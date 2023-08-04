@@ -9,7 +9,7 @@
 </head>
 <body>
 <div th:each="tab : ${tabstaves}">
-    <div class="vextab-auto" th:text="${tab}"
+    <div class="vextab-auto" th:text="'options scale=1 width = 1900' + ${tab}"
          width=680 scale=1.0 editor="false"
          editor-width=680 editor-height=330>
 

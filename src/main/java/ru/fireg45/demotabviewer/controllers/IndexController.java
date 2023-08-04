@@ -16,7 +16,8 @@ public class IndexController {
 
     @GetMapping()
     public String index(@RequestParam("track") int track, Model model) throws TGFileFormatException, IOException {
-        model.addAttribute("tabstaves", TabReader.read(track));
+        model.addAttribute("tabstaves", TabReader.read(track,
+                "/home/fireg/IdeaProjects/demoTabViewer/src/main/resources/static/test/tab.gp5"));
         return "index";
     }
 }
