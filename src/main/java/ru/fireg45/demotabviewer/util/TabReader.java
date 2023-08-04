@@ -67,8 +67,7 @@ public class TabReader {
         return beatsString;
     }
 
-    public static List<String> read(int track, String filename) throws TGFileFormatException, IOException {
-        List<String> tabs = new ArrayList<>();
+    public static TGSong read(int track, List<String> tabs, String filename) throws TGFileFormatException, IOException {
         TGSong song = readSong(filename);
         List<TGMeasure> measures = getMeasuresList(song, track);
         StringBuilder beatsString = initStringBuilder(song, track);
@@ -80,7 +79,7 @@ public class TabReader {
                 beatsString = initStringBuilder(song, track);
             }
         }
-        return tabs;
+        return song;
     }
 
 }
