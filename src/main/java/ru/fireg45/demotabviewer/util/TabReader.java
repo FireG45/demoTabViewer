@@ -6,6 +6,7 @@ import org.herac.tuxguitar.io.gtp.GTPInputStream;
 import org.herac.tuxguitar.io.gtp.GTPSettings;
 import org.herac.tuxguitar.song.factory.TGFactory;
 import org.herac.tuxguitar.song.models.*;
+import org.herac.tuxguitar.song.models.effects.TGEffectBend;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -30,25 +31,49 @@ public class TabReader {
         return measures;
     }
 
+    private static String readVoice(TGVoice voice) {
+        StringBuilder voiceString = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int k = 0; k < voice.countNotes(); k++) {
+            if (k > 0) stringBuilder.append(".");
+            TGNote note = voice.getNote(k);
+            stringBuilder.append(note.getEffect().isDeadNote() ? "X" : note.getValue()).append(readEffect(note))
+                    .append("/").append(note.getString());
+        }
+        if (voice.countNotes() > 1) {
+            voiceString.append("(").append(stringBuilder).append(")").append(" ");
+        } else {
+            voiceString.append(stringBuilder).append(" ");
+        }
+        return voiceString.toString();
+    }
+
+    private static String readEffect(TGNote note) {
+        TGNoteEffect effect = note.getEffect();
+        StringBuilder string = new StringBuilder();
+        if (effect.isBend()) {
+            string.append("b");
+            List<TGEffectBend.BendPoint> points = effect.getBend().getPoints();
+            string.append(points.stream().max((p1, p2) -> p1.getPosition() - p2.getPosition()).get().getValue());
+        }
+        if (effect.isVibrato()) string.append("v");
+        return string.toString();
+    }
+
+    private static String readBeat(TGBeat beat) {
+        if (beat.isRestBeat()) return " ## ";
+        StringBuilder beatString = new StringBuilder();
+        for (int j = 0; j < beat.countVoices(); j++) {
+            beatString.append(readVoice(beat.getVoice(j)));
+        }
+        return beatString.toString();
+    }
+
     private static String readMeasure(TGMeasure measure) {
         StringBuilder measureString = new StringBuilder();
         List<TGBeat> beats = measure.getBeats();
         for (TGBeat beat : beats) {
-            for (int j = 0; j < beat.countVoices(); j++) {
-                StringBuilder stringBuilder = new StringBuilder();
-                int notes = 0;
-                for (int k = 0; k < beat.getVoice(j).countNotes(); k++) {
-                    if (k > 0) stringBuilder.append(".");
-                    TGNote note = beat.getVoice(j).getNote(k);
-                    stringBuilder.append(note.getValue()).append("/").append(note.getString());
-                    notes++;
-                }
-                if (notes > 1) {
-                    measureString.append("(").append(stringBuilder).append(")").append(" ");
-                } else {
-                    measureString.append(stringBuilder).append(" ");
-                }
-            }
+            measureString.append(readBeat(beat));
         }
         return measureString.toString();
     }
@@ -71,15 +96,23 @@ public class TabReader {
         TGSong song = readSong(filename);
         List<TGMeasure> measures = getMeasuresList(song, track);
         StringBuilder beatsString = initStringBuilder(song, track);
+        String[] repeatChar = new String[] {"|", "=|:"};
         for (int l = 0; l < measures.size(); l++) {
             beatsString.append(readMeasure(measures.get(l)));
-            beatsString.append(" | ");
+
+            beatsString.append(" " + "|" + " ");
             if (l != 0 && l % 4 == 0) {
                 tabs.add(beatsString.toString());
                 beatsString = initStringBuilder(song, track);
             }
         }
         return song;
+    }
+
+    public static List<String> getTrackNames(Iterator<TGTrack> tracks) {
+        List<String> trackNames = new ArrayList<>();
+        tracks.forEachRemaining(tgTrack -> trackNames.add(tgTrack.getName()));
+        return trackNames;
     }
 
 }

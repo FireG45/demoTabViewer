@@ -21,11 +21,13 @@ public class IndexController {
     public String index(@RequestParam("track") int track, Model model) throws TGFileFormatException, IOException {
         List<String> tabs = new ArrayList<>();
         TGSong song = TabReader.read(track, tabs,
-                "/home/fireg/IdeaProjects/demoTabViewer/src/main/resources/static/test/tab.gp5");
+                "/home/fireg/IdeaProjects/demoTabViewer/src/main/resources/static/test/tab2.gp5");
         model.addAttribute("tabs", tabs);
         model.addAttribute("name", song.getName());
         model.addAttribute("author", song.getArtist());
         model.addAttribute("track", song.getTrack(track).getName());
+        model.addAttribute("trackId", track);
+        model.addAttribute("trackList", TabReader.getTrackNames(song.getTracks()));
         return "index";
     }
 }
