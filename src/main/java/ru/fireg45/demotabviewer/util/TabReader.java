@@ -1,9 +1,13 @@
 package ru.fireg45.demotabviewer.util;
 
+import org.herac.tuxguitar.graphics.control.TGFactoryImpl;
+import org.herac.tuxguitar.io.base.TGFileFormat;
 import org.herac.tuxguitar.io.base.TGFileFormatException;
-import org.herac.tuxguitar.io.gtp.GP5InputStream;
-import org.herac.tuxguitar.io.gtp.GTPInputStream;
-import org.herac.tuxguitar.io.gtp.GTPSettings;
+
+import org.herac.tuxguitar.io.base.TGSongReader;
+import org.herac.tuxguitar.io.base.TGSongReaderHandle;
+import org.herac.tuxguitar.io.gtp.*;
+import org.herac.tuxguitar.io.tg.TGSongReaderImpl;
 import org.herac.tuxguitar.song.factory.TGFactory;
 import org.herac.tuxguitar.song.models.*;
 import org.herac.tuxguitar.song.models.effects.TGEffectBend;
@@ -11,6 +15,7 @@ import org.herac.tuxguitar.song.models.effects.TGEffectBend;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -19,9 +24,11 @@ import static org.herac.tuxguitar.song.models.TGMeasure.CLEF_BASS;
 public class TabReader {
 
     public static TGSong readSong(String filename) throws IOException, TGFileFormatException {
-        GTPInputStream inputStream = new GP5InputStream(new GTPSettings());
-        inputStream.init(new TGFactory(), new FileInputStream(filename));
-        return inputStream.readSong();
+        GTPInputStream gtpInputStream = new GP5InputStream(new GTPSettings());
+        TGFactory factory = new TGFactoryImpl();
+        gtpInputStream.init(factory);
+        gtpInputStream.setStream(new FileInputStream(filename));
+        return gtpInputStream.readSong();
     }
 
     public static List<TGMeasure> getMeasuresList(TGSong song, int track) {
@@ -54,7 +61,7 @@ public class TabReader {
         if (effect.isBend()) {
             string.append("b");
             List<TGEffectBend.BendPoint> points = effect.getBend().getPoints();
-            string.append(points.stream().max((p1, p2) -> p1.getPosition() - p2.getPosition()).get().getValue());
+            string.append(points.stream().max(Comparator.comparingInt(TGEffectBend.BendPoint::getPosition)).get().getValue());
         }
         if (effect.isVibrato()) string.append("v");
         return string.toString();
@@ -84,9 +91,9 @@ public class TabReader {
         if (song.getTrack(track).getMeasure(0).getClef() == CLEF_BASS) {
             beatsString.append("clef=bass strings=4\n");
         }
-        if (song.getTrack(track).isPercussionTrack()) {
-            beatsString.append("clef=percussion \n");
-        }
+//        if (song.getTrack(track).isPercussionTrack()) {
+//            beatsString.append("clef=percussion \n");
+//        }
         beatsString.append("\nnotes ");
 
         return beatsString;

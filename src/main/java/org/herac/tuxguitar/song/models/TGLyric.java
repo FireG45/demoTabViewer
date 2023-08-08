@@ -1,6 +1,9 @@
 package org.herac.tuxguitar.song.models;
 
+import org.herac.tuxguitar.song.factory.TGFactory;
+
 public abstract class TGLyric {
+	
 	private static final String REGEX = " ";
 	
 	private int from;
@@ -38,9 +41,14 @@ public abstract class TGLyric {
 		return (getLyrics().length() == 0);
 	}
 	
-	public void copy(TGLyric lyric){
-		lyric.setFrom(getFrom());
-		lyric.setLyrics(getLyrics());
+	public void copyFrom(TGLyric lyric){
+		this.setFrom(lyric.getFrom());
+		this.setLyrics(lyric.getLyrics());
 	}
 	
+	public TGLyric clone(TGFactory factory) {
+		TGLyric tgLyric = factory.newLyric();
+		tgLyric.copyFrom(this);
+		return tgLyric;
+	}
 }

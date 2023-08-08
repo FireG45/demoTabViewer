@@ -6,29 +6,33 @@
  */
 package org.herac.tuxguitar.song.models;
 
-import org.herac.tuxguitar.song.factory.TGFactory;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-/**
- * @author julian
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
+
+import org.herac.tuxguitar.song.factory.TGFactory;
+
 public abstract class TGTrack {
+	
+	public static final int MAX_STRINGS = 25;
+	public static final int MIN_STRINGS = 1;
 	public static final int MAX_OFFSET = 24;
 	public static final int MIN_OFFSET = -24;
-	
+	public static final int MIN_FRETS = 10;
+	public static final int MAX_FRETS = 127;
+	public static final int DEFAULT_FRETS = 24;
+
 	private int number;
 	private int offset;
+	private int frets;
+	private int channelId;
 	private boolean solo;
 	private boolean mute;
+	private boolean letRing;
+	private boolean visible;
 	private String name;
-	private List measures;
-	private List strings;
-	private TGChannel channel;
+	private List<TGMeasure> measures;
+	private List<TGString> strings;
 	private TGColor color;
 	private TGLyric lyrics;
 	private TGSong song;
@@ -36,12 +40,15 @@ public abstract class TGTrack {
 	public TGTrack(TGFactory factory) {
 		this.number = 0;
 		this.offset = 0;
+		this.frets = DEFAULT_FRETS;
+		this.channelId = -1;
 		this.solo = false;
 		this.mute = false;
-		this.name = new String();
-		this.measures = new ArrayList();
-		this.strings = new ArrayList();
-		this.channel = factory.newChannel();
+		this.letRing = false;
+		this.visible = true;
+		this.name = "";
+		this.measures = new ArrayList<TGMeasure>();
+		this.strings = new ArrayList<TGString>();
 		this.color = factory.newColor();
 		this.lyrics = factory.newLyric();
 	}
@@ -54,7 +61,7 @@ public abstract class TGTrack {
 		this.number = number;
 	}
 	
-	public Iterator getMeasures() {
+	public Iterator<TGMeasure> getMeasures() {
 		return this.measures.iterator();
 	}
 	
@@ -70,7 +77,7 @@ public abstract class TGTrack {
 	
 	public TGMeasure getMeasure(int index){
 		if(index >= 0 && index < countMeasures()){
-			return (TGMeasure)this.measures.get(index);
+			return this.measures.get(index);
 		}
 		return null;
 	}
@@ -83,19 +90,11 @@ public abstract class TGTrack {
 		return this.measures.size();
 	}
 	
-	public TGChannel getChannel() {
-		return this.channel;
-	}
-	
-	public void setChannel(TGChannel channel) {
-		this.channel = channel;
-	}
-	
-	public List getStrings() {
+	public List<TGString> getStrings() {
 		return this.strings;
 	}
 	
-	public void setStrings(List strings) {
+	public void setStrings(List<TGString> strings) {
 		this.strings = strings;
 	}
 	
@@ -122,7 +121,15 @@ public abstract class TGTrack {
 	public void setOffset(int offset) {
 		this.offset = offset;
 	}
-	
+
+	public int getFrets() {
+		return frets;
+	}
+
+	public void setFrets(int frets) {
+		this.frets = frets;
+	}
+
 	public boolean isSolo() {
 		return this.solo;
 	}
@@ -131,12 +138,36 @@ public abstract class TGTrack {
 		this.solo = solo;
 	}
 	
+	public boolean isLetRing() {
+		return this.letRing;
+	}
+	
+	public void setLetRing(boolean letRing) {
+		this.letRing = letRing;
+	}
+	
 	public boolean isMute() {
 		return this.mute;
 	}
 	
 	public void setMute(boolean mute) {
 		this.mute = mute;
+	}
+
+	public boolean isVisible() {
+		return visible;
+	}
+
+	public void setVisible(boolean visible) {
+		this.visible = visible;
+	}
+
+	public int getChannelId() {
+		return this.channelId;
+	}
+	
+	public void setChannelId(int channelId) {
+		this.channelId = channelId;
 	}
 	
 	public TGLyric getLyrics() {
@@ -148,15 +179,11 @@ public abstract class TGTrack {
 	}
 	
 	public TGString getString(int number){
-		return (TGString)this.strings.get(number - 1);
+		return this.strings.get(number - 1);
 	}
 	
 	public int stringCount(){
 		return this.strings.size();
-	}
-	
-	public boolean isPercussionTrack(){
-		return (getChannel().isPercussionChannel());
 	}
 	
 	public TGSong getSong() {
@@ -168,32 +195,56 @@ public abstract class TGTrack {
 	}
 	
 	public void clear(){
+		int measureCount = this.countMeasures();
+		for(int i = 0 ; i < measureCount ; i ++) {
+			TGMeasure tgMeasure = this.getMeasure(i);
+			tgMeasure.clear();
+		}
+		
 		this.strings.clear();
 		this.measures.clear();
 	}
 	
 	public TGTrack clone(TGFactory factory,TGSong song){
-		TGTrack track = factory.newTrack();
-		copy(factory, song, track);
-		return track;
+		TGTrack tgTrack = factory.newTrack();
+		tgTrack.copyFrom(factory, song, this);
+		return tgTrack;
 	}
 	
-	public void copy(TGFactory factory,TGSong song,TGTrack track){
-		track.clear();
-		track.setNumber(getNumber());
-		track.setName(getName());
-		track.setOffset(getOffset());
-		getChannel().copy(track.getChannel());
-		getColor().copy(track.getColor());
-		getLyrics().copy(track.getLyrics());
-		for (int i = 0; i < getStrings().size(); i++) {
-			TGString string = (TGString) getStrings().get(i);
-			track.getStrings().add(string.clone(factory));
+	public void copyFrom(TGFactory factory, TGSong song ,TGTrack track){
+		this.clear();
+		this.setNumber(track.getNumber());
+		this.setName(track.getName());
+		this.setOffset(track.getOffset());
+		this.setFrets(track.getFrets());
+		this.setSolo(track.isSolo());
+		this.setMute(track.isMute());
+		this.setLetRing(track.isLetRing());
+		this.setVisible(track.isVisible());
+		this.setChannelId(track.getChannelId());
+		this.getColor().copyFrom(track.getColor());
+		this.getLyrics().copyFrom(track.getLyrics());
+		for (int i = 0; i < track.getStrings().size(); i++) {
+			TGString string = track.getStrings().get(i);
+			this.getStrings().add(string.clone(factory));
 		}
-		for (int i = 0; i < countMeasures(); i++) {
-			TGMeasure measure = getMeasure(i);
-			track.addMeasure(measure.clone(factory,song.getMeasureHeader(i)));
+		for (int i = 0; i < track.countMeasures(); i++) {
+			TGMeasure measure = track.getMeasure(i);
+			this.addMeasure(measure.clone(factory, song.getMeasureHeader(i)));
 		}
 	}
-	
+
+    public String getTuning() {
+		int id = getSong().getChannel(getChannelId() - 1).getProgram();
+		System.out.println("\n" + TGChannelNames.DEFAULT_NAMES[id]);
+		if (TGChannelNames.DEFAULT_NAMES[id].contains("Guitar") || TGChannelNames.DEFAULT_NAMES[id].contains("Bass")) {
+			StringBuilder tuning = new StringBuilder();
+			for (TGString string : strings) {
+				tuning.append(string).append(" ");
+			}
+			return tuning.reverse().toString();
+		} else  {
+			return "";
+		}
+	}
 }

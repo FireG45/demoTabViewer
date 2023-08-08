@@ -6,23 +6,28 @@
  */
 package org.herac.tuxguitar.io.gtp;
 
-import org.herac.tuxguitar.io.base.TGFileFormat;
-import org.herac.tuxguitar.io.base.TGFileFormatException;
-import org.herac.tuxguitar.song.models.*;
-import org.herac.tuxguitar.song.models.effects.*;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.herac.tuxguitar.gm.GMChannelRoute;
+import org.herac.tuxguitar.io.base.TGFileFormat;
+import org.herac.tuxguitar.io.base.TGFileFormatException;
+import org.herac.tuxguitar.song.models.*;
+import org.herac.tuxguitar.song.models.effects.TGEffectBend;
+import org.herac.tuxguitar.song.models.effects.TGEffectHarmonic;
+import org.herac.tuxguitar.song.models.effects.TGEffectGrace;
+import org.herac.tuxguitar.song.models.effects.TGEffectTremoloBar;
+import org.herac.tuxguitar.song.models.effects.TGEffectTremoloPicking;
+import org.herac.tuxguitar.song.models.effects.TGEffectTrill;
 /**
  * @author julian
  * 
  * TODO To change the template for this generated type comment go to Window - Preferences - Java - Code Style - Code Templates
  */
 public class GP5OutputStream extends GTPOutputStream {
-	private static final String GP5_FORMAT_EXTENSION = ".gp5";
+	
 	private static final String GP5_VERSION = "FICHIER GUITAR PRO v5.00";
 	private static final int GP_BEND_SEMITONE = 25;
 	private static final int GP_BEND_POSITION = 60;
@@ -46,11 +51,7 @@ public class GP5OutputStream extends GTPOutputStream {
 	}
 	
 	public TGFileFormat getFileFormat(){
-		return new TGFileFormat("Guitar Pro 5","*.gp5");
-	}
-	
-	public boolean isSupportedExtension(String extension) {
-		return (extension.toLowerCase().equals(GP5_FORMAT_EXTENSION)) ;
+		return new TGFileFormat("Guitar Pro 5", "audio/x-gtp", new String[]{"gp5"});
 	}
 	
 	public void writeSong(TGSong song){
@@ -58,6 +59,7 @@ public class GP5OutputStream extends GTPOutputStream {
 			if(song.isEmpty()){
 				throw new TGFileFormatException("Empty Song!!!");
 			}
+			configureChannelRouter(song);
 			TGMeasureHeader header = song.getMeasureHeader(0);
 			writeStringByte(GP5_VERSION, 30, DEFAULT_VERSION_CHARSET);
 			writeInfo(song);
@@ -83,7 +85,7 @@ public class GP5OutputStream extends GTPOutputStream {
 	}
 	
 	private void writeInfo(TGSong song) throws IOException{
-		List comments = toCommentLines(song.getComments());
+		List<String> comments = toCommentLines(song.getComments());
 		writeStringByteSizeOfInteger(song.getName());
 		writeStringByteSizeOfInteger("");
 		writeStringByteSizeOfInteger(song.getArtist());
@@ -101,7 +103,7 @@ public class GP5OutputStream extends GTPOutputStream {
 	
 	private void writeLyrics(TGSong song) throws IOException{
 		TGTrack lyricTrack = null;
-		Iterator it = song.getTracks();
+		Iterator<TGTrack> it = song.getTracks();
 		while(it.hasNext()){
 			TGTrack track = (TGTrack)it.next();
 			if(!track.getLyrics().isEmpty()){
@@ -139,7 +141,7 @@ public class GP5OutputStream extends GTPOutputStream {
 	private void writeChannels(TGSong song) throws IOException{
 		TGChannel[] channels = makeChannels(song);
 		for (int i = 0; i < channels.length; i++) {
-			writeInt(channels[i].getInstrument());
+			writeInt(channels[i].getProgram());
 			writeByte(toChannelByte(channels[i].getVolume()));
 			writeByte(toChannelByte(channels[i].getBalance()));
 			writeByte(toChannelByte(channels[i].getChorus()));
@@ -232,25 +234,27 @@ public class GP5OutputStream extends GTPOutputStream {
 	}
 	
 	private void writeTrack(TGTrack track) throws IOException {
+		GMChannelRoute channel = getChannelRoute(track.getChannelId());
+		List<TGString> strings = this.createWritableStrings(track);
+		
 		int flags = 0;
-		if (track.isPercussionTrack()) {
+		if (isPercussionChannel(track.getSong(),track.getChannelId())) {
 			flags |= 0x01;
 		}
 		writeUnsignedByte(flags);
-		writeByte((byte)8);
+		writeUnsignedByte((8 | flags));
 		writeStringByte(track.getName(), 40);
-		writeInt(track.getStrings().size());
+		writeInt(strings.size());
 		for (int i = 0; i < 7; i++) {
 			int value = 0;
-			if (track.getStrings().size() > i) {
-				TGString string = (TGString) track.getStrings().get(i);
-				value = string.getValue();
+			if (strings.size() > i) {
+				value = strings.get(i).getValue();
 			}
 			writeInt(value);
 		}
 		writeInt(1);
-		writeInt(track.getChannel().getChannel() + 1);
-		writeInt(track.getChannel().getEffectChannel() + 1);
+		writeInt(channel.getChannel1() + 1);
+		writeInt(channel.getChannel2() + 1);
 		writeInt(24);
 		writeInt(track.getOffset());
 		writeColor(track.getColor());
@@ -266,13 +270,13 @@ public class GP5OutputStream extends GTPOutputStream {
 				writeMeasure(measure, (header.getTempo().getValue() != tempo.getValue()) );
 				skipBytes(1);
 			}
-			header.getTempo().copy( tempo );
+			tempo.copyFrom( header.getTempo() );
 		}
 	}
 	
 	private void writeMeasure(TGMeasure measure, boolean changeTempo) throws IOException {
 		for(int v = 0; v < 2 ; v ++){
-			List voices = new ArrayList();
+			List<TGVoice> voices = new ArrayList<TGVoice>();
 			for (int m = 0; m < measure.countBeats(); m ++) {
 				TGBeat beat = measure.getBeat( m );
 				if( v < beat.countVoices() ){
@@ -378,7 +382,7 @@ public class GP5OutputStream extends GTPOutputStream {
 		}
 		
 		if ((flags & 0x10) != 0) {
-			writeMixChange(measure.getTempo());
+			writeMixChange(beat, measure.getTempo());
 		}
 		int stringFlags = 0;
 		if (!voice.isRestVoice()) {
@@ -412,12 +416,16 @@ public class GP5OutputStream extends GTPOutputStream {
 		    note.getEffect().isBend()     ||
 		    note.getEffect().isSlide()    ||
 		    note.getEffect().isHammer()   ||
+		    note.getEffect().isLetRing()  ||
 		    note.getEffect().isPalmMute() ||
 		    note.getEffect().isStaccato() ||
 		    note.getEffect().isTrill()    ||
 		    note.getEffect().isGrace()    ||
 		    note.getEffect().isHarmonic() ||
-		    note.getEffect().isTremoloPicking()) {
+		    note.getEffect().isTremoloPicking() ||
+                    note.getEffect().getSlideFrom() != 0 ||
+                    note.getEffect().getSlideTo() != 0
+                        ) {
 		    flags |= 0x08;
 		}
 		if( note.getEffect().isGhostNote() ){
@@ -537,6 +545,9 @@ public class GP5OutputStream extends GTPOutputStream {
 		if (effect.isHammer()) {
 			flags1 |= 0x02;
 		}
+		if (effect.isLetRing()) {
+			flags1 |= 0x08;
+		}
 		if (effect.isGrace()) {
 			flags1 |= 0x10;
 		}
@@ -549,7 +560,7 @@ public class GP5OutputStream extends GTPOutputStream {
 		if (effect.isTremoloPicking()) {
 			flags2 |= 0x04;
 		}
-		if (effect.isSlide()) {
+		if (effect.isSlide() || effect.getSlideFrom() != 0 || effect.getSlideTo() != 0) {
 			flags2 |= 0x08;
 		}
 		if (effect.isHarmonic()) {
@@ -576,11 +587,21 @@ public class GP5OutputStream extends GTPOutputStream {
 		}
 		
 		if ((flags2 & 0x08) != 0) {
-			writeByte((byte)1);
+			writeSlideFlags(effect);
 		}
 		
 		if ((flags2 & 0x10) != 0) {
+			if(effect.getHarmonic().getType() == TGEffectHarmonic.TYPE_NATURAL){
 			writeByte((byte)1);
+			}else if(effect.getHarmonic().getType() == TGEffectHarmonic.TYPE_TAPPED){
+				writeByte((byte)3);
+			}else if(effect.getHarmonic().getType() == TGEffectHarmonic.TYPE_PINCH){
+				writeByte((byte)4);
+			}else if(effect.getHarmonic().getType() == TGEffectHarmonic.TYPE_SEMI){
+				writeByte((byte)5);
+			}else if(effect.getHarmonic().getType() == TGEffectHarmonic.TYPE_ARTIFICIAL){
+				writeByte((byte)15);
+		}
 		}
 		
 		if ((flags2 & 0x20) != 0) {
@@ -588,6 +609,25 @@ public class GP5OutputStream extends GTPOutputStream {
 		}
 		
 	}
+	
+        private void writeSlideFlags(TGNoteEffect effect) throws IOException {
+                int flags = 0;
+		if (effect.getSlideFrom()>0) {
+                    flags |= 32;
+		} else if (effect.getSlideFrom()<0) {
+                    flags |= 16;
+                }
+		if (effect.getSlideTo()>0) {
+                    flags |= 8;
+		} else if (effect.getSlideTo()<0) {
+                    flags |= 4;
+		}
+                if (effect.isSlide() && effect.isHammer())
+                    flags |= 2;
+                else if (effect.isSlide())
+                    flags |= 1;
+                writeUnsignedByte((byte) flags);
+        }
 	
 	private void writeBend(TGEffectBend bend) throws IOException {
 		int points = bend.getPoints().size();
@@ -659,17 +699,18 @@ public class GP5OutputStream extends GTPOutputStream {
 		writeStringByteSizeOfInteger(text.getValue());
 	}
 	
-	private void writeMixChange(TGTempo tempo) throws IOException {
-		writeByte((byte) 0xff);
+	private void writeMixChange(TGBeat beat, TGTempo tempo) throws IOException {
+	    TGMixerChange mixer = beat.getMixerChange();
+		writeByte((byte) (mixer != null && mixer.getProgram() != null ? (short) mixer.getProgram() : 0xff));
 		for(int i = 0; i < 16; i++){
 			writeByte((byte) 0xff);
 		}
-		writeByte((byte) 0xff); //volume
-		writeByte((byte) 0xff); //int pan
-		writeByte((byte) 0xff); //int chorus
-		writeByte((byte) 0xff); //int reverb
-		writeByte((byte) 0xff); //int phaser
-		writeByte((byte) 0xff); //int tremolo
+		writeByte((byte) (mixer != null && mixer.getVolume() != null ? toChannelByte(mixer.getVolume()) : 0xff));
+		writeByte((byte) (mixer != null && mixer.getBalance() != null ? toChannelByte(mixer.getBalance()) : 0xff));
+		writeByte((byte) (mixer != null && mixer.getChorus() != null ? toChannelByte(mixer.getChorus()) : 0xff));
+		writeByte((byte) (mixer != null && mixer.getReverb() != null ? toChannelByte(mixer.getReverb()) : 0xff));
+		writeByte((byte) (mixer != null && mixer.getPhaser() != null ? toChannelByte(mixer.getPhaser()) : 0xff));
+		writeByte((byte) (mixer != null && mixer.getTremolo() != null ? toChannelByte(mixer.getTremolo()) : 0xff));
 		writeStringByteSizeOfInteger(""); //tempo name
 		writeInt((tempo != null)?tempo.getValue():-1); //tempo value
 		if((tempo != null)){
@@ -695,9 +736,7 @@ public class GP5OutputStream extends GTPOutputStream {
 		TGChannel[] channels = new TGChannel[64];
 		for (int i = 0; i < channels.length; i++) {
 			channels[i] = getFactory().newChannel();
-			channels[i].setChannel((short)i);
-			channels[i].setEffectChannel((short)i);
-			channels[i].setInstrument((short)24);
+			channels[i].setProgram((short)24);
 			channels[i].setVolume((short)13);
 			channels[i].setBalance((short)8);
 			channels[i].setChorus((short)0);
@@ -706,15 +745,16 @@ public class GP5OutputStream extends GTPOutputStream {
 			channels[i].setTremolo((short)0);
 		}
 		
-		Iterator it = song.getTracks();
+		Iterator<TGChannel> it = song.getChannels();
 		while (it.hasNext()) {
-			TGTrack track = (TGTrack) it.next();
-			channels[track.getChannel().getChannel()].setInstrument(track.getChannel().getInstrument());
-			channels[track.getChannel().getChannel()].setVolume(track.getChannel().getVolume());
-			channels[track.getChannel().getChannel()].setBalance(track.getChannel().getBalance());
-			channels[track.getChannel().getEffectChannel()].setInstrument(track.getChannel().getInstrument());
-			channels[track.getChannel().getEffectChannel()].setVolume(track.getChannel().getVolume());
-			channels[track.getChannel().getEffectChannel()].setBalance(track.getChannel().getBalance());
+			TGChannel tgChannel = (TGChannel) it.next();
+			GMChannelRoute gmChannelRoute = getChannelRoute(tgChannel.getChannelId());
+			channels[gmChannelRoute.getChannel1()].setProgram(tgChannel.getProgram());
+			channels[gmChannelRoute.getChannel1()].setVolume(tgChannel.getVolume());
+			channels[gmChannelRoute.getChannel1()].setBalance(tgChannel.getBalance());
+			channels[gmChannelRoute.getChannel2()].setProgram(tgChannel.getProgram());
+			channels[gmChannelRoute.getChannel2()].setVolume(tgChannel.getVolume());
+			channels[gmChannelRoute.getChannel1()].setBalance(tgChannel.getBalance());
 		}
 		
 		return channels;
@@ -760,8 +800,8 @@ public class GP5OutputStream extends GTPOutputStream {
 		return  (byte) ((s + 1) / 8);
 	}
 	
-	private List toCommentLines( String comments ){
-		List lines = new ArrayList();
+	private List<String> toCommentLines( String comments ){
+		List<String> lines = new ArrayList<String>();
 		
 		String line = comments;
 		while( line.length() > Byte.MAX_VALUE ) {

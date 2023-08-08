@@ -1,7 +1,12 @@
 package org.herac.tuxguitar.song.factory;
 
 import org.herac.tuxguitar.song.models.*;
-import org.herac.tuxguitar.song.models.effects.*;
+import org.herac.tuxguitar.song.models.effects.TGEffectBend;
+import org.herac.tuxguitar.song.models.effects.TGEffectGrace;
+import org.herac.tuxguitar.song.models.effects.TGEffectHarmonic;
+import org.herac.tuxguitar.song.models.effects.TGEffectTremoloBar;
+import org.herac.tuxguitar.song.models.effects.TGEffectTremoloPicking;
+import org.herac.tuxguitar.song.models.effects.TGEffectTrill;
 
 public class TGFactory {
 	
@@ -37,7 +42,7 @@ public class TGFactory {
 	
 	public TGColor newColor(){
 		return new TGColor(){
-			//TGColor Implementation
+			//UIColor Implementation
 		};
 	}
 	
@@ -71,6 +76,12 @@ public class TGFactory {
 		};
 	}
 	
+	public TGChannelParameter newChannelParameter(){
+		return new TGChannelParameter(){
+			//TGChannelParameter Implementation
+		};
+	}
+	
 	public TGTrack newTrack(){
 		return new TGTrack(this){
 			//TGTrack Implementation
@@ -94,7 +105,13 @@ public class TGFactory {
 			//TGBeat Implementation
 		};
 	}
-	
+
+	public TGMixerChange newMixerChange() {
+	    return new TGMixerChange() {
+
+		};
+	}
+
 	public TGVoice newVoice(int index){
 		return new TGVoice(this, index){
 			//TGVoice Implementation
@@ -107,6 +124,12 @@ public class TGFactory {
 		};
 	}
 	
+	public TGNoteSpelling newNoteSpelling(){
+		return new TGNoteSpelling(){
+			// TGNoteSpelling implementation
+		};
+	}
+		
 	public TGString newString(){
 		return new TGString(){
 			//TGString Implementation

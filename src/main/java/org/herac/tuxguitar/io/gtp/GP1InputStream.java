@@ -1,111 +1,153 @@
 package org.herac.tuxguitar.io.gtp;
 
-import org.herac.tuxguitar.io.base.TGFileFormat;
-import org.herac.tuxguitar.song.managers.TGSongManager;
-import org.herac.tuxguitar.song.models.*;
-import org.herac.tuxguitar.song.models.effects.TGEffectBend;
-import org.herac.tuxguitar.song.models.effects.TGEffectHarmonic;
-
 import java.io.IOException;
 import java.util.Iterator;
 
-/**
- * @author julian
- * 
- * TODO To change the template for this generated type comment go to Window - Preferences - Java - Code Style - Code Templates
- */
+import org.herac.tuxguitar.gm.GMChannelRoute;
+import org.herac.tuxguitar.io.base.TGFileFormat;
+import org.herac.tuxguitar.io.base.TGFileFormatException;
+import org.herac.tuxguitar.song.managers.TGSongManager;
+import org.herac.tuxguitar.song.models.TGBeat;
+import org.herac.tuxguitar.song.models.TGChannel;
+import org.herac.tuxguitar.song.models.TGChannelParameter;
+import org.herac.tuxguitar.song.models.TGChord;
+import org.herac.tuxguitar.song.models.TGColor;
+import org.herac.tuxguitar.song.models.TGDuration;
+import org.herac.tuxguitar.song.models.TGMeasure;
+import org.herac.tuxguitar.song.models.TGMeasureHeader;
+import org.herac.tuxguitar.song.models.TGNote;
+import org.herac.tuxguitar.song.models.TGNoteEffect;
+import org.herac.tuxguitar.song.models.TGSong;
+import org.herac.tuxguitar.song.models.TGString;
+import org.herac.tuxguitar.song.models.TGText;
+import org.herac.tuxguitar.song.models.TGTimeSignature;
+import org.herac.tuxguitar.song.models.TGTrack;
+import org.herac.tuxguitar.song.models.TGVelocities;
+import org.herac.tuxguitar.song.models.TGVoice;
+import org.herac.tuxguitar.song.models.effects.TGEffectBend;
+import org.herac.tuxguitar.song.models.effects.TGEffectHarmonic;
+
 public class GP1InputStream extends GTPInputStream {
 	
-	private static final String SUPPORTED_VERSIONS[] = new String[]{
-		"FICHIER GUITARE PRO v1", "FICHIER GUITARE PRO v1.01","FICHIER GUITARE PRO v1.02", "FICHIER GUITARE PRO v1.03","FICHIER GUITARE PRO v1.04"
+	public static final TGFileFormat FILE_FORMAT = new TGFileFormat("Guitar Pro", "audio/x-gtp", new String[]{"gtp"});
+	
+	public static final GTPFileFormatVersion[] SUPPORTED_VERSIONS = new GTPFileFormatVersion[] {
+		new GTPFileFormatVersion(FILE_FORMAT, "FICHIER GUITARE PRO v1", 0),
+		new GTPFileFormatVersion(FILE_FORMAT, "FICHIER GUITARE PRO v1.01", 1),
+		new GTPFileFormatVersion(FILE_FORMAT, "FICHIER GUITARE PRO v1.02", 2),
+		new GTPFileFormatVersion(FILE_FORMAT, "FICHIER GUITARE PRO v1.03", 3),
+		new GTPFileFormatVersion(FILE_FORMAT, "FICHIER GUITARE PRO v1.04", 4)
 	};
 	
 	private static final short TRACK_CHANNELS[][] = new short[][]{
-		new short[]{0,1},
-		new short[]{2,3},
-		new short[]{4,5},
-		new short[]{6,7},
-		new short[]{8,10},
-		new short[]{11,12},
-		new short[]{13,14},
-		new short[]{9,9},
+		new short[]{1,0,1},
+		new short[]{2,2,3},
+		new short[]{3,4,5},
+		new short[]{4,6,7},
+		new short[]{5,8,10},
+		new short[]{6,11,12},
+		new short[]{7,13,14},
+		new short[]{8,9,9},
 	};
 	
 	private int trackCount;
+	private int keySignature;
 	
 	public GP1InputStream(GTPSettings settings){
 		super(settings, SUPPORTED_VERSIONS);
 	}
 	
 	public TGFileFormat getFileFormat(){
-		return new TGFileFormat("Guitar Pro","*.gtp");
+		return FILE_FORMAT;
 	}
 	
-	public TGSong readSong() throws GTPFormatException, IOException {
-		readVersion();
-		if (!isSupportedVersion(getVersion())) {
-			this.close();
-			throw new GTPFormatException("Unsupported Version");
-		}
-		this.trackCount = ((getVersionIndex() > 2)?8:1);
-		
-		TGSong song = getFactory().newSong();
-		
-		readInfo(song);
-		
-		int tempo = readInt();
-		int tripletFeel = ((readInt() == 1)?TGMeasureHeader.TRIPLET_FEEL_EIGHTH:TGMeasureHeader.TRIPLET_FEEL_NONE);
-		
-		if(getVersionIndex() > 2){
-			readInt(); //key
-		}
-		
-		for (int i = 0; i < this.trackCount; i++) {
-			TGTrack track = getFactory().newTrack();
-			track.setNumber( (i + 1) );
-			track.getChannel().setChannel(TRACK_CHANNELS[ i ][0]);
-			track.getChannel().setEffectChannel(TRACK_CHANNELS[ i ][1]);
-			TGColor.RED.copy(track.getColor());
+	public TGSong readSong() throws TGFileFormatException {
+		try{
+			readVersion();
 			
-			int strings = ((getVersionIndex() > 1)?readInt():6);
-			for (int j = 0; j < strings; j++) {
-				TGString string = getFactory().newString();
-				string.setNumber( j + 1 );
-				string.setValue( readInt() );
-				track.getStrings().add( string  );
+			this.trackCount = ((getVersion().getVersionCode() > 2)?8:1);
+			
+			TGSong song = getFactory().newSong();
+			
+			readInfo(song);
+			
+			int tempo = readInt();
+			int tripletFeel = ((readInt() == 1)?TGMeasureHeader.TRIPLET_FEEL_EIGHTH:TGMeasureHeader.TRIPLET_FEEL_NONE);
+			
+			if(getVersion().getVersionCode() > 2){
+				this.keySignature = readKeySignature();
 			}
-			song.addTrack(track);
+			
+			for (int i = 0; i < this.trackCount; i++) {
+				TGChannel channel = getFactory().newChannel();
+				TGChannelParameter gmChannel1Param = getFactory().newChannelParameter();
+				TGChannelParameter gmChannel2Param = getFactory().newChannelParameter();
+				
+				gmChannel1Param.setKey(GMChannelRoute.PARAMETER_GM_CHANNEL_1);
+				gmChannel1Param.setValue(Integer.toString(TRACK_CHANNELS[ i ][1]));
+				gmChannel2Param.setKey(GMChannelRoute.PARAMETER_GM_CHANNEL_2);
+				gmChannel2Param.setValue(Integer.toString(TRACK_CHANNELS[ i ][2]));
+				
+				channel.setChannelId(TRACK_CHANNELS[ i ][0]);
+				channel.addParameter(gmChannel1Param);
+				channel.addParameter(gmChannel2Param);
+				song.addChannel(channel);
+			}
+			for (int i = 0; i < this.trackCount; i++) {
+				TGTrack track = getFactory().newTrack();
+				track.setNumber( (i + 1) );
+				track.setChannelId(TRACK_CHANNELS[ i ][0]);
+				track.getColor().copyFrom(TGColor.RED);
+				
+				int strings = ((getVersion().getVersionCode() > 1)?readInt():6);
+				
+				if (strings > 1000) {
+					throw new TGFileFormatException("Too many strings in GP1 file!");
+				}
+				
+				for (int j = 0; j < strings; j++) {
+					TGString string = getFactory().newString();
+					string.setNumber( j + 1 );
+					string.setValue( readInt() );
+					track.getStrings().add( string  );
+				}
+				song.addTrack(track);
+			}
+			
+			int measureCount = readInt();
+			
+			for (int i = 0; i < this.trackCount; i++) {
+				readTrack(song.getTrack(i), song.getChannel(i));
+			}
+			
+			if(getVersion().getVersionCode() > 2){
+				skip(10);
+			}
+			
+			TGMeasureHeader previous = null;
+			long[] lastReadedStarts = new long[this.trackCount];
+			for (int i = 0; i < measureCount; i++) {
+				TGMeasureHeader header = getFactory().newHeader();
+				header.setStart( (previous == null)?TGDuration.QUARTER_TIME:(previous.getStart() + previous.getLength()) );
+				header.setNumber( (previous == null)?1:previous.getNumber() + 1 );
+				header.getTempo().setValue( (previous == null)?tempo:previous.getTempo().getValue() );
+				header.setTripletFeel(tripletFeel);
+				readTrackMeasures(song,header,lastReadedStarts);
+				previous = header;
+			}
+			
+			TGSongManager tgSongManager = new TGSongManager(getFactory());
+			tgSongManager.autoCompleteSilences(song);
+			
+			this.updateChannelNames(tgSongManager, song);
+			this.close();
+			
+			return song;
+		} catch (GTPFormatException gtpFormatException) {
+			throw gtpFormatException;
+		} catch (Throwable throwable) {
+			throw new TGFileFormatException(throwable);
 		}
-		
-		int measureCount = readInt();
-		
-		for (int i = 0; i < this.trackCount; i++) {
-			readTrack(song.getTrack(i));
-		}
-		
-		if(getVersionIndex() > 2){
-			skip(10);
-		}
-		
-		TGMeasureHeader previous = null;
-		long[] lastReadedStarts = new long[this.trackCount];
-		for (int i = 0; i < measureCount; i++) {
-			TGMeasureHeader header = getFactory().newHeader();
-			header.setStart( (previous == null)?TGDuration.QUARTER_TIME:(previous.getStart() + previous.getLength()) );
-			header.setNumber( (previous == null)?1:previous.getNumber() + 1 );
-			header.getTempo().setValue( (previous == null)?tempo:previous.getTempo().getValue() );
-			header.setTripletFeel(tripletFeel);
-			readTrackMeasures(song,header,lastReadedStarts);
-			previous = header;
-		}
-		
-		TGSongManager manager = new TGSongManager(getFactory());
-		manager.setSong(song);
-		manager.autoCompleteSilences();
-		
-		this.close();
-		
-		return song;
 	}
 	
 	private void readInfo(TGSong song) throws IOException{
@@ -170,6 +212,16 @@ public class GP1InputStream extends GTPInputStream {
 		timeSignature.getDenominator().setValue(readUnsignedByte());
 	}
 	
+	private int readKeySignature() throws IOException {
+		// 0: C 1: G, -1: F		
+		int keySignature = readInt() & 0xFF;
+		if (keySignature < 0){
+			keySignature = 7 - keySignature; // translate -1 to 8, etc.
+		}
+		
+		return keySignature;
+	}
+	
 	private long readBeat(TGTrack track, TGMeasure measure, long start, long lastReadedStart) throws IOException {
 		readInt();
 		
@@ -207,7 +259,7 @@ public class GP1InputStream extends GTPInputStream {
 				TGBeat previousBeat = getBeat(track, measure, lastReadedStart);
 				if(previousBeat != null){
 					TGVoice previousVoice = previousBeat.getVoice(0);
-					Iterator it = previousVoice.getNotes().iterator();
+					Iterator<TGNote> it = previousVoice.getNotes().iterator();
 					while(it.hasNext()){
 						TGNote previous = (TGNote)it.next();
 						TGNote note = getFactory().newNote();
@@ -246,7 +298,7 @@ public class GP1InputStream extends GTPInputStream {
 		
 		beat.setStart(start);
 		voice.setEmpty(false);
-		duration.copy(voice.getDuration());
+		voice.getDuration().copyFrom(duration);
 		measure.addBeat(beat);
 		
 		return duration.getTime();
@@ -296,23 +348,23 @@ public class GP1InputStream extends GTPInputStream {
 		skip(1);
 	}
 	
-	private void readTrack(TGTrack track) throws IOException {
+	private void readTrack(TGTrack track, TGChannel channel) throws IOException {
 		track.setName("Track 1");
-		track.getChannel().setInstrument((short)readInt());
-		if (getVersionIndex() > 2) {
+		channel.setProgram((short)readInt());
+		if (getVersion().getVersionCode() > 2) {
 			readInt(); // Number of frets
 			track.setName(readStringByteSizeOfByte());
 			track.setSolo(readBoolean());
-			track.getChannel().setVolume((short)readInt());
-			track.getChannel().setBalance((short)readInt());
-			track.getChannel().setChorus((short)readInt());
-			track.getChannel().setReverb((short)readInt());
+			channel.setVolume((short)readInt());
+			channel.setBalance((short)readInt());
+			channel.setChorus((short)readInt());
+			channel.setReverb((short)readInt());
 			track.setOffset(readInt());
 		}
 	}
 	
 	private void readChord(int strings, TGBeat beat) throws IOException {
-		if(getVersionIndex() > 3){
+		if(getVersion().getVersionCode() > 3){
 			TGChord chord = getFactory().newChord(strings);
 			chord.setName(readStringByte(0));
 			
@@ -341,7 +393,7 @@ public class GP1InputStream extends GTPInputStream {
 	private int parseRepeatAlternative(TGSong song,int measure,int value){
 		int repeatAlternative = 0;
 		int existentAlternatives = 0;
-		Iterator it = song.getMeasureHeaders();
+		Iterator<TGMeasureHeader> it = song.getMeasureHeaders();
 		while(it.hasNext()){
 			TGMeasureHeader header = (TGMeasureHeader)it.next();
 			if(header.getNumber() == measure){
@@ -362,8 +414,8 @@ public class GP1InputStream extends GTPInputStream {
 	}
 	
 	private int getClef( TGTrack track ){
-		if( !track.isPercussionTrack() ){
-			Iterator it = track.getStrings().iterator();
+		if(!isPercussionChannel(track.getSong(),track.getChannelId())){
+			Iterator<TGString> it = track.getStrings().iterator();
 			while( it.hasNext() ){
 				TGString string = (TGString) it.next();
 				if( string.getValue() <= 34 ){
@@ -389,7 +441,7 @@ public class GP1InputStream extends GTPInputStream {
 	
 	private TGBeat getBeat(TGMeasure measure,long start){
 		if(start >= measure.getStart() && start < (measure.getStart() + measure.getLength())){
-			Iterator beats = measure.getBeats().iterator();
+			Iterator<TGBeat> beats = measure.getBeats().iterator();
 			while(beats.hasNext()){
 				TGBeat beat = (TGBeat)beats.next();
 				if(beat.getStart() == start){
@@ -398,5 +450,24 @@ public class GP1InputStream extends GTPInputStream {
 			}
 		}
 		return null;
+	}
+	
+	private void updateChannelNames(TGSongManager songManager, TGSong song) {
+		Iterator<TGChannel> it = song.getChannels();
+		while( it.hasNext() ) {
+			TGChannel tgChannel = it.next();
+			tgChannel.setName(songManager.createChannelNameFromProgram(song, tgChannel));
+		}
+	}
+	
+	private boolean isPercussionChannel( TGSong song, int channelId ){
+		Iterator<TGChannel> it = song.getChannels();
+		while( it.hasNext() ){
+			TGChannel channel = (TGChannel)it.next();
+			if( channel.getChannelId() == channelId ){
+				return channel.isPercussionChannel();
+			}
+		}
+		return false;
 	}
 }

@@ -23,10 +23,12 @@
         <label for="selectTrack">Track</label>
     </div>
 </div>
-
+<br>
+<h6 style="text-align: center" th:text="'Tuning: ' + ${tuning}"></h6>
+<h6 style="text-align: center" th:text="${tempo.getValue()} + 'BPM'"></h6>
 <div class="loader"></div>
 <div th:each="tab : ${tabs}">
-    <div class="vextab-auto" th:onload="vextab()" th:text="'options scale=1 width = 1900' + ${tab}"
+    <div class="vextab-auto" th:onload="vextab()" th:text="'options scale=1 width = 1900 tempo =' + ${tempo.getValue()} + ${tab}"
          width=680 scale=1.0 editor="false"
          editor-width=680 editor-height=330>
 

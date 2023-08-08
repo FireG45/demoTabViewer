@@ -1,7 +1,11 @@
 package org.herac.tuxguitar.io.gtp;
 
 import org.herac.tuxguitar.song.factory.TGFactory;
-import org.herac.tuxguitar.song.models.*;
+import org.herac.tuxguitar.song.models.TGBeat;
+import org.herac.tuxguitar.song.models.TGDuration;
+import org.herac.tuxguitar.song.models.TGMeasure;
+import org.herac.tuxguitar.song.models.TGNote;
+import org.herac.tuxguitar.song.models.TGVoice;
 
 public class GTPVoiceJoiner {
 	private TGFactory factory;
@@ -61,7 +65,7 @@ public class GTPVoiceJoiner {
 				}
 				
 				if(previousBestDuration != null){
-					previousBestDuration.copy( previous.getVoice(0).getDuration() );
+					previous.getVoice(0).getDuration().copyFrom( previousBestDuration );
 				}else{
 					if(voice.isRestVoice()){
 						this.measure.removeBeat(beat);
@@ -69,7 +73,7 @@ public class GTPVoiceJoiner {
 						break;
 					}
 					TGDuration duration = TGDuration.fromTime(this.factory, (beatStart - previousStart) );
-					duration.copy( previous.getVoice(0).getDuration() );
+					previous.getVoice(0).getDuration().copyFrom( duration );
 				}
 			}
 			
@@ -93,7 +97,7 @@ public class GTPVoiceJoiner {
 					break;
 				}
 				TGDuration duration = TGDuration.fromTime(this.factory, (measureEnd - beatStart) );
-				duration.copy( voice.getDuration() );
+				voice.getDuration().copyFrom( duration );
 			}
 			previous = beat;
 		}

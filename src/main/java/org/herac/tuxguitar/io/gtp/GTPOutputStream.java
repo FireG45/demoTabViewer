@@ -1,22 +1,43 @@
 package org.herac.tuxguitar.io.gtp;
 
-import org.herac.tuxguitar.io.base.TGOutputStreamBase;
-import org.herac.tuxguitar.song.factory.TGFactory;
-
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Iterator;
+import java.util.List;
 
-public abstract class GTPOutputStream extends GTPFileFormat implements TGOutputStreamBase{
+import org.herac.tuxguitar.gm.GMChannelRoute;
+import org.herac.tuxguitar.gm.GMChannelRouter;
+import org.herac.tuxguitar.gm.GMChannelRouterConfigurator;
+import org.herac.tuxguitar.io.base.TGFileFormatException;
+import org.herac.tuxguitar.io.base.TGSongWriter;
+import org.herac.tuxguitar.io.base.TGSongWriterHandle;
+import org.herac.tuxguitar.song.managers.TGSongManager;
+import org.herac.tuxguitar.song.models.TGChannel;
+import org.herac.tuxguitar.song.models.TGSong;
+import org.herac.tuxguitar.song.models.TGString;
+import org.herac.tuxguitar.song.models.TGTrack;
+
+public abstract class GTPOutputStream extends GTPFileFormat implements TGSongWriter{
 	
+	private GMChannelRouter channelRouter;
 	private OutputStream outputStream;
 	
 	public GTPOutputStream(GTPSettings settings){
 		super(settings);
 	}
 	
-	public void init(TGFactory factory,OutputStream stream) {
-		super.init(factory);
-		this.outputStream = stream;
+	public abstract void writeSong(TGSong song) throws TGFileFormatException;
+	
+	public void write(TGSongWriterHandle handle) throws TGFileFormatException {
+		try {
+			this.outputStream = handle.getOutputStream();
+			this.init(handle.getFactory());
+			this.writeSong(handle.getSong());
+		} catch (TGFileFormatException tgFormatException) {
+			throw tgFormatException;
+		} catch (Throwable throwable) {
+			throw new TGFileFormatException(throwable);
+		}
 	}
 	
 	protected void skipBytes(int count) throws IOException {
@@ -87,5 +108,71 @@ public abstract class GTPOutputStream extends GTPFileFormat implements TGOutputS
 	protected void close() throws IOException{
 		this.outputStream.flush();
 		this.outputStream.close();
+	}
+	
+	protected List<TGString> createWritableStrings(TGTrack track) {
+		int minimum = 4;
+		int maximum = 7;
+		int count = track.stringCount();
+		if( count >= minimum && count <= maximum ) {
+			return track.getStrings();
+		}
+		int writableCount = count;
+		if( writableCount < minimum ) {
+			writableCount = minimum;
+		}
+		if( writableCount > maximum ) {
+			writableCount = maximum;
+		}
+		List<TGString> strings = track.getStrings();
+		List<TGString> writableStrings = createDefaultStrings(track, writableCount);
+		for(TGString string : strings) {
+			if( string.getNumber() >= minimum && string.getNumber() <= maximum ) {
+				for(TGString writableString : writableStrings) {
+					if( writableString.getNumber() == string.getNumber() ) {
+						writableString.setValue(string.getValue());
+					}
+				}
+			}
+		}
+		return writableStrings;
+	}
+	
+	protected List<TGString> createDefaultStrings(TGTrack track, int count) {
+		if( this.isPercussionChannel(track.getSong(), track.getChannelId()) ) {
+			return new TGSongManager().createPercussionStrings(count);
+		}
+		return new TGSongManager().createDefaultInstrumentStrings(count);
+	}
+	
+	protected void configureChannelRouter( TGSong song ){
+		this.channelRouter = new GMChannelRouter();
+		
+		GMChannelRouterConfigurator gmChannelRouterConfigurator = new GMChannelRouterConfigurator(this.channelRouter);
+		gmChannelRouterConfigurator.configureRouter(song.getChannels());
+	}
+	
+	protected GMChannelRoute getChannelRoute(int channelId){
+		GMChannelRoute gmChannelRoute = this.channelRouter.getRoute(channelId);
+		if( gmChannelRoute == null || gmChannelRoute.getChannel1() < 0  || gmChannelRoute.getChannel2() < 0 ){
+			Integer defaultChannel = (gmChannelRoute != null && gmChannelRoute.getChannel1() >= 0 ? gmChannelRoute.getChannel1() : 15);
+			
+			gmChannelRoute = new GMChannelRoute(channelId);
+			gmChannelRoute.setChannel1(defaultChannel);
+			gmChannelRoute.setChannel2(defaultChannel);
+		}
+		
+		return gmChannelRoute;
+	}
+	
+	protected boolean isPercussionChannel( TGSong song, int channelId ){
+		Iterator<TGChannel> it = song.getChannels();
+		while( it.hasNext() ){
+			TGChannel channel = (TGChannel)it.next();
+			if( channel.getChannelId() == channelId ){
+				return channel.isPercussionChannel();
+			}
+		}
+		return false;
 	}
 }

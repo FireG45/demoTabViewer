@@ -30,14 +30,18 @@ public abstract class TGTempo {
 	public void setValue(int value) {
 		this.value = value;
 	}
-	
+
+	public double getInSeconds() {
+		return (60.00 / getValue());
+    }
+
 	public long getInMillis(){
-		double millis = (60.00 / getValue() * SECOND_IN_MILLIS);
+		double millis = (getInSeconds() * SECOND_IN_MILLIS);
 		return (long)millis;
 	}
 	
 	public long getInUSQ(){
-		double usq = ((60.00 / getValue() * SECOND_IN_MILLIS) * 1000.00);
+		double usq = ((getInSeconds() * SECOND_IN_MILLIS) * 1000.00);
 		return (long)usq;
 	}
 	
@@ -49,13 +53,12 @@ public abstract class TGTempo {
 	}
 	
 	public TGTempo clone(TGFactory factory){
-		TGTempo tempo = factory.newTempo();
-		copy(tempo);
-		return tempo;
+		TGTempo tgTempo = factory.newTempo();
+		tgTempo.copyFrom(this);
+		return tgTempo;
 	}
 	
-	public void copy(TGTempo tempo){
-		tempo.setValue(getValue());
+	public void copyFrom(TGTempo tempo){
+		this.setValue(tempo.getValue());
 	}
-	
 }

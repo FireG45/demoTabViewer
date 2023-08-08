@@ -6,10 +6,10 @@
  */
 package org.herac.tuxguitar.song.models;
 
-import org.herac.tuxguitar.song.factory.TGFactory;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.herac.tuxguitar.song.factory.TGFactory;
 
 /**
  * @author julian
@@ -24,14 +24,14 @@ public abstract class TGVoice {
 	
 	private TGBeat beat;
 	private TGDuration duration;
-	private List notes;
+	private List<TGNote> notes;
 	private int index;
 	private int direction;
 	private boolean empty;
 	
 	public TGVoice(TGFactory factory, int index) {
 		this.duration = factory.newDuration();
-		this.notes = new ArrayList();
+		this.notes = new ArrayList<TGNote>();
 		this.index = index;
 		this.empty = true;
 		this.direction = DIRECTION_NONE;
@@ -77,7 +77,7 @@ public abstract class TGVoice {
 		this.beat = beat;
 	}
 
-	public List getNotes() {
+	public List<TGNote> getNotes() {
 		return this.notes;
 	}
 	
@@ -98,7 +98,7 @@ public abstract class TGVoice {
 	
 	public TGNote getNote(int index){
 		if(index >= 0 && index < countNotes()){
-			return (TGNote)this.notes.get(index);
+			return this.notes.get(index);
 		}
 		return null;
 	}
@@ -115,9 +115,9 @@ public abstract class TGVoice {
 		TGVoice voice = factory.newVoice(getIndex());
 		voice.setEmpty(isEmpty());
 		voice.setDirection( getDirection() );
-		getDuration().copy(voice.getDuration());
+		voice.getDuration().copyFrom(getDuration());
 		for(int i = 0;i < countNotes();i++){
-			TGNote note = (TGNote)this.notes.get(i);
+			TGNote note = this.notes.get(i);
 			voice.addNote(note.clone(factory));
 		}
 		return voice;

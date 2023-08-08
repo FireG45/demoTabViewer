@@ -1,65 +1,55 @@
 package org.herac.tuxguitar.io.gtp;
 
-import org.herac.tuxguitar.io.base.TGInputStreamBase;
-import org.herac.tuxguitar.song.factory.TGFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 
-public abstract class GTPInputStream extends GTPFileFormat implements TGInputStreamBase{
+import org.herac.tuxguitar.io.base.TGFileFormatException;
+import org.herac.tuxguitar.io.base.TGSongReader;
+import org.herac.tuxguitar.io.base.TGSongReaderHandle;
+import org.herac.tuxguitar.song.models.TGSong;
+
+public abstract class GTPInputStream extends GTPFileFormat implements TGSongReader{
 	
-	private int versionIndex;
-	private String version;
-	private String[] versions;
+	private GTPFileFormatVersion version;
+	private GTPFileFormatVersion[] versions;
+
+	public void setStream(InputStream stream) {
+		this.stream = stream;
+	}
+
 	private InputStream stream;
 	
-	public GTPInputStream(GTPSettings settings, String[] versions){
+	public GTPInputStream(GTPSettings settings, GTPFileFormatVersion[] versions){
 		super(settings);
 		this.versions = versions;
 	}
 	
-	public void init(TGFactory factory,InputStream stream) {
-		super.init(factory);
-		this.stream = stream;
-		this.version = null;
+	public abstract TGSong readSong() throws TGFileFormatException;
+	
+	public void read(TGSongReaderHandle handle) throws TGFileFormatException {
+		try {
+			this.version = null;
+			this.stream = handle.getInputStream();
+			this.init(handle.getFactory());
+			
+			handle.setSong(this.readSong());
+		} catch (TGFileFormatException tgFormatException) {
+			throw tgFormatException;
+		} catch (Throwable throwable) {
+			throw new TGFileFormatException(throwable);
+		}
 	}
 	
-	protected String getVersion(){
+	protected GTPFileFormatVersion getVersion(){
 		return this.version;
 	}
 	
-	protected int getVersionIndex(){
-		return this.versionIndex;
-	}
-	
-	public boolean isSupportedVersion(String version) {
-		for (int i = 0; i < this.versions.length; i++) {
-			if (version.equals(this.versions[i])) {
-				this.versionIndex = i;
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	public boolean isSupportedVersion(){
-		try{
-			readVersion();
-			return isSupportedVersion(getVersion());
-		}catch(Exception e){
-			return false;
-		}catch(Error e){
-			return false;
-		}
-	}
-	
-	protected void readVersion(){
-		try {
-			if(this.version == null){
-				this.version = readStringByte(30, DEFAULT_VERSION_CHARSET);
-			}
-		} catch (IOException e) {
-			this.version = "NOT_SUPPORTED";
+	protected void readVersion() throws IOException {
+		this.version = new GTPFileFormatDetector(this.versions).getFileFormatVersion(this.stream);
+		if( this.version == null || !this.version.getFileFormat().equals(this.getFileFormat())) {
+			this.close();
+
+			throw new GTPFormatException("Unsupported Version");
 		}
 	}
 	
@@ -105,9 +95,9 @@ public abstract class GTPInputStream extends GTPFileFormat implements TGInputStr
 	}
 	
 	protected String readString(int size, int len, String charset) throws IOException{
-		byte[] bytes = new byte[ (size > 0?size:len) ];
+		byte[] bytes = new byte[ (size > 0 ? size : len ) ];
 		this.stream.read(bytes);
-		return newString(bytes,(len >= 0?len:size), charset);
+		return newString(bytes,(len >= 0 && len <= bytes.length ? len : size ), charset);
 	}
 	
 	protected String readString(int length, String charset) throws IOException{

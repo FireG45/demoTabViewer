@@ -14,19 +14,45 @@ import org.herac.tuxguitar.song.factory.TGFactory;
  * TODO To change the template for this generated type comment go to Window - Preferences - Java - Code Style - Code Templates
  */
 public abstract class TGNote {
+	// MIDI value
 	private int value;
 	private int velocity;
 	private int string;
 	private boolean tiedNote;
 	private TGNoteEffect effect;
 	private TGVoice voice;
+	private TGNoteSpelling spelling;
 	
 	public TGNote(TGFactory factory) {
 		this.value = 0;
+		this.spelling = factory.newNoteSpelling();
 		this.velocity = TGVelocities.DEFAULT;
 		this.string = 1;
 		this.tiedNote = false;
 		this.effect = factory.newEffect();
+	}
+	
+	public void setSpelling(TGNoteSpelling spelling) {
+		this.spelling = spelling;
+	}
+
+	public TGNoteSpelling getSpelling() {
+		// if this has never been set, initialize with default setting
+		if (spelling.getPitchNumber() < 0 && this.getVoice() != null)
+		{
+			try {
+				int keySignature = this.getVoice().getBeat().getMeasure().getKeySignature();
+				int midiValue = (this.getVoice().getBeat().getMeasure().getTrack().getString(this.getString()).getValue() + this.getValue()); 
+				
+				if (keySignature == 0)
+					spelling.setSpelling(midiValue);
+				else 
+					spelling.setSpellingFromKey(midiValue,  keySignature);
+			} catch(Exception e) {
+				// do nothing
+			}
+		}
+		return this.spelling;
 	}
 	
 	public int getValue() {

@@ -6,10 +6,10 @@
  */
 package org.herac.tuxguitar.song.models;
 
-import org.herac.tuxguitar.song.factory.TGFactory;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.herac.tuxguitar.song.factory.TGFactory;
 
 /**
  * @author julian
@@ -25,20 +25,20 @@ public abstract class TGMeasure {
 	public static final int CLEF_ALTO = 4;
 	
 	public static final int DEFAULT_CLEF = CLEF_TREBLE;
-	public static final int DEFAULT_KEY_SIGNATURE= 0;
+	public static final int DEFAULT_KEY_SIGNATURE = 0;
 	
 	private TGMeasureHeader header;
 	private TGTrack track;
 	private int clef;
 	private int keySignature;
 	
-	private List beats;
+	private List<TGBeat> beats;
 	
 	public TGMeasure(TGMeasureHeader header){
 		this.header = header;
 		this.clef = DEFAULT_CLEF;
 		this.keySignature = DEFAULT_KEY_SIGNATURE;
-		this.beats = new ArrayList();
+		this.beats = new ArrayList<TGBeat>();
 	}
 	
 	public TGTrack getTrack() {
@@ -65,7 +65,7 @@ public abstract class TGMeasure {
 		this.keySignature = keySignature;
 	}
 	
-	public List getBeats() {
+	public List<TGBeat> getBeats() {
 		return this.beats;
 	}
 	
@@ -85,7 +85,7 @@ public abstract class TGMeasure {
 	
 	public TGBeat getBeat(int index){
 		if(index >= 0 && index < countBeats()){
-			return (TGBeat)this.beats.get(index);
+			return this.beats.get(index);
 		}
 		return null;
 	}
@@ -134,32 +134,30 @@ public abstract class TGMeasure {
 		return this.header.getLength();
 	}
 	
-	public boolean hasMarker() {
-		return this.header.hasMarker();
-	}
-	
 	public TGMarker getMarker(){
 		return this.header.getMarker();
 	}
 	
-	public void makeEqual(TGMeasure measure){
+	public boolean hasMarker() {
+		return this.header.hasMarker();
+	}
+	
+	public void clear(){
+		this.beats.clear();
+	}
+	
+	public void copyFrom(TGFactory factory, TGMeasure measure){
 		this.clef = measure.getClef();
 		this.keySignature = measure.getKeySignature();
 		this.beats.clear();
 		for(int i = 0; i < measure.countBeats(); i ++){
-			TGBeat beat = measure.getBeat(i);
-			this.addBeat(beat);
+			this.addBeat(measure.getBeat(i).clone(factory));
 		}
 	}
 	
 	public TGMeasure clone(TGFactory factory,TGMeasureHeader header){
-		TGMeasure measure = factory.newMeasure(header);
-		measure.setClef(getClef());
-		measure.setKeySignature(getKeySignature());
-		for(int i = 0; i < countBeats(); i ++){
-			TGBeat beat = (TGBeat)this.beats.get(i);
-			measure.addBeat(beat.clone(factory));
-		}
-		return measure;
+		TGMeasure tgMeasure = factory.newMeasure(header);
+		tgMeasure.copyFrom(factory, this);
+		return tgMeasure;
 	}
 }

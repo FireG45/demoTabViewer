@@ -15,6 +15,7 @@ import org.herac.tuxguitar.song.factory.TGFactory;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public abstract class TGString {
+	
 	private int number;
 	private int value;
 	
@@ -44,14 +45,21 @@ public abstract class TGString {
 	}
 	
 	public TGString clone(TGFactory factory){
-		TGString string = factory.newString();
-		copy(string);
-		return string;
+		TGString tgString = factory.newString();
+		tgString.copyFrom(this);
+		return tgString;
 	}
 	
-	public void copy(TGString string){
-		string.setNumber(getNumber());
-		string.setValue(getValue());
+	public void copyFrom(TGString string){
+		this.setNumber(string.getNumber());
+		this.setValue(string.getValue());
 	}
-	
+
+	@Override
+	public String toString() {
+		String[] notes = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+		int octave = value / 12;
+		int semitone = value % 12;
+		return notes[semitone];
+	}
 }
