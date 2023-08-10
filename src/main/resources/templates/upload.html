@@ -9,7 +9,7 @@
     <script type="text/javascript" th:src="@{/js/loader.js}"></script>
     <script type="text/javascript" th:src="@{/js/selectTrack.js}"></script>
     <script src="https://kit.fontawesome.com/629d24440b.js" crossorigin="anonymous"></script>
-    <title th:text="${author + ' - ' + name + ' tab'}"></title>
+    <title>Upload your tab!</title>
 </head>
 <body>
 <header class="p-3 mb-3 border-bottom fixed-top bg-dark">
@@ -42,12 +42,27 @@
         </div>
     </div>
 </header>
-<br><br><br>
-    <div class="list-group list-group-light">
-        <a th:each="tab : ${tabs}" th:text="${tab.getAuthor()} + ' - ' + ${tab.getTitle()}"
-           th:href="@{/tabs/{id}(id=${tab.getId()})}"
-           class="list-group-item list-group-item-action px-3 border-0 ripple"
-           aria-current="true">The current link item with a ripple</a>
+<br>
+<br>
+<br>
+    <div class="container">
+        <div class="row-cols-auto">
+            <form class="col-6" method="POST" enctype="multipart/form-data" action="/upload">
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Title</label>
+                    <input type="text" class="form-control" name="title" id="exampleInputEmail1" placeholder="Title">
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputPassword1">Author</label>
+                    <input type="text" class="form-control" name="author" id="exampleInputPassword1" placeholder="Author">
+                </div>
+                <div class="form-group">
+                    <label for="uploadId">File</label>
+                    <input class="form-control" type="file" name="file" id="uploadId">
+                </div>
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>
