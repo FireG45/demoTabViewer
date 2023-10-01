@@ -88,12 +88,7 @@ public class TabReader {
     private static StringBuilder initStringBuilder(TGSong song, int track) {
         StringBuilder beatsString = new StringBuilder();
         beatsString.append("\ntabstave notation=true time=4/4 ");
-        if (song.getTrack(track).getMeasure(0).getClef() == CLEF_BASS) {
-            beatsString.append("clef=bass strings=4\n");
-        }
-//        if (song.getTrack(track).isPercussionTrack()) {
-//            beatsString.append("clef=percussion \n");
-//        }
+        beatsString.append("strings=").append(song.getTrack(track).stringCount()).append("\n");
         beatsString.append("\nnotes ");
 
         return beatsString;
