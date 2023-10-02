@@ -1,14 +1,13 @@
 import { Paper } from "@mui/material";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 function TabList() {
-
     const [tabs, setTabs] = useState([]);
     useEffect(() => {
         fetch('http://localhost:8080')
             .then((response) => response.json())
             .then((data) => {
-                console.log(data);
                 setTabs(data);
             })
             .catch((err) => {
@@ -21,9 +20,9 @@ function TabList() {
       {tabs.map((tab) => {
          return (
             <div className="post-card" key={tab.id}>
-                <Paper elevation='8' style={{margin:"10px",padding:"15px", textAlign:"left"}}>
+                <Paper elevation={5} style={{margin:"10px",padding:"15px", textAlign:"left"}}>
                     <h3 className="post-title">
-                        <a href={'http://localhost:8080/tabs/' + tab.id}>{tab.author} - {tab.title}</a>
+                        <Link to={'http://localhost:3000/tabs/' + tab.id}>{tab.author} - {tab.title}</Link>
                     </h3>
                 </Paper>
             </div>

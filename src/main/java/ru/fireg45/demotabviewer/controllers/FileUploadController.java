@@ -7,7 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.fireg45.demotabviewer.model.Tabulature;
 import ru.fireg45.demotabviewer.services.FileService;
 import ru.fireg45.demotabviewer.services.TabulatureService;
-import ru.fireg45.demotabviewer.util.FileUploadException;
 
 @Controller
 public class FileUploadController {

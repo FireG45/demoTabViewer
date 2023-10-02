@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.fireg45.demotabviewer.model.Tabulature;
-import ru.fireg45.demotabviewer.util.FileUploadException;
+import ru.fireg45.demotabviewer.util.exceptions.FileUploadException;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;

@@ -137,7 +137,7 @@ public abstract class TGNoteSpelling {
 	}
 	
 	private int initializeKey (int keysignature) {
-		System.out.print("init key called initial val: " + keysignature);
+		//System.out.print("init key called initial val: " + keysignature);
 
 		// TuxGuitar keysignature 1 to 7 is number of sharps, 8 to 14 is (number of flats + 7)
 		// rearrange so these are in order Cb=-7, C=0, C#=7
