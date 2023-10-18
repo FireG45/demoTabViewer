@@ -8,6 +8,10 @@ import org.herac.tuxguitar.io.gtp.GTPSettings;
 import org.herac.tuxguitar.song.factory.TGFactory;
 import org.herac.tuxguitar.song.models.*;
 import org.springframework.stereotype.Service;
+import ru.fireg45.demotabviewer.util.tabs.dto.BeatDTO;
+import ru.fireg45.demotabviewer.util.tabs.dto.MeasureDTO;
+import ru.fireg45.demotabviewer.util.tabs.dto.NoteDTO;
+import ru.fireg45.demotabviewer.util.tabs.dto.TabDTO;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -56,16 +60,16 @@ public class TabReaderImpl implements TabReader {
     @Override
     public MeasureDTO readMeasure(TGMeasure measure) {
         List<TGBeat> beats = measure.getBeats();
-        int noteCount = 0;
-        List<NoteDTO> notes = new ArrayList<>();
+        List<BeatDTO> beatDTOS = new ArrayList<>();
         for (TGBeat beat : beats) {
             TGVoice voice = beat.getVoice(0);
+            List<NoteDTO> notes = new ArrayList<>();
             for (TGNote note : voice.getNotes()) {
                 notes.add(new NoteDTO(note.getString(), note.getValue()));
             }
+            beatDTOS.add(new BeatDTO(notes));
         }
-
-        return new MeasureDTO(notes);
+        return new MeasureDTO(beatDTOS);
     }
 
     @Override
@@ -78,10 +82,19 @@ public class TabReaderImpl implements TabReader {
         TGSong song = readSong(filename);
         List<TGMeasure> measures = getMeasuresList(song, track);
         TabDTO tabDTO = new TabDTO();
+
+        tabDTO.stringCount = song.getTrack(track).stringCount();
+        tabDTO.trackNames = new String[song.countTracks()];
+        List<TGTrack> tracks = song.getTrackList().stream().toList();
+        for (int j = 0; j < tracks.size(); j++) {
+            tabDTO.trackNames[j] = tracks.get(j).getName();
+        }
+
         tabDTO.measures = new MeasureDTO[measures.size()];
         for (int i = 0; i < measures.size(); i++) {
             tabDTO.measures[i] = readMeasure(measures.get(i));
         }
+
         return tabDTO;
     }
 

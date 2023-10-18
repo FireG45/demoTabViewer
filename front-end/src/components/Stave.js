@@ -1,8 +1,8 @@
 import React, { useRef, useEffect } from 'react'
 import VexFlow from 'vexflow'
-const { Renderer, TabStave, TabNote, Formatter} = VexFlow.Flow
+const { Renderer, TabStave, TabNote, Formatter, StaveNote} = VexFlow.Flow
 
-export default function Stave({ measures = null }) {
+export default function Stave({ measure = null, stringCount = 6 }) {
   const container = useRef()
   const rendererRef = useRef()
 
@@ -15,24 +15,30 @@ export default function Stave({ measures = null }) {
     }
     const renderer = rendererRef.current
     
-    renderer.resize(500, 300);
+    renderer.resize(500, 130);
     const context = renderer.getContext();
 
-    const stave = new TabStave(10, 40, 400);
-    stave.addClef("tab").setContext(context).draw();
-
+    const stave = new TabStave(0, 0, 350);
+    stave.options.num_lines = stringCount;
+    stave.options.line_config = new Array(stringCount).fill({visible : true});
+    stave.setContext(context).draw();
     let notes = [];
 
-    let measure = measures[0].noteDTOS;
-
     for (let i = 0; i < measure.length; i++) {
-      let note = new TabNote({
-        positions: [{ str: measure[0].string, fret: measure[0].fret }],
-        duration: "q",
-      })
-      notes.push(note)
-    }
+      let beat = measure[i].noteDTOS
+      var pos = []
 
+      for (let j = 0; j < beat.length; j++) {
+        pos.push({ str: parseInt(beat[j].string), fret: parseInt(beat[j].fret) })
+      }
+      var note
+      if (pos.length > 0) {
+        note = new TabNote({positions: pos, duration: "q"})
+        notes.push(note)
+      } else {
+        notes.push(new StaveNote({ keys: ["b/4"], duration: "qr" }))
+      } 
+    }
 
     if (notes.length !== 0) {
       Formatter.FormatAndDraw(context, stave, notes);

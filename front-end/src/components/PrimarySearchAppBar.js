@@ -164,7 +164,7 @@ export default function PrimarySearchAppBar() {
             component="div"
             sx={{ display: { xs: 'none', sm: 'block' } }}
           >
-            TABS
+          <a href='/' style={{'textDecoration':'none', 'color':'#FFFF'}}>TABS</a>
           </Typography>
           <Search>
             <SearchIconWrapper>

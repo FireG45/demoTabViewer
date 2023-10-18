@@ -10,8 +10,8 @@ function App() {
             <Router>
                 <PrimarySearchAppBar/>
                 <Routes>
-                    <Route path='/' exact element={<TabList />} />
-                        <Route path='/tabs/:id' element={<ShowTab />} />
+                    <Route path='/' exact element={<TabList/>} />
+                    <Route path='/tabs/:id/:track' element={<ShowTab/>} />
                 </Routes>
             </Router>
         </React.StrictMode>

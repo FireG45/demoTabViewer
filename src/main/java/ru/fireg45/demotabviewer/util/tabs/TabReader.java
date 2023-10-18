@@ -3,6 +3,9 @@ package ru.fireg45.demotabviewer.util.tabs;
 import org.herac.tuxguitar.io.base.TGFileFormatException;
 
 import org.herac.tuxguitar.song.models.*;
+import ru.fireg45.demotabviewer.util.tabs.dto.MeasureDTO;
+import ru.fireg45.demotabviewer.util.tabs.dto.NoteDTO;
+import ru.fireg45.demotabviewer.util.tabs.dto.TabDTO;
 
 import java.io.IOException;
 import java.util.Iterator;

@@ -22,7 +22,7 @@ function TabList() {
             <div className="post-card" key={tab.id}>
                 <Paper elevation={5} style={{margin:"10px",padding:"15px", textAlign:"left"}}>
                     <h3 className="post-title">
-                        <Link to={'http://localhost:3000/tabs/' + tab.id}>{tab.author} - {tab.title}</Link>
+                        <Link to={'http://localhost:3000/tabs/' + tab.id +'/0'}>{tab.author} - {tab.title}</Link>
                     </h3>
                 </Paper>
             </div>
