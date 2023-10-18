@@ -20,15 +20,13 @@ function ShowTab() {
     }, [path])
 
     const centerStyle = ({ display: 'flex', alignItems: 'center', justifyContent: 'center' })
-
     return (
       <Container style={centerStyle}>
         <Stack spacing={1}>
           <h2 style={centerStyle}>{tab.author} - {tab.title}</h2>
-          <Score style={centerStyle}/>
+          <Score style={centerStyle} id={id}/>
         </Stack>
       </Container>
-      
     );
 }
 

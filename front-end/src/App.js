@@ -6,13 +6,15 @@ import ShowTab from './components/ShowTab';
  
 function App() {
     return (
-        <Router>
-            <PrimarySearchAppBar/>
-            <Routes>
-                <Route path='/' exact element={<TabList />} />
-                <Route path='/tabs/:id' element={<ShowTab />} />
-            </Routes>
-        </Router>
+        <React.StrictMode>
+            <Router>
+                <PrimarySearchAppBar/>
+                <Routes>
+                    <Route path='/' exact element={<TabList />} />
+                        <Route path='/tabs/:id' element={<ShowTab />} />
+                </Routes>
+            </Router>
+        </React.StrictMode>
     );
 }
  

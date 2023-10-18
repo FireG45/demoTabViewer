@@ -1,42 +1,45 @@
-import React, { useRef, useEffect } from 'react'
-import VexFlow from 'vexflow'
-const { Renderer, TabStave, TabNote, Formatter} = VexFlow.Flow
+import { Component } from "react";
+import Stave from "./Stave";
 
-
-export default function Score({
-  staves = [],
-}) {
-  const container = useRef()
-  const rendererRef = useRef()
-
-  useEffect(() => {
-    if (rendererRef.current == null) {
-      rendererRef.current = new Renderer(
-        container.current,
-        Renderer.Backends.SVG
-      )
+export default class Score extends Component {
+    constructor(props) {
+        super(props);
+        this.id = props.id
+        this.state = {
+            error : null,
+            isLoaded : false,
+            measures: []
+        };
     }
-    const renderer = rendererRef.current
-    
-    // Configure the rendering context.
-    renderer.resize(500, 300);
-    const context = renderer.getContext();
 
-    // Create a tab stave of width 400 at position 10, 40 on the canvas.
-    const stave = new TabStave(10, 40, 400);
-    stave.addClef("tab").setContext(context).draw();
+    componentDidMount() {
+        var path = "http://localhost:8080/tabs/" + this.id
+        fetch(path).then(res => res.json()).then(
+            (result) => {
+                this.setState({
+                    isLoaded : true,
+                    measures: result.measures
+                });
+            },
+            (error) => {
+                this.setState({
+                    isLoaded: true,
+                    error
+                })
+            }
+        )
+    }
 
-    const notes = [
-        // A single note
-        new TabNote({
-            positions: [{ str: 3, fret: 7 }],
-            duration: "q",
-        }),
-    ];
-
-    Formatter.FormatAndDraw(context, stave, notes);
-
-  })
-
-  return <div ref={container} />
+    render() {
+        const {error, isLoaded, measures} = this.state;
+        if (error) {
+            return <p>Error: {error.meassage} </p>
+        } else if (!isLoaded) {
+            return <p>Loading...</p>
+        } else {
+            return (
+                <Stave measures={measures}/>
+            )
+        }
+    }
 }

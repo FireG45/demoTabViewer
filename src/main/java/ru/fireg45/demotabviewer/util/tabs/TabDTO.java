@@ -1,10 +1,14 @@
 package ru.fireg45.demotabviewer.util.tabs;
 
-record BeatDTO(int string, int fret) {
+import java.util.List;
+
+record NoteDTO(int string, int fret) {
 }
 
-record MeasureDTO(BeatDTO[] beatDTOS) {}
+record MeasureDTO(List<NoteDTO> noteDTOS) {}
 
 public class TabDTO {
+    public String title;
+    public String author;
     public MeasureDTO[] measures;
 }
