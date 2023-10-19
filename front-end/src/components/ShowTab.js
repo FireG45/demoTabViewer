@@ -61,8 +61,7 @@ class ShowTab extends Component {
     } else if (!isLoaded) {
         return <p>Loading...</p>
     } else {
-      const centerStyle = ({ display: 'flex', alignItems: 'center', justifyContent: 'center' });
-
+      document.title = tab.author + ' - ' + tab.title + ' Tab';
       const tracks = tab.trackNames.map((track) => {
         var key = tab.trackNames.indexOf(track)
         var selectedStyle = key === this.track ? { 'font-weight' : 'bold'} : {};
@@ -72,15 +71,15 @@ class ShowTab extends Component {
       });
 
       return (
-        <Container style={centerStyle}>
-          <Stack spacing={1}>
+        <Container>
+         <Stack direction="column" justifyContent="flex-start" alignItems="stretch" spacing={0} ml={-40} mr={-40}>
             <br></br>
-            <h2 style={centerStyle}>{tab.author} - {tab.title}</h2>
-            <div style={centerStyle}>
+            <h2>{tab.author} - {tab.title}</h2>
+            <div>
               <SimpleListMenu options={tracks}/>
             </div>
-            <div style={centerStyle}>
-              <Score ref={this.score} style={centerStyle} id={this.id} track={this.track} />
+            <div>
+              <Score ref={this.score} id={this.id} track={this.track} />
             </div>
           </Stack>
         </Container>

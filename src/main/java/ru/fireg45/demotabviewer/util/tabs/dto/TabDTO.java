@@ -5,6 +5,7 @@ public class TabDTO {
     public String author;
     public int track;
     public int stringCount;
+    public String[] tunings;
     public String[] trackNames;
     public MeasureDTO[] measures;
 }

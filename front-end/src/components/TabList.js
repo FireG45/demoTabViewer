@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 function TabList() {
     const [tabs, setTabs] = useState([]);
     useEffect(() => {
+        document.title = 'Tabulatures';
         fetch('http://localhost:8080')
             .then((response) => response.json())
             .then((data) => {

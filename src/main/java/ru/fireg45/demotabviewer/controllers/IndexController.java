@@ -12,6 +12,7 @@ import ru.fireg45.demotabviewer.util.tabs.TabReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @CrossOrigin
@@ -32,13 +33,19 @@ public class IndexController {
     }
 
     @GetMapping("/tabs/{id}")
-    public TabDTO tabViewer(@PathVariable("id") int id, @RequestParam(name = "track", defaultValue = "0") int track,
-                            Model model) throws TGFileFormatException, IOException {
-        Tabulature tabulature = tabulatureService.findById(id).get();
-        TabDTO tab = tabReader.read(track ,tabulature.getFilepath());
-        tab.title = tabulature.getTitle();
-        tab.author = tabulature.getAuthor();
-        tab.track = track;
+    public TabDTO tabViewer(@PathVariable("id") int id, @RequestParam(name = "track", defaultValue = "0") int track)
+            throws TGFileFormatException, IOException {
+        TabDTO tab;
+        Optional<Tabulature> tabulatureOptional = tabulatureService.findById(id);
+        if (tabulatureOptional.isPresent()) {
+            Tabulature tabulature = tabulatureOptional.get();
+            tab = tabReader.read(track ,tabulature.getFilepath());
+            tab.title = tabulature.getTitle();
+            tab.author = tabulature.getAuthor();
+            tab.track = track;
+        } else {
+            tab = null;
+        }
         return tab;
     }
 }

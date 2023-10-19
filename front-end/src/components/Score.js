@@ -12,6 +12,7 @@ export default class Score extends Component {
             isLoaded : false,
             measures: [],
             stringCount : 6,
+            tuning : "",
         };
     }
 
@@ -22,7 +23,8 @@ export default class Score extends Component {
                 this.setState({
                     isLoaded : true,
                     measures: result.measures,
-                    stringCount : result.stringCount
+                    stringCount : result.stringCount,
+                    tuning : result.tunings[this.track].split(" ").reverse(),
                 });
             },
             (error) => {
@@ -35,7 +37,7 @@ export default class Score extends Component {
     }
 
     render() {
-        const {error, isLoaded, measures, stringCount} = this.state;
+        const {error, isLoaded, measures, stringCount, tuning} = this.state;
         if (error) {
             return <p>Error: {error.meassage} </p>
         } else if (!isLoaded) {
@@ -43,12 +45,22 @@ export default class Score extends Component {
         } else {
             return (
                 <>
-                    <Grid container spacing={0} columns={{ xs: 4, sm: 8, md: 15 }}>
-                    {Array.from(Array(measures.length)).map((_, index) => (
-                            <Grid item xs={2} sm={4} md={4.588} key={index}>
-                                <Stave measure={measures[index].beatDTOS} stringCount={stringCount}/>
+                    <Grid container spacing={0} columns={{ xs: 4, sm: 8, md: 40 }}>
+                    {Array.from(Array(measures.length)).map((_, index) => {
+                        let tempo = index === 0 || measures[index - 1].tempo !== measures[index].tempo ? measures[index].tempo : false;
+                        let timeSignature = index === 0 || measures[index - 1].timeSignature !== measures[index].timeSignature ? measures[index].timeSignature : false;
+                        return (
+                            <Grid item xs={2} sm={4} md={10} key={index}>
+                                <Stave
+                                    measure={measures[index].beatDTOS}
+                                    tempo={tempo}
+                                    stringCount={stringCount}
+                                    timeSignature={timeSignature}
+                                    tuning={index === 0 ? tuning : false}
+                                />
                             </Grid>
-                        ))}
+                        )
+                    })}
                     </Grid>
                 </>
             )

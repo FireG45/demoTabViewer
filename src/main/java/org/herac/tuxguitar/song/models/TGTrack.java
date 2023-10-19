@@ -236,7 +236,7 @@ public abstract class TGTrack {
 
     public String getTuning() {
 		int id = getSong().getChannel(getChannelId() - 1).getProgram();
-		System.out.println("\n" + TGChannelNames.DEFAULT_NAMES[id]);
+		// System.out.println("\n" + TGChannelNames.DEFAULT_NAMES[id]);
 		if (TGChannelNames.DEFAULT_NAMES[id].contains("Guitar") || TGChannelNames.DEFAULT_NAMES[id].contains("Bass")) {
 			StringBuilder tuning = new StringBuilder();
 			for (TGString string : strings) {

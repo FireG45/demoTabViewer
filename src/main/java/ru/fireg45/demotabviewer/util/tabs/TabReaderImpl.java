@@ -7,6 +7,7 @@ import org.herac.tuxguitar.io.gtp.GTPInputStream;
 import org.herac.tuxguitar.io.gtp.GTPSettings;
 import org.herac.tuxguitar.song.factory.TGFactory;
 import org.herac.tuxguitar.song.models.*;
+import org.herac.tuxguitar.song.models.effects.TGEffectBend;
 import org.springframework.stereotype.Service;
 import ru.fireg45.demotabviewer.util.tabs.dto.BeatDTO;
 import ru.fireg45.demotabviewer.util.tabs.dto.MeasureDTO;
@@ -15,9 +16,7 @@ import ru.fireg45.demotabviewer.util.tabs.dto.TabDTO;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class TabReaderImpl implements TabReader {
@@ -50,26 +49,71 @@ public class TabReaderImpl implements TabReader {
 
     @Override
     public NoteDTO readBeat(TGBeat beat) {
-        TGVoice voice = beat.getVoice(0);
-        for (int i = 0; i < voice.countNotes(); i++) {
-
-        }
         return null;
+    }
+
+    public String readDuration(TGDuration duration) {
+        List<Integer> thDurations = List.of(
+                TGDuration.WHOLE, TGDuration.HALF, TGDuration.QUARTER, TGDuration.EIGHTH, TGDuration.SIXTEENTH,
+                        TGDuration.THIRTY_SECOND, TGDuration.SIXTY_FOURTH, (int)TGDuration.QUARTER_TIME);
+        List<String> vexDurations = List.of( "w", "h", "q", "8", "16", "32", "64", "128");
+        return vexDurations.get(thDurations.indexOf(duration.getValue()));
+    }
+
+    public List<String> readEffects(TGNoteEffect effect) {
+        List<String> effects = new ArrayList<>();
+        if (!effect.hasAnyEffect()) return effects;
+        else {
+            if (effect.isVibrato()) {
+                effects.add("v");
+            }
+            if (effect.isBend()) {
+                TGEffectBend bend = effect.getBend();
+                List<TGEffectBend.BendPoint> points = bend.getPoints();
+                Collections.reverse(points);
+                TGEffectBend.BendPoint maxPoint = Collections.max(points,
+                        Comparator.comparingInt(TGEffectBend.BendPoint::getValue));
+                String[] bendValues = new String[] { "1/2", "Full"};
+                int maxVal = maxPoint.getValue();
+                if (maxVal > 1) {
+                    if (maxPoint == points.get(0)) {
+                        effects.add("b " + "UP:" + bendValues[maxVal / 2 - 1]);
+                    } else {
+                        effects.add("b " + "UP:" + bendValues[maxPoint.getValue() / 2 - 1] + " "
+                                + "DOWN:" + bendValues[maxPoint.getValue() / 2 - 1]);
+                    }
+                }
+            }
+            if (effect.isPalmMute()) {
+                effects.add("p");
+            }
+        }
+        return effects;
     }
 
     @Override
     public MeasureDTO readMeasure(TGMeasure measure) {
         List<TGBeat> beats = measure.getBeats();
         List<BeatDTO> beatDTOS = new ArrayList<>();
+        TGTempo tempo = measure.getTempo();
+        TGTimeSignature timeSignature = measure.getTimeSignature();
         for (TGBeat beat : beats) {
             TGVoice voice = beat.getVoice(0);
             List<NoteDTO> notes = new ArrayList<>();
+            List<String> effects = new ArrayList<>();
+            boolean palmMute = false;
             for (TGNote note : voice.getNotes()) {
-                notes.add(new NoteDTO(note.getString(), note.getValue()));
+                TGNoteEffect effect =  note.getEffect();
+
+                notes.add(new NoteDTO(String.valueOf(note.getString()), effect.isDeadNote() ? "x" :  String.valueOf(note.getValue())));
+                effects.addAll(readEffects(effect));
+                palmMute |= effect.isPalmMute();
             }
-            beatDTOS.add(new BeatDTO(notes));
+            String duration = readDuration(voice.getDuration());
+            beatDTOS.add(new BeatDTO(duration, palmMute, notes, effects));
         }
-        return new MeasureDTO(beatDTOS);
+        return new MeasureDTO(tempo.getValue(),
+                timeSignature.getNumerator() + "/" + timeSignature.getDenominator().getValue(), beatDTOS);
     }
 
     @Override
@@ -85,13 +129,16 @@ public class TabReaderImpl implements TabReader {
 
         tabDTO.stringCount = song.getTrack(track).stringCount();
         tabDTO.trackNames = new String[song.countTracks()];
+        tabDTO.tunings = new String[song.countTracks()];
         List<TGTrack> tracks = song.getTrackList().stream().toList();
         for (int j = 0; j < tracks.size(); j++) {
             tabDTO.trackNames[j] = tracks.get(j).getName();
+            tabDTO.tunings[j] = tracks.get(j).getTuning();
         }
 
-        tabDTO.measures = new MeasureDTO[measures.size()];
-        for (int i = 0; i < measures.size(); i++) {
+        int mSize = measures.size();
+        tabDTO.measures = new MeasureDTO[mSize];
+        for (int i = 0; i < mSize; i++) {
             tabDTO.measures[i] = readMeasure(measures.get(i));
         }
 
