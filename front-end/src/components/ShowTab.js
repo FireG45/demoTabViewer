@@ -3,28 +3,40 @@ import Score from "./Score";
 import Stack from "@mui/material/Stack";
 import { Container } from "@mui/material";
 import withRouter from './withRouter'
-import { Link } from "react-router-dom";
-import SimpleListMenu from "./SimpleListMenu";
-
+import { CircularProgress } from "@mui/material";
+import Box from '@mui/material/Box';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
 
 class ShowTab extends Component {
+  routingFunction = (event) => {
+    var path = "/tabs/" + this.id + "?track=" + event.target.value
+    this.props.history.push({
+        pathname: path,
+        state: event.target.value
+    });
+  }
+
   constructor(props) {
     super(props);
     this.id = null;
-    this.track = 0;
     this.score = createRef()
+    this.track = 0;
     this.state = {
         error : null,
         isLoaded : false,
         tab: null,
+        track : 0,
     };
   }
 
   componentDidMount() {
     this.id = this.props.params.id
-    this.track = this.props.params.track;
-    console.log(this.track);
+    this.track = this.props.params.track
     var path = "http://localhost:8080/tabs/" + this.id + "?track=" + this.track
+    this.path = "/tabs/" + this.props.params.id + "/"  
     fetch(path).then(res => res.json()).then(
         (result) => {
             this.setState({
@@ -35,39 +47,24 @@ class ShowTab extends Component {
         (error) => {
             this.setState({
                 isLoaded: true,
+                track : this.track,
                 error
             })
         }
     )
   }
 
-  handleChange(event) {
-    this.setState({
-        selected: event.target.value,
-    }, () => {
-        this.props.history.push(`/${this.state.selected}/new/`)
-    })
-  }
-
-  handleForceupdateMethod() {
-    this.score.render();
-  };
-
   render() {
-    const {error, isLoaded, tab} = this.state;
+    const {error, isLoaded, tab, track} = this.state;
 
     if (error) {
         return <p>Error: {error.meassage} </p>
     } else if (!isLoaded) {
-        return <p>Loading...</p>
+        return <CircularProgress />
     } else {
       document.title = tab.author + ' - ' + tab.title + ' Tab';
       const tracks = tab.trackNames.map((track) => {
-        var key = tab.trackNames.indexOf(track)
-        var selectedStyle = key === this.track ? { 'font-weight' : 'bold'} : {};
-        return (
-          <Link key={key} style={selectedStyle} to={'http://localhost:3000/tabs/' + this.id + '/' + key} onClick={this.handleForceupdateMethod}>{track}</Link>
-        )
+        return track
       });
 
       return (
@@ -76,7 +73,30 @@ class ShowTab extends Component {
             <br></br>
             <h2>{tab.author} - {tab.title}</h2>
             <div>
-              <SimpleListMenu options={tracks}/>
+              <Box sx={{ maxWidth: 220 }}>
+                <FormControl fullWidth>
+                  <InputLabel id="demo-simple-select-label">Track</InputLabel>
+                  <Select
+                    labelId="demo-simple-select-label"
+                    id="demo-simple-select"
+                    value={this.track}
+                    label="Track"
+                    onChange={
+                      (event) => { 
+                        this.props.navigate(this.path + event.target.value, { replace: false });
+                        this.forceUpdate();
+                        this.props.navigate(0);
+                    }
+                  }
+                  >
+                    {
+                      Array.from(Array(tracks.length)).map((_, index) => {
+                        return <MenuItem key={index} value={index}>{tracks[index]}</MenuItem>
+                      })
+                    }
+                  </Select>
+                </FormControl>
+              </Box>
             </div>
             <div>
               <Score ref={this.score} id={this.id} track={this.track} />

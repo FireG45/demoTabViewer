@@ -2,7 +2,8 @@ package ru.fireg45.demotabviewer.util.tabs;
 
 import org.herac.tuxguitar.graphics.control.TGFactoryImpl;
 import org.herac.tuxguitar.io.base.TGFileFormatException;
-import org.herac.tuxguitar.io.gtp.GP5InputStream;
+import org.herac.tuxguitar.io.gtp.GP1InputStream;
+import org.herac.tuxguitar.io.gtp.*;
 import org.herac.tuxguitar.io.gtp.GTPInputStream;
 import org.herac.tuxguitar.io.gtp.GTPSettings;
 import org.herac.tuxguitar.song.factory.TGFactory;
@@ -22,7 +23,16 @@ import java.util.*;
 public class TabReaderImpl implements TabReader {
     @Override
     public TGSong readSong(String filename) throws IOException, TGFileFormatException {
-        GTPInputStream gtpInputStream = new GP5InputStream(new GTPSettings());
+        GTPInputStream gtpInputStream;
+        String extension = filename.substring(filename.lastIndexOf('.'));
+        System.out.println(extension);
+        switch (extension) {
+            case ".gp" -> gtpInputStream = new GP1InputStream(new GTPSettings());
+            case ".gp2" -> gtpInputStream = new GP2InputStream(new GTPSettings());
+            case ".gp3" -> gtpInputStream = new GP3InputStream(new GTPSettings());
+            case ".gp4" -> gtpInputStream = new GP4InputStream(new GTPSettings());
+            default -> gtpInputStream = new GP5InputStream(new GTPSettings());
+        }
         TGFactory factory = new TGFactoryImpl();
         gtpInputStream.init(factory);
         gtpInputStream.setStream(new FileInputStream(filename));
@@ -74,7 +84,7 @@ public class TabReaderImpl implements TabReader {
                 TGEffectBend.BendPoint maxPoint = Collections.max(points,
                         Comparator.comparingInt(TGEffectBend.BendPoint::getValue));
                 String[] bendValues = new String[] { "1/2", "Full"};
-                int maxVal = maxPoint.getValue();
+                int maxVal = maxPoint.getValue() % 2;
                 if (maxVal > 1) {
                     if (maxPoint == points.get(0)) {
                         effects.add("b " + "UP:" + bendValues[maxVal / 2 - 1]);

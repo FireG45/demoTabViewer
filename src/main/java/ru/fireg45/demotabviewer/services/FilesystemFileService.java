@@ -17,7 +17,7 @@ public class FilesystemFileService implements FileService {
 
     @Override
     public String upload(MultipartFile file) throws Exception {
-        String name = generateFilename(file) + ".gp5";
+        String name = generateFilename(file) + file.getOriginalFilename();
 
         if (!file.isEmpty()) {
             byte[] bytes = file.getBytes();
