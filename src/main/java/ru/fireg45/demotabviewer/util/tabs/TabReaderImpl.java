@@ -25,7 +25,6 @@ public class TabReaderImpl implements TabReader {
     public TGSong readSong(String filename) throws IOException, TGFileFormatException {
         GTPInputStream gtpInputStream;
         String extension = filename.substring(filename.lastIndexOf('.'));
-        System.out.println(extension);
         switch (extension) {
             case ".gp" -> gtpInputStream = new GP1InputStream(new GTPSettings());
             case ".gp2" -> gtpInputStream = new GP2InputStream(new GTPSettings());
@@ -79,23 +78,22 @@ public class TabReaderImpl implements TabReader {
             }
             if (effect.isBend()) {
                 TGEffectBend bend = effect.getBend();
-                List<TGEffectBend.BendPoint> points = bend.getPoints();
-                Collections.reverse(points);
-                TGEffectBend.BendPoint maxPoint = Collections.max(points,
-                        Comparator.comparingInt(TGEffectBend.BendPoint::getValue));
-                String[] bendValues = new String[] { "1/2", "Full"};
-                int maxVal = maxPoint.getValue() % 2;
-                if (maxVal > 1) {
-                    if (maxPoint == points.get(0)) {
-                        effects.add("b " + "UP:" + bendValues[maxVal / 2 - 1]);
-                    } else {
-                        effects.add("b " + "UP:" + bendValues[maxPoint.getValue() / 2 - 1] + " "
-                                + "DOWN:" + bendValues[maxPoint.getValue() / 2 - 1]);
-                    }
+
+                 String[] bendValues =
+                         new String[] { "1/4", "1/4", "1/2", "3/4", "full", "1¼", "1½", "1¾", "2", "2¼",
+                                 "2½", "2¾", "3", "3¼", "3½"};
+                String value = bendValues[bend.getBendValue() / 25];
+
+                switch (bend.getBendType()) {
+                    case 1 -> effects.add("b " + "UP:" + value);
+                    case 2 -> effects.add("b " + "UP:" + value + " " + "DOWN:" + value);
                 }
             }
             if (effect.isPalmMute()) {
                 effects.add("p");
+            }
+            if (effect.isTapping()) {
+                effects.add("t");
             }
         }
         return effects;
@@ -107,23 +105,45 @@ public class TabReaderImpl implements TabReader {
         List<BeatDTO> beatDTOS = new ArrayList<>();
         TGTempo tempo = measure.getTempo();
         TGTimeSignature timeSignature = measure.getTimeSignature();
+        List<List<Integer>> pmIndexes = new ArrayList<>();
+        List<String> slidesAndTies = new ArrayList<>();
+        List<Integer> subList = new ArrayList<>();
+        int i = 0;
         for (TGBeat beat : beats) {
             TGVoice voice = beat.getVoice(0);
             List<NoteDTO> notes = new ArrayList<>();
             List<String> effects = new ArrayList<>();
             boolean palmMute = false;
+            int noteInd = 0;
             for (TGNote note : voice.getNotes()) {
                 TGNoteEffect effect =  note.getEffect();
-
-                notes.add(new NoteDTO(String.valueOf(note.getString()), effect.isDeadNote() ? "x" :  String.valueOf(note.getValue())));
+                if (effect.isSlide() || effect.isHammer() || effect.isPullOff()) {
+                    String type = "";
+                    if (effect.isSlide()) type = "S";
+                    if (effect.isHammer()  || effect.isPullOff()) type = "H";
+                    slidesAndTies.add(noteInd + "|" + (noteInd + 1) + "|" + type);
+                }
+                notes.add(new NoteDTO(String.valueOf(note.getString()),
+                        effect.isDeadNote() ? "x" : String.valueOf(note.getValue())));
                 effects.addAll(readEffects(effect));
                 palmMute |= effect.isPalmMute();
+                noteInd++;
             }
             String duration = readDuration(voice.getDuration());
+            if (palmMute) {
+                subList.add(i);
+            } else if (!subList.isEmpty()) {
+                pmIndexes.add(subList);
+                subList = new ArrayList<>();
+            }
             beatDTOS.add(new BeatDTO(duration, palmMute, notes, effects));
+            i++;
         }
-        return new MeasureDTO(tempo.getValue(),
-                timeSignature.getNumerator() + "/" + timeSignature.getDenominator().getValue(), beatDTOS);
+        if (!subList.isEmpty()) {
+            pmIndexes.add(subList);
+        }
+        return new MeasureDTO(tempo.getValue(),timeSignature.getNumerator() + "/"
+                + timeSignature.getDenominator().getValue(), beatDTOS, pmIndexes, slidesAndTies);
     }
 
     @Override

@@ -57,6 +57,9 @@ export default class Score extends Component {
                                     stringCount={stringCount}
                                     timeSignature={timeSignature}
                                     tuning={index === 0 ? tuning : false}
+                                    staveId={index + 1}
+                                    pmIndexes={measures[index].pmIndexes}
+                                    slidesAndTies={measures[index].slidesAndTies}
                                 />
                             </Grid>
                         )
