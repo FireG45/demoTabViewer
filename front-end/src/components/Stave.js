@@ -7,7 +7,8 @@ import drawPalmMutes from './renderUtils/drawPalmMutes'
 import drawLetRing from './renderUtils/drawLetRing'
 const { Renderer, TabStave, TabNote, Formatter, StaveNote } = VexFlow.Flow
 
-export default function Stave({ measure = null, stringCount = 6, tempo = 0, timeSignature = "", tuning = "", staveId = 0, pmIndexes = null , slidesAndTies = null, lrIndexes = null}) {
+export default function Stave({ measure = null, stringCount = 6, tempo = 0, timeSignature = "", tuning = "",
+                                staveId = 0, pmIndexes = null , slidesAndTies = null, lrIndexes = null}) {
   const container = useRef()
   const rendererRef = useRef()
 
@@ -15,7 +16,7 @@ export default function Stave({ measure = null, stringCount = 6, tempo = 0, time
     if (rendererRef.current == null) {
       rendererRef.current = new Renderer(
         container.current,
-        Renderer.Backends.SVG
+        Renderer.Backends.CANVAS
       )
     }
     const renderer = rendererRef.current
@@ -99,5 +100,5 @@ export default function Stave({ measure = null, stringCount = 6, tempo = 0, time
     drawHummerSlide(slidesAndTies, notes, context)
   })
 
-  return <div ref={container} />
+  return <canvas ref={container} />
 }

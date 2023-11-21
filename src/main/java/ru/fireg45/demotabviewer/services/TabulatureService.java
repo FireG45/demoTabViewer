@@ -24,7 +24,7 @@ public class TabulatureService {
         return tabulaturesRepository.findAll();
     }
 
-    public void save(Tabulature tabulature) {
-        tabulaturesRepository.save(tabulature);
+    public Tabulature save(Tabulature tabulature) {
+        return tabulaturesRepository.save(tabulature);
     }
 }

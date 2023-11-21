@@ -32,7 +32,7 @@ public class FilesystemFileService implements FileService {
     }
 
     private String generateFilename(MultipartFile file) {
-        return String.valueOf(file.hashCode());
+        return String.valueOf(file.hashCode() + System.currentTimeMillis());
     }
 
     @Override
