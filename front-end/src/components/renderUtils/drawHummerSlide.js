@@ -5,9 +5,9 @@ export default function drawHummerSlide(slidesAndTies, notes, context) {
         let splitted = slidesAndTies[i].split("|")
         let from = notes[parseInt(splitted[0])]
         let to = notes[parseInt(splitted[1])]
-        let indices = [0, parseInt(splitted[2])];
+        let indices = [];
         if (!from || !to || !from.getPositions || !to.getPositions) continue;
-        // for (let i = 0; i < from.getPositions().length; i++) indices.push(i)
+        for (let i = 0; i < from.getPositions().length; i++) indices.push(i)
         var tie = splitted[2] === 'S' ? new TabSlide({
           first_note: from,
           last_note: to,
