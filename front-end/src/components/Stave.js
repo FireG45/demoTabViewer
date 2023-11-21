@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react'
-import VexFlow, { GhostNote, ModifierContext } from 'vexflow'
+import VexFlow from 'vexflow'
 import parseEffects from './renderUtils/parseEffects'
 import drawHummerSlide from './renderUtils/drawHummerSlide'
 import drawBeams from './renderUtils/drawBeams'

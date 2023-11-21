@@ -1,8 +1,7 @@
-import { Annotation, AnnotationHorizontalJustify, AnnotationVerticalJustify, Bend, GhostNote, Vibrato } from 'vexflow'
+import { Annotation, Bend, Vibrato } from 'vexflow'
 
 function parseEffects(effects = []) {
     var modificators = []
-    const annotationShift = -10;
     for (let i = 0; i < effects.length; i++) {
       switch (effects[i][0]) {
         case 'b':
@@ -19,30 +18,28 @@ function parseEffects(effects = []) {
         break;
 
         case 't':
-          var a = new Annotation("T");
-          a.setJustification(AnnotationVerticalJustify)
-          modificators.push(a)
+          modificators.push(new Annotation("T"))
         break;
 
         case 's':
-          var a = new Annotation("S");
-          modificators.push(a)
+          modificators.push(new Annotation("S"))
         break;
 
         case 'P':
-          var a = new Annotation("P");
-          modificators.push(a)
+          modificators.push(new Annotation("P"))
         break;
 
         case '>':
-          var a = new Annotation(">");
-          modificators.push(a)
+          modificators.push(new Annotation(">"))
+        break;
+
+        case '^':
+          modificators.push(new Annotation("^"))
         break;
 
         case 'h':
           let harmText = effects[i].split("|")[1]
-          var a = new Annotation(harmText);
-          modificators.push(a)
+          modificators.push(new Annotation(harmText))
         break;
 
         default:

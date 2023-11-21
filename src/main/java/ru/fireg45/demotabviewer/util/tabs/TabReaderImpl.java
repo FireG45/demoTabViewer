@@ -103,15 +103,7 @@ public class TabReaderImpl implements TabReader {
                 effects.add("P");
             }
             if (effect.isHarmonic()) {
-                TGEffectHarmonic harmonic = effect.getHarmonic();
-                StringBuilder effectString = new StringBuilder("h|");
-
-                if (harmonic.isNatural())  effectString.append(TGEffectHarmonic.KEY_NATURAL);
-                if (harmonic.isArtificial()) effectString.append(TGEffectHarmonic.KEY_ARTIFICIAL);
-                if (harmonic.isTapped()) effectString.append(TGEffectHarmonic.KEY_TAPPED);
-                if (harmonic.isPinch()) effectString.append(TGEffectHarmonic.KEY_PINCH);
-                if (harmonic.isSemi()) effectString.append(TGEffectHarmonic.KEY_SEMI);
-                effects.add(effectString.toString());
+                effects.add(readHarmonic(effect));
             }
             if (effect.isAccentuatedNote()) {
                 effects.add(">");
@@ -119,8 +111,23 @@ public class TabReaderImpl implements TabReader {
             if (effect.isLetRing()) {
                 effects.add("L");
             }
+            if (effect.isHeavyAccentuatedNote()) {
+                effects.add("^");
+            }
         }
         return effects;
+    }
+
+    private static String readHarmonic(TGNoteEffect effect) {
+        TGEffectHarmonic harmonic = effect.getHarmonic();
+        StringBuilder effectString = new StringBuilder("h|");
+
+        if (harmonic.isNatural())  effectString.append(TGEffectHarmonic.KEY_NATURAL);
+        if (harmonic.isArtificial()) effectString.append(TGEffectHarmonic.KEY_ARTIFICIAL);
+        if (harmonic.isTapped()) effectString.append(TGEffectHarmonic.KEY_TAPPED);
+        if (harmonic.isPinch()) effectString.append(TGEffectHarmonic.KEY_PINCH);
+        if (harmonic.isSemi()) effectString.append(TGEffectHarmonic.KEY_SEMI);
+        return effectString.toString();
     }
 
     @Override
@@ -143,17 +150,14 @@ public class TabReaderImpl implements TabReader {
             boolean ghostNote = false;
             boolean letRing = false;
             int noteInd = 0;
-            Set<Integer> processedInds = new HashSet<>();
             for (TGNote note : voice.getNotes()) {
                 TGNoteEffect effect =  note.getEffect();
-                if (!processedInds.contains(noteInd) &&
-                        (effect.isSlide() || effect.isHammer() || effect.isPullOff())) {
+                if (effect.isSlide() || effect.isHammer() || effect.isPullOff()) {
                     String type = "";
                     if (effect.isHammer()  || effect.isPullOff()) type = "H";
                     else if (effect.isSlide()) type = "S";
 
-                    slidesAndTies.add(noteInd + "|" + (noteInd + 1) + "|" + type);
-                    processedInds.add(noteInd);
+                    slidesAndTies.add(i + "|" + (i + 1) + "|" + type + "|" + noteInd);
                 }
                 notes.add(new NoteDTO(String.valueOf(note.getString()),
                         effect.isDeadNote() ? "x" : String.valueOf(note.getValue())));
