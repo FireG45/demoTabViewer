@@ -9,6 +9,7 @@ import org.herac.tuxguitar.io.gtp.GTPSettings;
 import org.herac.tuxguitar.song.factory.TGFactory;
 import org.herac.tuxguitar.song.models.*;
 import org.herac.tuxguitar.song.models.effects.TGEffectBend;
+import org.herac.tuxguitar.song.models.effects.TGEffectHarmonic;
 import org.springframework.stereotype.Service;
 import ru.fireg45.demotabviewer.util.tabs.dto.BeatDTO;
 import ru.fireg45.demotabviewer.util.tabs.dto.MeasureDTO;
@@ -95,6 +96,29 @@ public class TabReaderImpl implements TabReader {
             if (effect.isTapping()) {
                 effects.add("t");
             }
+            if (effect.isSlapping()) {
+                effects.add("s");
+            }
+            if (effect.isPopping()) {
+                effects.add("P");
+            }
+            if (effect.isHarmonic()) {
+                TGEffectHarmonic harmonic = effect.getHarmonic();
+                StringBuilder effectString = new StringBuilder("h|");
+
+                if (harmonic.isNatural())  effectString.append(TGEffectHarmonic.KEY_NATURAL);
+                if (harmonic.isArtificial()) effectString.append(TGEffectHarmonic.KEY_ARTIFICIAL);
+                if (harmonic.isTapped()) effectString.append(TGEffectHarmonic.KEY_TAPPED);
+                if (harmonic.isPinch()) effectString.append(TGEffectHarmonic.KEY_PINCH);
+                if (harmonic.isSemi()) effectString.append(TGEffectHarmonic.KEY_SEMI);
+                effects.add(effectString.toString());
+            }
+            if (effect.isAccentuatedNote()) {
+                effects.add(">");
+            }
+            if (effect.isLetRing()) {
+                effects.add("L");
+            }
         }
         return effects;
     }
@@ -106,27 +130,37 @@ public class TabReaderImpl implements TabReader {
         TGTempo tempo = measure.getTempo();
         TGTimeSignature timeSignature = measure.getTimeSignature();
         List<List<Integer>> pmIndexes = new ArrayList<>();
+        List<List<Integer>> lrIndexes = new ArrayList<>();
         List<String> slidesAndTies = new ArrayList<>();
         List<Integer> subList = new ArrayList<>();
+        List<Integer> lrsubList = new ArrayList<>();
         int i = 0;
         for (TGBeat beat : beats) {
             TGVoice voice = beat.getVoice(0);
             List<NoteDTO> notes = new ArrayList<>();
             List<String> effects = new ArrayList<>();
             boolean palmMute = false;
+            boolean ghostNote = false;
+            boolean letRing = false;
             int noteInd = 0;
+            Set<Integer> processedInds = new HashSet<>();
             for (TGNote note : voice.getNotes()) {
                 TGNoteEffect effect =  note.getEffect();
-                if (effect.isSlide() || effect.isHammer() || effect.isPullOff()) {
+                if (!processedInds.contains(noteInd) &&
+                        (effect.isSlide() || effect.isHammer() || effect.isPullOff())) {
                     String type = "";
-                    if (effect.isSlide()) type = "S";
                     if (effect.isHammer()  || effect.isPullOff()) type = "H";
+                    else if (effect.isSlide()) type = "S";
+
                     slidesAndTies.add(noteInd + "|" + (noteInd + 1) + "|" + type);
+                    processedInds.add(noteInd);
                 }
                 notes.add(new NoteDTO(String.valueOf(note.getString()),
                         effect.isDeadNote() ? "x" : String.valueOf(note.getValue())));
                 effects.addAll(readEffects(effect));
                 palmMute |= effect.isPalmMute();
+                letRing |= effect.isLetRing();
+                ghostNote |= effect.isGhostNote();
                 noteInd++;
             }
             String duration = readDuration(voice.getDuration());
@@ -136,14 +170,23 @@ public class TabReaderImpl implements TabReader {
                 pmIndexes.add(subList);
                 subList = new ArrayList<>();
             }
-            beatDTOS.add(new BeatDTO(duration, palmMute, notes, effects));
+            if (letRing) {
+                lrsubList.add(i);
+            } else if (!lrsubList.isEmpty()) {
+                lrIndexes.add(lrsubList);
+                lrsubList = new ArrayList<>();
+            }
+            beatDTOS.add(new BeatDTO(duration, palmMute, ghostNote, notes, effects));
             i++;
         }
         if (!subList.isEmpty()) {
             pmIndexes.add(subList);
         }
+        if (!lrsubList.isEmpty()) {
+            lrIndexes.add(lrsubList);
+        }
         return new MeasureDTO(tempo.getValue(),timeSignature.getNumerator() + "/"
-                + timeSignature.getDenominator().getValue(), beatDTOS, pmIndexes, slidesAndTies);
+                + timeSignature.getDenominator().getValue(), beatDTOS, pmIndexes, slidesAndTies, lrIndexes);
     }
 
     @Override

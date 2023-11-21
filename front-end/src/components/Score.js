@@ -59,6 +59,7 @@ export default class Score extends Component {
                                     tuning={index === 0 ? tuning : false}
                                     staveId={index + 1}
                                     pmIndexes={measures[index].pmIndexes}
+                                    lrIndexes={measures[index].lrIndexes}
                                     slidesAndTies={measures[index].slidesAndTies}
                                 />
                             </Grid>

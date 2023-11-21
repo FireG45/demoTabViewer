@@ -1,9 +1,13 @@
 import React, { useRef, useEffect } from 'react'
-import VexFlow, { Beam, TabSlide, TextBracket } from 'vexflow'
-import parseEffects from './utils/parseEffects'
+import VexFlow, { GhostNote, ModifierContext } from 'vexflow'
+import parseEffects from './renderUtils/parseEffects'
+import drawHummerSlide from './renderUtils/drawHummerSlide'
+import drawBeams from './renderUtils/drawBeams'
+import drawPalmMutes from './renderUtils/drawPalmMutes'
+import drawLetRing from './renderUtils/drawLetRing'
 const { Renderer, TabStave, TabNote, Formatter, StaveNote } = VexFlow.Flow
 
-export default function Stave({ measure = null, stringCount = 6, tempo = 0, timeSignature = "", tuning = "", staveId = 0, pmIndexes = null , slidesAndTies = null}) {
+export default function Stave({ measure = null, stringCount = 6, tempo = 0, timeSignature = "", tuning = "", staveId = 0, pmIndexes = null , slidesAndTies = null, lrIndexes = null}) {
   const container = useRef()
   const rendererRef = useRef()
 
@@ -57,25 +61,25 @@ export default function Stave({ measure = null, stringCount = 6, tempo = 0, time
     
     let notes = [];
     let beamNotes = [];
-    var palmMutedTextes = []
     for (let i = 0; i < measure.length; i++) {
       let beat = measure[i].noteDTOS;
       let duration = measure[i].duration;
       let effects = measure[i].effects;
+      let ghostNote = measure[i].ghostNote;
       var pos = []
 
       for (let j = 0; j < beat.length; j++) {
         pos.push({ str: beat[j].string, fret: beat[j].fret })
       }
-      var note
-      if (pos.length > 0) {
-        note = new TabNote({positions: pos, duration: duration})
 
+      if (pos.length > 0) {
+        var note = new TabNote({positions: pos, duration: duration});
+        note.setGhost(ghostNote)
         let parsedEffects = parseEffects(effects);
         
         for (let i = 0; i < parsedEffects.length; i++) {
           const element = parsedEffects[i];
-          note.addModifier(element);
+          note.addModifier(element)
         }
 
         notes.push(note)
@@ -87,50 +91,13 @@ export default function Stave({ measure = null, stringCount = 6, tempo = 0, time
 
     if (notes && notes.length > 0) Formatter.FormatAndDraw(context, stave, notes);
 
-    for (let i = 0; i < pmIndexes.length; i++) {
-      let start = notes[pmIndexes[i][0]]
-      let stop = notes[pmIndexes[i][pmIndexes[i].length - 1]]
-      if (pmIndexes[i].length > 1) {
-        let pmText = new TextBracket({start : start, stop: stop, text : "P.M", position: 1})
-        pmText.fontSize = "10"
-        palmMutedTextes.push(pmText)
-      } else {
-        context.setFont("Arial", 10);
-        context.fillText("P.M", shift + start.getX() + 8, 25);
-      }
-    }
+    drawPalmMutes(pmIndexes, notes, context, shift)
+    drawLetRing(lrIndexes, notes, context, shift)
 
-    for (let i = 0; i < slidesAndTies.length; i++) {
-      let splitted = slidesAndTies[i].split("|")
-      let from = notes[parseInt(splitted[0])]
-      let to = notes[parseInt(splitted[1])]
-      let indices = []
-      if (!from.getPositions || !to.getPositions) continue;
-      for (let i = 0; i < from.getPositions().length; i++) indices.push(i)
-      var tie = new TabSlide({
-        first_note: from,
-        last_note: to,
-        first_indices: indices,
-        last_indices: indices,
-      }, from.getPositions()[0].fret < to.getPositions()[0].fret ? TabSlide.SLIDE_UP : TabSlide.SLIDE_DOWN);
+    drawBeams(notes, context)
 
-      tie.setContext(context);
-      tie.draw();
-    }
-
-
-    for (let i = 0; i < palmMutedTextes.length; i++) {
-      const element = palmMutedTextes[i];
-      element.setContext(context).draw();
-    }
-
-    var beams = Beam.generateBeams(notes, {
-      stem_direction: -1, flat_beams :true, flat_beam_offset : -10
-    });
-
-    beams.forEach(function(beam) {
-      beam.setContext(context).draw();
-    });
+    drawHummerSlide(slidesAndTies, notes, context)
   })
+
   return <div ref={container} />
 }
