@@ -8,7 +8,7 @@ import org.herac.tuxguitar.io.base.TGSongReader;
 import org.herac.tuxguitar.io.base.TGSongReaderHandle;
 import org.herac.tuxguitar.song.models.TGSong;
 
-public abstract class GTPInputStream extends GTPFileFormat implements TGSongReader{
+public abstract class GTPInputStream extends GTPFileFormat implements TGSongReader {
 	
 	private GTPFileFormatVersion version;
 	private GTPFileFormatVersion[] versions;

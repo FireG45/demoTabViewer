@@ -13,8 +13,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MoreIcon from '@mui/icons-material/MoreVert';
-import { Box, Drawer, List, ListItem, ListItemButton } from "@mui/material";
-import { NavLink, useNavigate } from 'react-router-dom';
+import { Box, Button, Drawer, Input, List, ListItemButton } from "@mui/material";
+import { useNavigate } from 'react-router-dom';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -178,7 +178,7 @@ export default function PrimarySearchAppBar() {
             component="div"
             sx={{ display: { xs: 'none', sm: 'block' } }}
           >
-          <a href='/' style={{'textDecoration':'none', 'color':'#FFFF'}}>TABS</a>
+          <Button onClick={() => navigate('/')} style={{'fontSize' : '18px', 'textDecoration':'none', 'color':'#FFFF'}}>TABS</Button>
           </Typography>
           <Search>
             <SearchIconWrapper>
@@ -189,21 +189,75 @@ export default function PrimarySearchAppBar() {
               inputProps={{ 'aria-label': 'search' }}
             />
           </Search>
-          <Drawer open={open} onClose={toggleDrawer(false)}>
-              <Box
-                role="presentation"
-                onClick={toggleDrawer(false)}
-                onKeyDown={toggleDrawer(false)}
+          <Drawer open={open} onClose={() => toggleDrawer(false)} onClick={toggleDrawer(false)}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                ml: 'auto',
+                mt: 1,
+                mr: 2,
+              }}
+            >
+              <Button onClick={toggleDrawer(false)}>
+              <Typography
+                component="label"
+                htmlFor="close-icon"
+                fontSize="sm"
+                fontWeight="lg"
+                sx={{ cursor: 'pointer' }}
               >
-                <List>
-                    <ListItem>
-                      <NavLink to='/'>All tabs</NavLink>
-                    </ListItem>
-                    <ListItem>
-                    <NavLink to='/upload'>Upload tab</NavLink>
-                    </ListItem>
-                </List>
-              </Box>
+                x
+              </Typography>
+              </Button>
+            </Box>
+            <Input
+              size="sm"
+              placeholder="Search"
+              variant="plain"
+              endDecorator={<Search />}
+              slotProps={{
+                input: {
+                  'aria-label': 'Search anything',
+                },
+              }}
+              sx={{
+                m: 3,
+                borderRadius: 0,
+                borderBottom: '2px solid',
+                borderColor: 'neutral.outlinedBorder',
+                '&:hover': {
+                  borderColor: 'neutral.outlinedHoverBorder',
+                },
+                '&::before': {
+                  border: '1px solid var(--Input-focusedHighlight)',
+                  transform: 'scaleX(0)',
+                  left: 0,
+                  right: 0,
+                  bottom: '-2px',
+                  top: 'unset',
+                  transition: 'transform .15s cubic-bezier(0.1,0.9,0.2,1)',
+                  borderRadius: 0,
+                },
+                '&:focus-within::before': {
+                  transform: 'scaleX(1)',
+                },
+              }}
+            />
+            <List
+              size="lg"
+              component="nav"
+              sx={{
+                flex: 'none',
+                fontSize: 'xl',
+                '& > div': { justifyContent: 'center' },
+              }}
+            >
+              <ListItemButton onClick={() => navigate('/')}>All tabs</ListItemButton>
+              <ListItemButton onClick={() => navigate('/upload')}>Upload tab</ListItemButton>
+              <ListItemButton onClick={() => navigate('/user')}>My profile</ListItemButton>
+            </List>
           </Drawer>
           <Box sx={{ flexGrow: 1 }} />
           <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
