@@ -1,9 +1,10 @@
-import { Paper } from "@mui/material";
+    import { Paper } from "@mui/material";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function TabList() {
     const [tabs, setTabs] = useState([]);
+    const navigate = useNavigate();
     useEffect(() => {
         document.title = 'Tabulatures';
         fetch('http://localhost:8080')
@@ -16,15 +17,21 @@ function TabList() {
             });
     }, []);
 
+    const paperSX = {
+        boxShadow: 3,
+        "&:hover": {
+          bgcolor: "#ccc",
+          boxShadow: 8,
+        },
+      };
+
     return (
         <div className="tabs-container">
       {tabs.map((tab) => {
          return (
             <div className="post-card" key={tab.id}>
-                <Paper elevation={5} style={{margin:"10px",padding:"15px", textAlign:"left"}}>
-                    <h3 className="post-title">
-                        <Link to={'http://localhost:3000/tabs/' + tab.id +'/0'}>{tab.author} - {tab.title}</Link>
-                    </h3>
+                <Paper onClick={() => navigate('/tabs/' + tab.id +'/0')} sx={paperSX} elevation={5} style={{margin:"10px",padding:"15px", textAlign:"left"}}>
+                   <h3> {tab.author} - {tab.title} </h3>
                 </Paper>
             </div>
          );

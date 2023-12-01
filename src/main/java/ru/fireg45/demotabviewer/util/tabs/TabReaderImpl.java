@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Service
-public class TabReaderImpl implements TabReader {
+    public class TabReaderImpl implements TabReader {
     @Override
     public TGSong readSong(String filename) throws IOException, TGFileFormatException {
         GTPInputStream gtpInputStream;
@@ -58,8 +58,49 @@ public class TabReaderImpl implements TabReader {
     }
 
     @Override
-    public NoteDTO readBeat(TGBeat beat) {
-        return null;
+    public NoteDTO readNote(TGNote note) { return null; }
+
+    @Override
+    public BeatDTO readBeat(TGBeat beat, List<String> slidesAndTies, List<Integer> subList,
+                            List<List<Integer>> pmIndexes, List<List<Integer>> lrIndexes, List<Integer> lrsubList,
+                            int i) {
+        TGVoice voice = beat.getVoice(0);
+        List<NoteDTO> notes = new ArrayList<>();
+        List<String> effects = new ArrayList<>();
+        boolean palmMute = false;
+        boolean ghostNote = false;
+        boolean letRing = false;
+        int noteInd = 0;
+        for (TGNote note : voice.getNotes()) {
+            TGNoteEffect effect =  note.getEffect();
+            if (effect.isSlide() || effect.isHammer() || effect.isPullOff()) {
+                String type = "";
+                if (effect.isHammer()  || effect.isPullOff()) type = "H";
+                else if (effect.isSlide()) type = "S";
+
+                slidesAndTies.add(i + "|" + (i + 1) + "|" + type + "|" + noteInd);
+            }
+            effects.addAll(readEffects(effect, note.getValue()));
+            palmMute |= effect.isPalmMute();
+            letRing |= effect.isLetRing();
+            ghostNote |= effect.isGhostNote();
+            noteInd++;
+
+            notes.add(new NoteDTO(String.valueOf(note.getString()),
+                    effect.isDeadNote() ? "x" : String.valueOf(note.getValue())));
+        }
+        String duration = readDuration(voice.getDuration());
+        if (palmMute) {
+            subList.add(i);
+        } else if (!subList.isEmpty()) {
+            pmIndexes.add(subList);
+        }
+        if (letRing) {
+            lrsubList.add(i);
+        } else if (!lrsubList.isEmpty()) {
+            lrIndexes.add(lrsubList);
+        }
+        return new BeatDTO(duration, palmMute, ghostNote, notes, effects);
     }
 
     public String readDuration(TGDuration duration) {
@@ -70,7 +111,7 @@ public class TabReaderImpl implements TabReader {
         return vexDurations.get(thDurations.indexOf(duration.getValue()));
     }
 
-    public List<String> readEffects(TGNoteEffect effect) {
+    public List<String> readEffects(TGNoteEffect effect, int fret) {
         List<String> effects = new ArrayList<>();
         if (!effect.hasAnyEffect()) return effects;
         else {
@@ -79,7 +120,6 @@ public class TabReaderImpl implements TabReader {
             }
             if (effect.isBend()) {
                 TGEffectBend bend = effect.getBend();
-
                  String[] bendValues =
                          new String[] { "1/4", "1/4", "1/2", "3/4", "full", "1¼", "1½", "1¾", "2", "2¼",
                                  "2½", "2¾", "3", "3¼", "3½"};
@@ -90,40 +130,23 @@ public class TabReaderImpl implements TabReader {
                     case 2 -> effects.add("b " + "UP:" + value + " " + "DOWN:" + value);
                 }
             }
-            if (effect.isPalmMute()) {
-                effects.add("p");
-            }
-            if (effect.isTapping()) {
-                effects.add("t");
-            }
-            if (effect.isSlapping()) {
-                effects.add("s");
-            }
-            if (effect.isPopping()) {
-                effects.add("P");
-            }
-            if (effect.isHarmonic()) {
-                effects.add(readHarmonic(effect));
-            }
-            if (effect.isAccentuatedNote()) {
-                effects.add(">");
-            }
-            if (effect.isLetRing()) {
-                effects.add("L");
-            }
-            if (effect.isHeavyAccentuatedNote()) {
-                effects.add("^");
+            boolean[] effectsFlags = { effect.isPalmMute(), effect.isTapping(), effect.isSlapping(), effect.isPopping(),
+                    effect.isHarmonic(), effect.isAccentuatedNote(), effect.isLetRing(),
+                    effect.isHeavyAccentuatedNote() };
+            String[] effectsSigns = { "p",  "t", "s", "P", readHarmonic(effect, fret), ">", "L", "^" };
+            int effectsSize = effectsFlags.length;
+            for (int i = 0; i < effectsSize; i++) {
+                if (effectsFlags[i]) effects.add(effectsSigns[i]);
             }
         }
         return effects;
     }
 
-    private static String readHarmonic(TGNoteEffect effect) {
+    private static String readHarmonic(TGNoteEffect effect, int fret) {
         TGEffectHarmonic harmonic = effect.getHarmonic();
         StringBuilder effectString = new StringBuilder("h|");
-
-        if (harmonic.isNatural())  effectString.append(TGEffectHarmonic.KEY_NATURAL);
-        if (harmonic.isArtificial()) effectString.append(TGEffectHarmonic.KEY_ARTIFICIAL);
+        if (harmonic == null) return "";
+        if (harmonic.isNatural() || harmonic.isArtificial())  effectString.append("H").append("|").append(fret);
         if (harmonic.isTapped()) effectString.append(TGEffectHarmonic.KEY_TAPPED);
         if (harmonic.isPinch()) effectString.append(TGEffectHarmonic.KEY_PINCH);
         if (harmonic.isSemi()) effectString.append(TGEffectHarmonic.KEY_SEMI);
@@ -143,44 +166,7 @@ public class TabReaderImpl implements TabReader {
         List<Integer> lrsubList = new ArrayList<>();
         int i = 0;
         for (TGBeat beat : beats) {
-            TGVoice voice = beat.getVoice(0);
-            List<NoteDTO> notes = new ArrayList<>();
-            List<String> effects = new ArrayList<>();
-            boolean palmMute = false;
-            boolean ghostNote = false;
-            boolean letRing = false;
-            int noteInd = 0;
-            for (TGNote note : voice.getNotes()) {
-                TGNoteEffect effect =  note.getEffect();
-                if (effect.isSlide() || effect.isHammer() || effect.isPullOff()) {
-                    String type = "";
-                    if (effect.isHammer()  || effect.isPullOff()) type = "H";
-                    else if (effect.isSlide()) type = "S";
-
-                    slidesAndTies.add(i + "|" + (i + 1) + "|" + type + "|" + noteInd);
-                }
-                notes.add(new NoteDTO(String.valueOf(note.getString()),
-                        effect.isDeadNote() ? "x" : String.valueOf(note.getValue())));
-                effects.addAll(readEffects(effect));
-                palmMute |= effect.isPalmMute();
-                letRing |= effect.isLetRing();
-                ghostNote |= effect.isGhostNote();
-                noteInd++;
-            }
-            String duration = readDuration(voice.getDuration());
-            if (palmMute) {
-                subList.add(i);
-            } else if (!subList.isEmpty()) {
-                pmIndexes.add(subList);
-                subList = new ArrayList<>();
-            }
-            if (letRing) {
-                lrsubList.add(i);
-            } else if (!lrsubList.isEmpty()) {
-                lrIndexes.add(lrsubList);
-                lrsubList = new ArrayList<>();
-            }
-            beatDTOS.add(new BeatDTO(duration, palmMute, ghostNote, notes, effects));
+            beatDTOS.add(readBeat(beat, slidesAndTies, subList, pmIndexes, lrIndexes, lrsubList, i));
             i++;
         }
         if (!subList.isEmpty()) {

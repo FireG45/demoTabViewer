@@ -3,6 +3,7 @@ package ru.fireg45.demotabviewer.util.tabs;
 import org.herac.tuxguitar.io.base.TGFileFormatException;
 
 import org.herac.tuxguitar.song.models.*;
+import ru.fireg45.demotabviewer.util.tabs.dto.BeatDTO;
 import ru.fireg45.demotabviewer.util.tabs.dto.MeasureDTO;
 import ru.fireg45.demotabviewer.util.tabs.dto.NoteDTO;
 import ru.fireg45.demotabviewer.util.tabs.dto.TabDTO;
@@ -20,7 +21,11 @@ public interface TabReader {
 
     String readEffect(TGNote note);
 
-    NoteDTO readBeat(TGBeat beat);
+    BeatDTO readBeat(TGBeat beat, List<String> slidesAndTies, List<Integer> subList,
+                     List<List<Integer>> pmIndexes, List<List<Integer>> lrIndexes, List<Integer> lrsubList,
+                     int i);
+
+    NoteDTO readNote(TGNote note);
 
     MeasureDTO readMeasure(TGMeasure measure);
 

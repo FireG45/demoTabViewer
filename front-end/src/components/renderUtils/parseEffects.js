@@ -38,8 +38,19 @@ function parseEffects(effects = []) {
         break;
 
         case 'h':
-          let harmText = effects[i].split("|")[1]
-          modificators.push(new Annotation(harmText))
+          let harmSplit = effects[i].split("|")
+          let harmText = harmSplit[1]
+          if (harmText[0] === 'H') {
+            let fret = parseInt(harmSplit[2])
+            if (fret === 5 || fret === 7 || fret === 12
+              || fret === 17 || fret === 19 || fret === 24) {
+                modificators.push(new Annotation("N.H")) 
+              } else {
+                modificators.push(new Annotation("A.H")) 
+              }
+          } else {
+            modificators.push(new Annotation(harmText))
+          }
         break;
 
         default:
