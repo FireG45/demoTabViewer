@@ -20,7 +20,7 @@ function TabList() {
     const paperSX = {
         boxShadow: 3,
         "&:hover": {
-          bgcolor: "#ccc",
+          bgcolor: "#ebebeb",
           boxShadow: 8,
         },
       };
