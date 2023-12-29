@@ -1,23 +1,24 @@
 package ru.fireg45.demotabviewer.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.resource.HttpResource;
 import ru.fireg45.demotabviewer.model.Tabulature;
 import ru.fireg45.demotabviewer.responses.FileUploadResponse;
 import ru.fireg45.demotabviewer.services.FileService;
 import ru.fireg45.demotabviewer.services.TabulatureService;
 
-import java.net.http.HttpResponse;
-
 @RestController
 @CrossOrigin
 public class FileUploadController {
 
-    final String path = "/home/fireg/IdeaProjects/demoTabViewer/src/main/resources/static/test/";
+    @Value("${upload.defaultFilePath}")
+    private String path;
 
     private final FileService fileService;
     private final TabulatureService tabulatureService;
@@ -28,10 +29,10 @@ public class FileUploadController {
         this.tabulatureService = tabulatureService;
     }
 
-    @PostMapping(value="/upload")
+    @PostMapping(value = "/upload")
     public FileUploadResponse handleFileUpload(@RequestParam("file") MultipartFile file,
-                                                   @RequestParam("author") String author,
-                                                   @RequestParam("title") String title) {
+                                               @RequestParam("author") String author,
+                                               @RequestParam("title") String title) {
         Tabulature tab;
         try {
             String path = fileService.upload(file);

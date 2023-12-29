@@ -27,11 +27,11 @@ import java.util.*;
         GTPInputStream gtpInputStream;
         String extension = filename.substring(filename.lastIndexOf('.'));
         switch (extension) {
-            case ".gp" -> gtpInputStream = new GP1InputStream(new GTPSettings());
             case ".gp2" -> gtpInputStream = new GP2InputStream(new GTPSettings());
             case ".gp3" -> gtpInputStream = new GP3InputStream(new GTPSettings());
             case ".gp4" -> gtpInputStream = new GP4InputStream(new GTPSettings());
-            default -> gtpInputStream = new GP5InputStream(new GTPSettings());
+            case ".gp5" -> gtpInputStream = new GP5InputStream(new GTPSettings());
+            default -> gtpInputStream = new GP1InputStream(new GTPSettings());
         }
         TGFactory factory = new TGFactoryImpl();
         gtpInputStream.init(factory);
@@ -48,37 +48,18 @@ import java.util.*;
     }
 
     @Override
-    public String readVoice(TGVoice voice) {
-        return null;
-    }
-
-    @Override
-    public String readEffect(TGNote note) {
-        return null;
-    }
-
-    @Override
-    public NoteDTO readNote(TGNote note) { return null; }
-
-    @Override
     public BeatDTO readBeat(TGBeat beat, List<String> slidesAndTies, List<Integer> subList,
                             List<List<Integer>> pmIndexes, List<List<Integer>> lrIndexes, List<Integer> lrsubList,
                             int i) {
         TGVoice voice = beat.getVoice(0);
         List<NoteDTO> notes = new ArrayList<>();
         List<String> effects = new ArrayList<>();
-        boolean palmMute = false;
-        boolean ghostNote = false;
-        boolean letRing = false;
+        boolean palmMute = false, ghostNote = false, letRing  = false;
         int noteInd = 0;
         for (TGNote note : voice.getNotes()) {
             TGNoteEffect effect =  note.getEffect();
             if (effect.isSlide() || effect.isHammer() || effect.isPullOff()) {
-                String type = "";
-                if (effect.isHammer()  || effect.isPullOff()) type = "H";
-                else if (effect.isSlide()) type = "S";
-
-                slidesAndTies.add(i + "|" + (i + 1) + "|" + type + "|" + noteInd);
+                slidesAndTies.add(readSlideTie(i, effect, noteInd));
             }
             effects.addAll(readEffects(effect, note.getValue()));
             palmMute |= effect.isPalmMute();
@@ -103,6 +84,13 @@ import java.util.*;
         return new BeatDTO(duration, palmMute, ghostNote, notes, effects);
     }
 
+    private static String readSlideTie(int i, TGNoteEffect effect, int noteInd) {
+        String type = "";
+        if (effect.isHammer()  || effect.isPullOff()) type = "H";
+        else if (effect.isSlide()) type = "S";
+        return i + "|" + (i + 1) + "|" + type + "|" + noteInd;
+    }
+
     public String readDuration(TGDuration duration) {
         List<Integer> thDurations = List.of(
                 TGDuration.WHOLE, TGDuration.HALF, TGDuration.QUARTER, TGDuration.EIGHTH, TGDuration.SIXTEENTH,
@@ -111,10 +99,12 @@ import java.util.*;
         return vexDurations.get(thDurations.indexOf(duration.getValue()));
     }
 
+    @Override
     public List<String> readEffects(TGNoteEffect effect, int fret) {
         List<String> effects = new ArrayList<>();
-        if (!effect.hasAnyEffect()) return effects;
-        else {
+        if (!effect.hasAnyEffect()) {
+            return effects;
+        } else {
             if (effect.isVibrato()) {
                 effects.add("v");
             }
@@ -180,11 +170,6 @@ import java.util.*;
     }
 
     @Override
-    public StringBuilder initStringBuilder(TGSong song, int track) {
-        return null;
-    }
-
-    @Override
     public TabDTO read(int track, String filename) throws TGFileFormatException, IOException {
         TGSong song = readSong(filename);
         List<TGMeasure> measures = getMeasuresList(song, track);
@@ -208,8 +193,4 @@ import java.util.*;
         return tabDTO;
     }
 
-    @Override
-    public List<String> getTrackNames(Iterator<TGTrack> tracks) {
-        return null;
-    }
 }

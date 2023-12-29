@@ -17,21 +17,13 @@ public interface TabReader {
 
     List<TGMeasure> getMeasuresList(TGSong song, int track);
 
-    String readVoice(TGVoice voice);
-
-    String readEffect(TGNote note);
+    List<String> readEffects(TGNoteEffect effect, int fret);
 
     BeatDTO readBeat(TGBeat beat, List<String> slidesAndTies, List<Integer> subList,
                      List<List<Integer>> pmIndexes, List<List<Integer>> lrIndexes, List<Integer> lrsubList,
                      int i);
 
-    NoteDTO readNote(TGNote note);
-
     MeasureDTO readMeasure(TGMeasure measure);
 
-    StringBuilder initStringBuilder(TGSong song, int track);
-
     TabDTO read(int track, String filename) throws TGFileFormatException, IOException;
-
-    List<String> getTrackNames(Iterator<TGTrack> tracks);
 }
