@@ -55,7 +55,7 @@ class ShowTab extends Component {
   }
 
   render() {
-    const {error, isLoaded, tab, track} = this.state;
+    const {error, isLoaded, tab} = this.state;
 
     if (error) {
         return <p>Error: {error.meassage} </p>

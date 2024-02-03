@@ -1,7 +1,9 @@
 package ru.fireg45.demotabviewer.responses;
 
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+@Getter
 public class FileUploadResponse {
     private int id;
     HttpStatus status;
@@ -11,11 +13,4 @@ public class FileUploadResponse {
         this.status = status;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public HttpStatus getStatus() {
-        return status;
-    }
 }

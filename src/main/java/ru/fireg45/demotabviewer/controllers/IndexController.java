@@ -2,9 +2,11 @@ package ru.fireg45.demotabviewer.controllers;
 
 import org.herac.tuxguitar.io.base.TGFileFormatException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import ru.fireg45.demotabviewer.model.Tabulature;
+import ru.fireg45.demotabviewer.security.UserPrincipal;
 import ru.fireg45.demotabviewer.services.TabulatureService;
 import ru.fireg45.demotabviewer.util.tabs.dto.TabDTO;
 import ru.fireg45.demotabviewer.util.tabs.TabReader;
@@ -48,4 +50,10 @@ public class IndexController {
         }
         return tab;
     }
+
+    @GetMapping("/test")
+    public String secured(@AuthenticationPrincipal UserPrincipal principal) {
+        return "LOGGED IN AS " + principal.getEmail();
+    }
+
 }
