@@ -8,8 +8,10 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { Input } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useCookies } from "react-cookie";
 
-export default function SignUp() {
+export default function UploadTab() {
+  const [cookies] = useCookies(["token"]);
   const [file, setFile] = React.useState(null);
   const [title, setTitle] = React.useState(null);
   const [author, setAuthor] = React.useState(null);
@@ -37,16 +39,19 @@ export default function SignUp() {
     e.preventDefault()
     if (file) {
       console.log("Uploading file...");
-  
       const formData = new FormData();
       formData.append("file", file);
       formData.append("author", author);
       formData.append("title", title);
   
+
       try {
         const result = await fetch("http://localhost:8080/upload", {
           method: "POST",
           body: formData,
+          headers: new Headers({ 
+            'Authorization': 'Bearer ' + cookies["token"]
+          })
         });
   
         const data = await result.json();

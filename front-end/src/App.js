@@ -5,6 +5,8 @@ import TabList from './components/TabList';
 import ShowTab from './components/ShowTab';
 import UploadTab from './components/UploadTab';
 import NotFoundError from './components/NotFoundError';
+import SignUp from './components/SignUp';
+import SignIn from './components/SignIn';
  
 function App() {
     return (
@@ -15,6 +17,8 @@ function App() {
                     <Route path='/' exact element={<TabList/>} />
                     <Route path='/tabs/:id/:track' element={<ShowTab/>} />
                     <Route path='/upload' element={<UploadTab/>} />
+                    <Route path='/signup' element={<SignUp/>} />
+                    <Route path='/signin' element={<SignIn/>} />
                     <Route path='*' element={<NotFoundError/>} />
                 </Routes>
             </Router>

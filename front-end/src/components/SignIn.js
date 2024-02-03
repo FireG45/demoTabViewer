@@ -11,11 +11,16 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
+import { Alert } from '@mui/material';
+import { useCookies } from "react-cookie";
 
 const defaultTheme = createTheme();
 
-export default function SignUp() {
+
+export default function SignIn() {
   const navigate = useNavigate();
+  const [error, setError] = React.useState(null);
+  const [cookies, setCookie, removeCookie] = useCookies(["token"]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -27,7 +32,7 @@ export default function SignUp() {
     });
 
     try {
-      const result = await fetch("http://localhost:8080/auth/register", {
+      const result = await fetch("http://localhost:8080/auth/login", {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -35,24 +40,22 @@ export default function SignUp() {
         },
         body: JSON.stringify(
           {
-            username: formData.get('username'), 
             email: formData.get('email'),
             password: formData.get('password')
           })
       });
 
-      const data = await result.json();
-      
-      console.log(data)
-
       if (result.ok) {
-        navigate('/signin')
+        const data = await result.json();
+        setCookie("token", data.accessToken)
+        navigate('/')
+      } else {
+        setError(<Alert severity="error">Неверный email или пароль!</Alert>);
       }
     } catch (error) {
       console.error(error);
     }
   };
-
   return (
     <ThemeProvider theme={defaultTheme}>
       <Container component="main" maxWidth="xs">
@@ -69,55 +72,46 @@ export default function SignUp() {
             <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">
-            Зарегестрироваться
+            Войти
           </Typography>
-          <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  autoComplete="username"
-                  name="username"
-                  required
-                  fullWidth
-                  id="username"
-                  label="Имя пользователя"
-                  autoFocus
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  fullWidth
-                  id="email"
-                  label="Email"
-                  name="email"
-                  autoComplete="email"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  fullWidth
-                  name="password"
-                  label="Пароль"
-                  type="password"
-                  id="password"
-                  autoComplete="new-password"
-                />
-              </Grid>
-            </Grid>
+          {error}
+          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="Email"
+              name="email"
+              autoComplete="email"
+              autoFocus
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Пароль"
+              type="password"
+              id="password"
+              autoComplete="current-password"
+            />
+            {/* <FormControlLabel
+              control={<Checkbox value="remember" color="primary" />}
+              label="Remember me"
+            /> */}
             <Button
               type="submit"
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
             >
-              Зарегестрироваться
+              Войти
             </Button>
-            <Grid container justifyContent="flex-end">
+            <Grid container>
               <Grid item>
-                <Link href="/signin" variant="body2">
-                  Уже зарегестрированы? Войти
+                <Link href="/signup" variant="body2">
+                  {"Еще не зарегестрированы? Зарегестрироваться"}
                 </Link>
               </Grid>
             </Grid>

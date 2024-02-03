@@ -13,8 +13,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MoreIcon from '@mui/icons-material/MoreVert';
-import { Box, Button, Drawer, Input, List, ListItemButton } from "@mui/material";
+import { Box, Button, Drawer, List, ListItemButton } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
+import { useCookies } from 'react-cookie';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -65,6 +66,8 @@ export default function PrimarySearchAppBar() {
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
+  const [cookies, setCookie, removeCookie] = useCookies(["token"]);
+
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -109,8 +112,13 @@ export default function PrimarySearchAppBar() {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+      <MenuItem onClick={handleMenuClose}>Мой аккаунт</MenuItem>
+      <MenuItem onClick={handleMenuClose}>Мои табулатуры</MenuItem>
+      <MenuItem onClick={() => {
+        removeCookie("token")
+        setAnchorEl(null);
+        handleMobileMenuClose();
+      }}>Выйти</MenuItem>
     </Menu>
   );
 
@@ -212,11 +220,10 @@ export default function PrimarySearchAppBar() {
               </Typography>
               </Button>
             </Box>
-            <Input
+            {/* <Input 
               size="sm"
-              placeholder="Search"
+              placeholder="Поиск..."
               variant="plain"
-              endDecorator={<Search />}
               slotProps={{
                 input: {
                   'aria-label': 'Search anything',
@@ -244,7 +251,7 @@ export default function PrimarySearchAppBar() {
                   transform: 'scaleX(1)',
                 },
               }}
-            />
+            /> */}
             <List
               size="lg"
               component="nav"
@@ -254,24 +261,29 @@ export default function PrimarySearchAppBar() {
                 '& > div': { justifyContent: 'center' },
               }}
             >
-              <ListItemButton onClick={() => navigate('/')}>All tabs</ListItemButton>
-              <ListItemButton onClick={() => navigate('/upload')}>Upload tab</ListItemButton>
-              <ListItemButton onClick={() => navigate('/user')}>My profile</ListItemButton>
+              <ListItemButton onClick={() => navigate('/')}>Табулатуры</ListItemButton>
+              <ListItemButton onClick={() => navigate('/upload')}>Загрузить табулатуру</ListItemButton>
+              <ListItemButton onClick={() => navigate('/user')}>Мой аккаунт</ListItemButton>
             </List>
           </Drawer>
           <Box sx={{ flexGrow: 1 }} />
           <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-            <IconButton
-              size="large"
-              edge="end"
-              aria-label="account of current user"
-              aria-controls={menuId}
-              aria-haspopup="true"
-              onClick={handleProfileMenuOpen}
-              color="inherit"
-            >
-              <AccountCircle />
-            </IconButton>
+            {cookies["token"] ? 
+                  <IconButton
+                  size="large"
+                  edge="end"
+                  aria-label="account of current user"
+                  aria-controls={menuId}
+                  aria-haspopup="true"
+                  onClick={handleProfileMenuOpen}
+                  color="inherit"
+                >
+                  <AccountCircle />
+                </IconButton>
+                :
+                <Button variant="outlined" сolor="light" onClick={() => navigate('/signin')} style={{'color':'#FFFF'}}>Войти</Button>
+            }
+            
           </Box>
           <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
             <IconButton

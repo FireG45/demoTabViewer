@@ -56,6 +56,7 @@ class ShowTab extends Component {
 
   render() {
     const {error, isLoaded, tab} = this.state;
+    console.log(sessionStorage.getItem("token"));
 
     if (error) {
         return <p>Error: {error.meassage} </p>

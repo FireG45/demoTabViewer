@@ -8,12 +8,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Optional;
 
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+
 @Component
+@CrossOrigin
 @RequiredArgsConstructor
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
@@ -33,7 +37,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private Optional<String> extractToken(HttpServletRequest request) {
-        var token = request.getHeader("Authorization");
+        var token = request.getHeader(AUTHORIZATION);
         if (StringUtils.hasText(token) && token.startsWith("Bearer ")) {
             return Optional.of(token.substring(7));
         }
