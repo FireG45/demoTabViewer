@@ -1,5 +1,6 @@
 package ru.fireg45.demotabviewer.security;
 
+import com.auth0.jwt.exceptions.SignatureVerificationException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,12 +28,18 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        extractToken(request)
-                .map(jwtDecoder::decode)
-                .map(jwtToPrincipleConverter::convert)
-                .map(UserPrincipalAuthToken::new)
-                .ifPresent(auth -> SecurityContextHolder.getContext().setAuthentication(auth));
-        filterChain.doFilter(request, response);
+
+        try {
+            extractToken(request)
+                    .map(jwtDecoder::decode)
+                    .map(jwtToPrincipleConverter::convert)
+                    .map(UserPrincipalAuthToken::new)
+                    .ifPresent(auth -> SecurityContextHolder.getContext().setAuthentication(auth));
+        } catch (SignatureVerificationException ex) {
+            response.setStatus(403);
+        } finally {
+            filterChain.doFilter(request, response);
+        }
 
     }
 

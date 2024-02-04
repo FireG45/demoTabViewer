@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Entity
@@ -23,12 +25,15 @@ public class User {
     @Column(name = "email")
     private String email;
 
-    @JsonIgnore
     @Column(name = "password")
     private String password;
 
     @Column(name = "role")
     private String role;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user")
+    private List<Tabulature> tabulatures;
 
     public User() {}
 

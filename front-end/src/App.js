@@ -7,8 +7,11 @@ import UploadTab from './components/UploadTab';
 import NotFoundError from './components/NotFoundError';
 import SignUp from './components/SignUp';
 import SignIn from './components/SignIn';
+import { useCookies } from 'react-cookie';
  
 function App() {
+    const [cookies, setCookie, removeCookie] = useCookies(["token"]);
+
     return (
         <React.StrictMode>
             <Router>
@@ -16,7 +19,7 @@ function App() {
                 <Routes>
                     <Route path='/' exact element={<TabList/>} />
                     <Route path='/tabs/:id/:track' element={<ShowTab/>} />
-                    <Route path='/upload' element={<UploadTab/>} />
+                    <Route path='/upload' element={cookies["token"] ? <UploadTab/> : <SignIn/>} />
                     <Route path='/signup' element={<SignUp/>} />
                     <Route path='/signin' element={<SignIn/>} />
                     <Route path='*' element={<NotFoundError/>} />

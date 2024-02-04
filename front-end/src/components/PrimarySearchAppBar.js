@@ -8,14 +8,14 @@ import InputBase from '@mui/material/InputBase';
 import Badge from '@mui/material/Badge';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
-import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MoreIcon from '@mui/icons-material/MoreVert';
-import { Box, Button, Drawer, List, ListItemButton } from "@mui/material";
+import { Box, Button, Divider, Drawer, List, ListItemButton } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
+import LeftMenuDrawer from './LeftMenuDrawer';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -47,7 +47,6 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   color: 'inherit',
   '& .MuiInputBase-input': {
     padding: theme.spacing(1, 1, 1, 0),
-    // vertical padding + font size from searchIcon
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create('width'),
     width: '100%',
@@ -115,9 +114,7 @@ export default function PrimarySearchAppBar() {
       <MenuItem onClick={handleMenuClose}>Мой аккаунт</MenuItem>
       <MenuItem onClick={handleMenuClose}>Мои табулатуры</MenuItem>
       <MenuItem onClick={() => {
-        removeCookie("token")
-        setAnchorEl(null);
-        handleMobileMenuClose();
+
       }}>Выйти</MenuItem>
     </Menu>
   );
@@ -170,23 +167,14 @@ export default function PrimarySearchAppBar() {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="open drawer"
-            onClick={toggleDrawer(true)}
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
+          <LeftMenuDrawer />
           <Typography
             variant="h6"
             noWrap
             component="div"
             sx={{ display: { xs: 'none', sm: 'block' } }}
           >
-          <Button onClick={() => navigate('/')} style={{'fontSize' : '18px', 'textDecoration':'none', 'color':'#FFFF'}}>TABS</Button>
+            <Button onClick={() => navigate('/')} style={{ 'fontSize': '18px', 'textDecoration': 'none', 'color': '#FFFF' }}>TABS</Button>
           </Typography>
           <Search>
             <SearchIconWrapper>
@@ -197,94 +185,7 @@ export default function PrimarySearchAppBar() {
               inputProps={{ 'aria-label': 'search' }}
             />
           </Search>
-          <Drawer open={open} onClose={() => toggleDrawer(false)} onClick={toggleDrawer(false)}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                ml: 'auto',
-                mt: 1,
-                mr: 2,
-              }}
-            >
-              <Button onClick={toggleDrawer(false)}>
-              <Typography
-                component="label"
-                htmlFor="close-icon"
-                fontSize="sm"
-                fontWeight="lg"
-                sx={{ cursor: 'pointer' }}
-              >
-                x
-              </Typography>
-              </Button>
-            </Box>
-            {/* <Input 
-              size="sm"
-              placeholder="Поиск..."
-              variant="plain"
-              slotProps={{
-                input: {
-                  'aria-label': 'Search anything',
-                },
-              }}
-              sx={{
-                m: 3,
-                borderRadius: 0,
-                borderBottom: '2px solid',
-                borderColor: 'neutral.outlinedBorder',
-                '&:hover': {
-                  borderColor: 'neutral.outlinedHoverBorder',
-                },
-                '&::before': {
-                  border: '1px solid var(--Input-focusedHighlight)',
-                  transform: 'scaleX(0)',
-                  left: 0,
-                  right: 0,
-                  bottom: '-2px',
-                  top: 'unset',
-                  transition: 'transform .15s cubic-bezier(0.1,0.9,0.2,1)',
-                  borderRadius: 0,
-                },
-                '&:focus-within::before': {
-                  transform: 'scaleX(1)',
-                },
-              }}
-            /> */}
-            <List
-              size="lg"
-              component="nav"
-              sx={{
-                flex: 'none',
-                fontSize: 'xl',
-                '& > div': { justifyContent: 'center' },
-              }}
-            >
-              <ListItemButton onClick={() => navigate('/')}>Табулатуры</ListItemButton>
-              <ListItemButton onClick={() => navigate('/upload')}>Загрузить табулатуру</ListItemButton>
-              <ListItemButton onClick={() => navigate('/user')}>Мой аккаунт</ListItemButton>
-            </List>
-          </Drawer>
           <Box sx={{ flexGrow: 1 }} />
-          <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-            {cookies["token"] ? 
-                  <IconButton
-                  size="large"
-                  edge="end"
-                  aria-label="account of current user"
-                  aria-controls={menuId}
-                  aria-haspopup="true"
-                  onClick={handleProfileMenuOpen}
-                  color="inherit"
-                >
-                  <AccountCircle />
-                </IconButton>
-                :
-                <Button variant="outlined" сolor="light" onClick={() => navigate('/signin')} style={{'color':'#FFFF'}}>Войти</Button>
-            }
-            
-          </Box>
           <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
             <IconButton
               size="large"

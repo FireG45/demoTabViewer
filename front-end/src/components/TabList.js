@@ -1,4 +1,4 @@
-    import { Paper } from "@mui/material";
+import { Paper } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 

@@ -6,15 +6,17 @@ import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import { Input } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Alert, Input } from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCookies } from "react-cookie";
 
 export default function UploadTab() {
-  const [cookies] = useCookies(["token"]);
+  const [cookies, setCookie, removeCookie] = useCookies(["token"]);
   const [file, setFile] = React.useState(null);
   const [title, setTitle] = React.useState(null);
   const [author, setAuthor] = React.useState(null);
+  const [error, setError] = React.useState(null);
+
   const navigate = useNavigate();
 
   const handleFileChange = (e) => {
@@ -54,10 +56,20 @@ export default function UploadTab() {
           })
         });
   
-        const data = await result.json();
         
         if (result.ok) {
+          const data = await result.json();
           navigate('/tabs/' + data.id + '/0')
+        } else {
+          if (result.status === 403) {
+            setError(
+            <Alert severity="error">
+              Неверынй или истекший токен доступа!
+                <Link to={'/signin'} onClick={() => removeCookie("token")}>
+                  Войти
+                </Link>
+            </Alert>);
+          }
         }
       } catch (error) {
         console.error(error);
@@ -77,7 +89,7 @@ export default function UploadTab() {
         }}
       >
         <Typography component="h1" variant="h5">
-          Upload Tab!
+          Загрузить табулатуру!
         </Typography>
         <Box component="form" onSubmit={handleUpload} sx={{ mt: 3 }}>
           <Grid container spacing={2}>
@@ -87,7 +99,7 @@ export default function UploadTab() {
                 required
                 fullWidth
                 id="author"
-                label="Author"
+                label="Автор"
                 name="author"
                 autoComplete="author"
               />
@@ -98,7 +110,7 @@ export default function UploadTab() {
                 required
                 fullWidth
                 name="title"
-                label="Title"
+                label="Название"
                 type="title"
                 id="title"
                 autoComplete="title"
@@ -122,10 +134,11 @@ export default function UploadTab() {
             sx={{ mt: 3, mb: 2 }}
             onClick={handleUpload}
           >
-            Upload
+            Загрузить
           </Button>}
         </Box>
       </Box>
+      {error}
     </Container>
   );
 }

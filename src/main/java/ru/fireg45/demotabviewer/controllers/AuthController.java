@@ -8,18 +8,17 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.fireg45.demotabviewer.model.User;
 import ru.fireg45.demotabviewer.requests.LoginRequest;
 import ru.fireg45.demotabviewer.requests.RegistrationRequest;
 import ru.fireg45.demotabviewer.responses.LoginResponse;
 import ru.fireg45.demotabviewer.responses.RegistrationResponse;
+import ru.fireg45.demotabviewer.responses.UserResponse;
 import ru.fireg45.demotabviewer.security.JWTIssuer;
 import ru.fireg45.demotabviewer.security.UserPrincipal;
 import ru.fireg45.demotabviewer.services.UserService;
@@ -46,7 +45,6 @@ public class AuthController {
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
         var principal = (UserPrincipal) authentication.getPrincipal();
 
@@ -68,6 +66,11 @@ public class AuthController {
 
         userService.save(user);
         return new RegistrationResponse(HttpStatus.OK);
+    }
+
+    @GetMapping("/auth/getuser")
+    public UserResponse getUser(@AuthenticationPrincipal UserPrincipal principal) {
+        return new UserResponse(principal.getUsername());
     }
 
 }
