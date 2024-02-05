@@ -48,9 +48,10 @@ export default function SignIn() {
       if (result.ok) {
         const data = await result.json();
         setCookie("token", data.accessToken)
+        setCookie("user", data.username)
         navigate('/')
       } else {
-        setError(<Alert severity="error">Неверный email или пароль!</Alert>);
+        setError(<><Alert severity="error">Неверный email или пароль!</Alert><br/></>);
       }
     } catch (error) {
       console.error(error);
@@ -74,7 +75,6 @@ export default function SignIn() {
           <Typography component="h1" variant="h5">
             Войти
           </Typography>
-          {error}
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
             <TextField
               margin="normal"
@@ -108,7 +108,8 @@ export default function SignIn() {
             >
               Войти
             </Button>
-            <Grid container>
+            {error}
+            <Grid container spacing={5}>
               <Grid item>
                 <Link href="/signup" variant="body2">
                   {"Еще не зарегестрированы? Зарегестрироваться"}

@@ -33,6 +33,10 @@ public class Tabulature {
     @Temporal(TemporalType.TIMESTAMP)
     private Date uploaded;
 
+    @Column(name = "last_update")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date lastUpdate;
+
     public Tabulature() {}
 
     public Tabulature(String title, String author, String filepath, User user) {
@@ -40,6 +44,8 @@ public class Tabulature {
         this.author = author;
         this.filepath = filepath;
         this.user = user;
+        this.uploaded = new Date();
+        this.lastUpdate = new Date();
     }
 
 }

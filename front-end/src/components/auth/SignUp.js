@@ -75,7 +75,7 @@ export default function SignUp() {
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
-                  autoComplete="username"
+                  autoComplete="name"
                   name="username"
                   required
                   fullWidth

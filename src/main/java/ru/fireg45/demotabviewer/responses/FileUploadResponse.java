@@ -8,9 +8,8 @@ public class FileUploadResponse {
     private int id;
     HttpStatus status;
 
-    public FileUploadResponse(int id, HttpStatus status) {
+    public FileUploadResponse(int id) {
         this.id = id;
-        this.status = status;
     }
 
 }

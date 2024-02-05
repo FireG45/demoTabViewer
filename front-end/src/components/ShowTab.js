@@ -3,7 +3,6 @@ import Score from "./Score";
 import Stack from "@mui/material/Stack";
 import { Container, Grid, IconButton } from "@mui/material";
 import withRouter from './withRouter'
-import { CircularProgress } from "@mui/material";
 import Box from '@mui/material/Box';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';

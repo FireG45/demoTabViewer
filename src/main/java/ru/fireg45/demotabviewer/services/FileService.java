@@ -6,6 +6,7 @@ import ru.fireg45.demotabviewer.model.Tabulature;
 
 @Service
 public interface FileService {
-    public String upload(MultipartFile file)  throws Exception ;
+    public String upload(MultipartFile file) throws Exception ;
+    public void delete(String filepath);
     public MultipartFile download(Tabulature tabulature);
 }

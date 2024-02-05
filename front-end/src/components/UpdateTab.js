@@ -7,15 +7,17 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { Alert, Divider, Input, Stack } from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useCookies } from "react-cookie";
 
-export default function UploadTab() {
+export default function UpdateTab() {
   const [cookies, setCookie, removeCookie] = useCookies(["token"]);
   const [file, setFile] = React.useState(null);
-  const [title, setTitle] = React.useState(null);
-  const [author, setAuthor] = React.useState(null);
+  const [title, setTitle] = React.useState("");
+  const [author, setAuthor] = React.useState("");
   const [error, setError] = React.useState(null);
+  const [loaded, setLoaded] = React.useState(false);
+  const params = useParams();
 
   const navigate = useNavigate();
 
@@ -37,19 +39,45 @@ export default function UploadTab() {
     }
   }
 
+  const getParams = async () => {
+    try {
+      const result = await fetch("http://localhost:8080/tabs/update/" + params.id, {
+        method: "GET",
+        headers: new Headers({
+          'Authorization': 'Bearer ' + cookies["token"]
+        })
+      });
+
+      if (result.ok) {
+        const data = await result.json();
+        setAuthor(data.author)
+        setTitle(data.title)
+        console.log(author);
+        console.log(title);
+        setLoaded(true)
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  React.useEffect(() => {
+    if (!loaded) getParams()
+  })
+
+
   const handleUpload = async (e) => {
     e.preventDefault()
-    if (file) {
+    if (true) {
       console.log("Uploading file...");
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", file ? file : "null");
       formData.append("author", author);
       formData.append("title", title);
 
-
       try {
-        const result = await fetch("http://localhost:8080/upload", {
-          method: "POST",
+        const result = await fetch("http://localhost:8080/tabs/update/" + params.id, {
+          method: "PATCH",
           body: formData,
           headers: new Headers({
             'Authorization': 'Bearer ' + cookies["token"]
@@ -61,7 +89,7 @@ export default function UploadTab() {
           const data = await result.json();
           navigate('/tabs/' + data.id + '/0')
         } else {
-          if (result.status === 403) {
+          if (result.status !== 200) {
             setError(
               <Alert severity="error">
                 Ошибка! Нет доступа!
@@ -91,13 +119,9 @@ export default function UploadTab() {
       >
         <Stack spacing={5}>
           <Typography component="h1" variant="h2">
-            Загрузить табулатуру!
+            Редактировать табулатуру!
           </Typography>
           <Divider />
-          <Typography component="h5">
-            Есть табулатура, которой можно поделиться?
-            Загрузите её в формате Guitar Pro и заполните поля ниже.
-          </Typography>
           <Box component="form" onSubmit={handleUpload} sx={{ mt: 3 }}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
@@ -109,6 +133,7 @@ export default function UploadTab() {
                   label="Автор"
                   name="author"
                   autoComplete="author"
+                  value={author}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -121,6 +146,7 @@ export default function UploadTab() {
                   type="title"
                   id="title"
                   autoComplete="title"
+                  value={title}
                 />
               </Grid>
               <Divider />
@@ -151,12 +177,12 @@ export default function UploadTab() {
                   onChange={handleFileChange}
                 /> */}
                   <Typography component='span' variant='span'>
-                    Чтобы создать табулатуру, вам необходимо либо купить программное обеспечение Guitar Pro, либо использовать бесплатную альтернативу TuxGuitar (Файл → Сохранить как → Guitar Pro 5).
+                    Если хотите оставить файл без изменений, отсавте поле файла пустым.
                   </Typography>
                 </div>
               </Grid>
             </Grid>
-            {file && <Button
+            {<Button
               type="submit"
               fullWidth
               variant="contained"

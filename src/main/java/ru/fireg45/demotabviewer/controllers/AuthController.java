@@ -23,6 +23,8 @@ import ru.fireg45.demotabviewer.security.JWTIssuer;
 import ru.fireg45.demotabviewer.security.UserPrincipal;
 import ru.fireg45.demotabviewer.services.UserService;
 
+import java.util.Optional;
+
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 public class AuthController {
@@ -52,7 +54,20 @@ public class AuthController {
 
         var token = jwtIssuer.issue(principal.getUserId(), principal.getEmail(), roles);
 
-        return new LoginResponse(token, HttpStatus.OK);
+        User user = userService.findByEmail(request.getEmail()).orElse(null);
+
+        return new LoginResponse(user != null ? user.getUsername() : "", token, HttpStatus.OK);
+    }
+
+    @PostMapping("/auth/logout")
+    public ResponseEntity<String> logout(@AuthenticationPrincipal UserPrincipal principal) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth.getName().equals(principal.getUsername())) {
+            auth.setAuthenticated(false);
+            System.out.println(auth.getName() + "logged out");
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @PostMapping("/auth/register")

@@ -44,6 +44,9 @@ public class WebSecurityConfig {
                         .requestMatchers("/tabs/*").permitAll()
                         .requestMatchers("/auth/register").permitAll()
                         .requestMatchers("/auth/*").permitAll()
+                        .requestMatchers("/tabs/mytabs").authenticated()
+                        .requestMatchers("/tabs/edit/*").authenticated()
+                        .requestMatchers("/tabs/delete/*").authenticated()
                         .anyRequest().authenticated()
                 );
 
@@ -67,9 +70,9 @@ public class WebSecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("*"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedMethods(List.of("*"));
+        configuration.setAllowedHeaders(List.of("*"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

@@ -8,6 +8,11 @@ import ru.fireg45.demotabviewer.util.exceptions.FileUploadException;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 
 @Service
 public class FilesystemFileService implements FileService {
@@ -29,6 +34,18 @@ public class FilesystemFileService implements FileService {
         }
 
         return path + name;
+    }
+
+    @Override
+    public void delete(String filepath) {
+        Path path = FileSystems.getDefault().getPath(filepath);
+        try {
+            Files.delete(path);
+        } catch (NoSuchFileException x) {
+            System.err.format("%s: no such" + " file or directory%n", path);
+        } catch (IOException x) {
+            System.err.println(x.getLocalizedMessage());
+        }
     }
 
     private String generateFilename(MultipartFile file) {

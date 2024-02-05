@@ -5,9 +5,11 @@ import TabList from './components/TabList';
 import ShowTab from './components/ShowTab';
 import UploadTab from './components/UploadTab';
 import NotFoundError from './components/NotFoundError';
-import SignUp from './components/SignUp';
-import SignIn from './components/SignIn';
+import SignUp from './components/auth/SignUp';
+import SignIn from './components/auth/SignIn';
 import { useCookies } from 'react-cookie';
+import MyTabList from './components/MyTabList';
+import UpdateTab from './components/UpdateTab';
  
 function App() {
     const [cookies, setCookie, removeCookie] = useCookies(["token"]);
@@ -22,6 +24,8 @@ function App() {
                     <Route path='/upload' element={cookies["token"] ? <UploadTab/> : <SignIn/>} />
                     <Route path='/signup' element={<SignUp/>} />
                     <Route path='/signin' element={<SignIn/>} />
+                    <Route path='/mytabs' element={<MyTabList/>} />
+                    <Route path='/update/:id' element={<UpdateTab/>} />
                     <Route path='*' element={<NotFoundError/>} />
                 </Routes>
             </Router>

@@ -27,4 +27,6 @@ public class TabulatureService {
     public Tabulature save(Tabulature tabulature) {
         return tabulaturesRepository.save(tabulature);
     }
+
+    public void delete(Tabulature tabulature) { tabulaturesRepository.delete(tabulature); }
 }

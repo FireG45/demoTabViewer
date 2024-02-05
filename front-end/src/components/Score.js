@@ -1,6 +1,7 @@
 import { Component } from "react";
 import Stave from "./Stave";
 import { Grid, CircularProgress } from "@mui/material";
+import Loading from "./Loading";
 
 export default class Score extends Component {
     constructor(props) {
@@ -41,7 +42,7 @@ export default class Score extends Component {
         if (error) {
             return <p>Error: {error.meassage} </p>
         } else if (!isLoaded) {
-            return <CircularProgress />
+            return <Loading />
         } else {
             return (
                 <>

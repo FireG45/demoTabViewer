@@ -12,10 +12,11 @@ import SearchIcon from '@mui/icons-material/Search';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MoreIcon from '@mui/icons-material/MoreVert';
-import { Box, Button, Divider, Drawer, List, ListItemButton } from "@mui/material";
+import { Box, Button, Divider, Drawer, List, ListItemButton, Stack } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
 import LeftMenuDrawer from './LeftMenuDrawer';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -186,17 +187,19 @@ export default function PrimarySearchAppBar() {
             />
           </Search>
           <Box sx={{ flexGrow: 1 }} />
-          <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
-            <IconButton
-              size="large"
-              aria-label="show more"
-              aria-controls={mobileMenuId}
-              aria-haspopup="true"
-              onClick={handleMobileMenuOpen}
-              color="inherit"
-            >
-              <MoreIcon />
-            </IconButton>
+          <Box>
+            {cookies["token"] ?
+              <Typography>
+                <Stack alignItems={'center'}>
+                  <AccountCircleIcon />
+                  <Typography variant="caption">
+                    {cookies["user"] + " "}
+                  </Typography>
+                </Stack>
+              </Typography>
+              :
+              ""
+            }
           </Box>
         </Toolbar>
       </AppBar>

@@ -16,6 +16,7 @@ import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import { useCookies } from 'react-cookie';
 import { useNavigate } from 'react-router-dom';
 import LoginIcon from '@mui/icons-material/Login';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 
 export default function LeftMenuDrawer() {
   const [state, setState] = React.useState({
@@ -51,7 +52,7 @@ export default function LeftMenuDrawer() {
                 <ListItemIcon>
                   <AccountCircleIcon />
                 </ListItemIcon>
-                <ListItemText primary={"Мой аккаунт"} />
+                <ListItemText primary={cookies["user"]} />
               </ListItemButton>
             </ListItem>
 
@@ -65,11 +66,20 @@ export default function LeftMenuDrawer() {
             </ListItem>
 
             <ListItem disablePadding>
-              <ListItemButton>
+              <ListItemButton onClick={() => navigate("/mytabs")}>
                 <ListItemIcon>
                   <PlaylistAddIcon />
                 </ListItemIcon>
                 <ListItemText primary={"Мои табулатуры"} />
+              </ListItemButton>
+            </ListItem>
+
+            <ListItem disablePadding>
+              <ListItemButton  onClick={() => navigate("/upload")}>
+                <ListItemIcon>
+                  <UploadFileIcon />
+                </ListItemIcon>
+                <ListItemText primary={"Загрузить табулатуру"} />
               </ListItemButton>
             </ListItem>
           </>
@@ -91,8 +101,15 @@ export default function LeftMenuDrawer() {
           <Divider />
           <List>
             <ListItem disablePadding>
-              <ListItemButton onClick={() => {
+              <ListItemButton onClick={ async () => {
                 removeCookie("token")
+                removeCookie("user")
+                await fetch("http://localhost:8080/auth/logout", {
+                  method : 'POST',
+                  headers : new Headers({
+                    'Authorization': 'Bearer ' + cookies["token"]
+                  })
+                })
                 navigate('/signin');
               }}>
                 <ListItemIcon>
