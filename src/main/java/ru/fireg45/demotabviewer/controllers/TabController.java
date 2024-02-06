@@ -2,46 +2,53 @@ package ru.fireg45.demotabviewer.controllers;
 
 import org.herac.tuxguitar.io.base.TGFileFormatException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import ru.fireg45.demotabviewer.model.Tabulature;
 import ru.fireg45.demotabviewer.model.User;
-import ru.fireg45.demotabviewer.responses.FileUploadResponse;
 import ru.fireg45.demotabviewer.security.UserPrincipal;
+import ru.fireg45.demotabviewer.services.ReviewService;
 import ru.fireg45.demotabviewer.services.TabulatureService;
 import ru.fireg45.demotabviewer.services.UserService;
 import ru.fireg45.demotabviewer.util.tabs.dto.TabDTO;
 import ru.fireg45.demotabviewer.util.tabs.TabReader;
+import ru.fireg45.demotabviewer.util.tabs.dto.TabListDTO;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 @RestController
 @CrossOrigin
-public class IndexController {
+public class TabController {
 
     private final TabulatureService tabulatureService;
     private final UserService userService;
     private final TabReader tabReader;
+    private final ReviewService reviewService;
 
     @Autowired
-    public IndexController(TabulatureService tabulatureService, UserService userService, TabReader tabReader) {
+    public TabController(TabulatureService tabulatureService, UserService userService, TabReader tabReader, ReviewService reviewService) {
         this.tabulatureService = tabulatureService;
         this.userService = userService;
         this.tabReader = tabReader;
+        this.reviewService = reviewService;
     }
 
     @GetMapping("")
-    public List<Tabulature> index() {
-        return tabulatureService.findAll();
+    public TabListDTO index(@RequestParam(name = "page", defaultValue = "0") int page,
+                            @RequestParam(name = "pageCount", defaultValue = "1") int pageCount,
+                            @RequestParam(name = "author" , required = false) String author) {
+        int PAGE_SIZE = 20;
+        PageRequest pageRequest = PageRequest.of(page, PAGE_SIZE);
+        List<Tabulature> tabs = author == null || author.isEmpty() ? tabulatureService.findAll(pageRequest) :
+                tabulatureService.findAllByAuthor(author, pageRequest);
+        return new TabListDTO(tabs, tabulatureService.getPageCount(PAGE_SIZE), page);
     }
 
     @GetMapping("/tabs/{id}")
@@ -60,6 +67,12 @@ public class IndexController {
             tab.uploaded = new SimpleDateFormat("yyyy-MM-dd").format(tabulature.getUploaded());
             var principal = SecurityContextHolder.getContext().getAuthentication().getName();
             tab.userOwner = principal != null && Objects.equals(tabulature.getUser().getEmail(), principal);
+            Optional<User> user = userService.findByEmail(principal);
+            if (user.isPresent()) {
+                int userId = user.get().getId();
+                Integer rating = reviewService.getRatingByUserAndTab(userId, id);
+                tab.rating = rating == null ? 0 : rating;
+            }
         } else {
             tab = null;
         }

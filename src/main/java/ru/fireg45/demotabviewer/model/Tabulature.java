@@ -1,11 +1,12 @@
 package ru.fireg45.demotabviewer.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.sql.Timestamp;
 import java.util.Date;
+import java.util.List;
 
 @Setter
 @Getter
@@ -37,15 +38,23 @@ public class Tabulature {
     @Temporal(TemporalType.TIMESTAMP)
     private Date lastUpdate;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "tab")
+    private List<Review> reviews;
+
+    @Column(name = "rating")
+    private int rating;
+
     public Tabulature() {}
 
-    public Tabulature(String title, String author, String filepath, User user) {
+    public Tabulature(String title, String author, String filepath, User user, int rating) {
         this.title = title;
         this.author = author;
         this.filepath = filepath;
         this.user = user;
         this.uploaded = new Date();
         this.lastUpdate = new Date();
+        this.rating = rating;
     }
 
 }

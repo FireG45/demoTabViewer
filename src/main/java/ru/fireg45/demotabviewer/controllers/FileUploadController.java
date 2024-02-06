@@ -51,7 +51,7 @@ public class FileUploadController {
 
         try {
             String path = fileService.upload(file);
-            tab = tabulatureService.save(new Tabulature(title, author, path, user));
+            tab = tabulatureService.save(new Tabulature(title, author, path, user, 0));
         } catch (Exception ex) {
             return new ResponseEntity<>(new FileUploadResponse(-1), HttpStatus.BAD_REQUEST);
         }

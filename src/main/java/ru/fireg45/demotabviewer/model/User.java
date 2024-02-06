@@ -35,6 +35,10 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Tabulature> tabulatures;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "uploaded")
+    private List<Review> reviews;
+
     public User() {}
 
     public User(String username, String email, String password, String role) {

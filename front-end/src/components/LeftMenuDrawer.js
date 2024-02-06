@@ -48,7 +48,7 @@ export default function LeftMenuDrawer() {
         {cookies["token"] ?
           <>
             <ListItem disablePadding>
-              <ListItemButton>
+            <ListItemButton onClick={() => navigate("/account")}>
                 <ListItemIcon>
                   <AccountCircleIcon />
                 </ListItemIcon>
@@ -57,7 +57,7 @@ export default function LeftMenuDrawer() {
             </ListItem>
 
             <ListItem disablePadding>
-              <ListItemButton>
+              <ListItemButton disabled>
                 <ListItemIcon>
                   <GradeIcon />
                 </ListItemIcon>

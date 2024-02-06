@@ -177,7 +177,7 @@ export default function PrimarySearchAppBar() {
           >
             <Button onClick={() => navigate('/')} style={{ 'fontSize': '18px', 'textDecoration': 'none', 'color': '#FFFF' }}>TABS</Button>
           </Typography>
-          <Search>
+          {/* <Search>
             <SearchIconWrapper>
               <SearchIcon />
             </SearchIconWrapper>
@@ -185,7 +185,7 @@ export default function PrimarySearchAppBar() {
               placeholder="Поиск..."
               inputProps={{ 'aria-label': 'search' }}
             />
-          </Search>
+          </Search> */}
           <Box sx={{ flexGrow: 1 }} />
           <Box>
             {cookies["token"] ?

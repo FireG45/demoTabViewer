@@ -47,6 +47,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/tabs/mytabs").authenticated()
                         .requestMatchers("/tabs/edit/*").authenticated()
                         .requestMatchers("/tabs/delete/*").authenticated()
+                        .requestMatchers("/addreview").authenticated()
                         .anyRequest().authenticated()
                 );
 

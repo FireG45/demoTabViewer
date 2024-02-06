@@ -46,7 +46,6 @@ export default function UploadTab() {
       formData.append("author", author);
       formData.append("title", title);
 
-
       try {
         const result = await fetch("http://localhost:8080/upload", {
           method: "POST",
