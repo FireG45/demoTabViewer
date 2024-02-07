@@ -4,10 +4,10 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.hibernate.search.engine.search.query.SearchResult;
 import org.hibernate.search.mapper.orm.Search;
-import org.hibernate.search.mapper.orm.massindexing.MassIndexer;
 import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.springframework.stereotype.Repository;
 import ru.fireg45.demotabviewer.model.Tabulature;
+import ru.fireg45.demotabviewer.util.Tuple;
 
 import java.util.List;
 
@@ -17,19 +17,17 @@ public class TabulatureSearchRepositoryImpl implements TabulatureSearchRepositor
     EntityManager entityManager;
 
     @Override
-    public List<Tabulature> search(String query) throws InterruptedException {
+    public Tuple<List<Tabulature>, Long> search(String query, int page, int pageSize, int pageCount) throws InterruptedException {
         SearchSession searchSession = Search.session(entityManager);
 
-        MassIndexer indexer = searchSession.massIndexer(Tabulature.class);
-        indexer.startAndWait();
+        int start = page * pageSize;
 
         SearchResult<Tabulature> result = searchSession.search(Tabulature.class)
-                .where( f -> f.match()
-                        .fields( "title", "author")
+                .where(f -> f.match()
+                        .fields("title", "author")
                         .matching(query))
-                .fetchAll();
+                .fetch(start, start + pageSize);
 
-        List<Tabulature> hits = result.hits();
-        return null;
+        return new Tuple<>(result.hits(), result.total().hitCount());
     }
 }

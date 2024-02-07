@@ -51,15 +51,19 @@ public class TabController {
                             @RequestParam(name = "query" , required = false) String query) throws InterruptedException {
         int PAGE_SIZE = 20;
         List<Tabulature> tabs;
+        long pagesCount;
         if (query == null) {
             PageRequest pageRequest = PageRequest.of(page, PAGE_SIZE);
             tabs = author == null || author.isEmpty() ? tabulatureService.findAll(pageRequest) :
                     tabulatureService.findAllByAuthor(author, pageRequest);
+            pagesCount = tabulatureService.getPageCount(PAGE_SIZE);
         } else {
-            tabs = tabulatureSearchService.search(query);
+            var tuple = tabulatureSearchService.search(query, page, PAGE_SIZE, pageCount);
+            pagesCount = tuple.getValue2();
+            tabs = tuple.getValue1();
         }
 
-        return new TabListDTO(tabs, query == null ? tabulatureService.getPageCount(PAGE_SIZE) : -1, page);
+        return new TabListDTO(tabs, (int) pagesCount, page);
     }
 
     @GetMapping("/tabs/{id}")

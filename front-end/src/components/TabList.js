@@ -12,22 +12,24 @@ function TabList() {
   const [tabs, setTabs] = useState([]);
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
+  const [query, setQuery] = useState(null);
+  const [queryStr, setQueryStr] = useState(null);
   const navigate = useNavigate();
   const params = useParams();
 
   useEffect(() => {
     document.title = params.author ? `Табулатуры ${params.author}` : 'Все табулатуры';
-    fetch(`http://localhost:8080?page=${page - 1}&pageCount=${pageCount}&author=${params.author ? params.author : ''}`)
+    fetch(`http://localhost:8080?page=${page - 1}&pageCount=${pageCount}${params.author ? `&author=${params.author}` : ''}${query ? `&query=${query}` : ''}`)
       .then((response) => response.json())
       .then((data) => {
         setTabs(data.tabs);
-        setPage(data.page + 1)
-        setPageCount(data.pageCount)
+        setPage(data.page + 1);
+        setPageCount(data.pageCount);
       })
       .catch((err) => {
         console.log(err.message);
       });
-  }, [page]);
+  }, [page, query]);
 
   const paperSX = {
     boxShadow: 3,
@@ -58,8 +60,30 @@ function TabList() {
             </Typography>
           </>
         }
+        {!!params.query &&
+          <>
+            <br />
+            <Typography variant={'h5'} align={'center'}>
+              Табулатуры по запросу: {params.query}:
+            </Typography>
+          </>
+        }
         <br />
-        <TextField fullWidth type="search" id="search" label="Поиск..." />
+        {!!!params.author &&
+          <TextField fullWidth type="search" id="search" label="Поиск..." value={queryStr}
+            onKeyDown={(e) => {
+              if (e.keyCode == 13) {
+                setQueryStr(e.target.value)
+                setQuery(e.target.value)
+              }
+            }}
+            onChange={(e) => {
+              setQueryStr(e.target.value)
+            }}
+            onClick={((e) => {
+              setQuery("")
+            })} />
+        }
         <br /><br />
         {tabs.map((tab) => {
           console.log(tab.favorite);
