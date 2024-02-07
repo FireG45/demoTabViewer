@@ -1,17 +1,21 @@
 package ru.fireg45.demotabviewer.controllers;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import ru.fireg45.demotabviewer.model.User;
 import ru.fireg45.demotabviewer.requests.LoginRequest;
@@ -24,6 +28,9 @@ import ru.fireg45.demotabviewer.security.JWTIssuer;
 import ru.fireg45.demotabviewer.security.UserPrincipal;
 import ru.fireg45.demotabviewer.services.UserService;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @CrossOrigin(origins = "http://localhost:3000")
@@ -44,7 +51,11 @@ public class AuthController {
     }
 
     @PostMapping("/auth/login")
-    public LoginResponse login(@RequestBody @Validated LoginRequest request) {
+    public LoginResponse login(@RequestBody @Valid LoginRequest request,
+                               BindingResult result) {
+        if (result.hasErrors()) {
+            return new LoginResponse(getErrorList(result));
+        }
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
@@ -60,6 +71,10 @@ public class AuthController {
         return new LoginResponse(user != null ? user.getUsername() : "", token, HttpStatus.OK);
     }
 
+    private static List<String> getErrorList(BindingResult result) {
+        return result.getFieldErrors().stream().map(DefaultMessageSourceResolvable::getDefaultMessage).toList();
+    }
+
     @PostMapping("/auth/logout")
     public ResponseEntity<String> logout(@AuthenticationPrincipal UserPrincipal principal) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -72,7 +87,12 @@ public class AuthController {
     }
 
     @PostMapping("/auth/register")
-    public RegistrationResponse registration(@RequestBody RegistrationRequest request) {
+    public RegistrationResponse registration(@RequestBody @Valid RegistrationRequest request,
+                                             BindingResult result) {
+        if (result.hasErrors()) {
+            return new RegistrationResponse(getErrorList(result));
+        }
+
         if (userService.findByUsername(request.getUsername()).isPresent() ||
                 userService.findByEmail(request.getEmail()).isPresent())
             return new RegistrationResponse(HttpStatus.BAD_REQUEST);
@@ -100,7 +120,12 @@ public class AuthController {
 
     @PostMapping("/auth/update")
     public ResponseEntity<UserResponse> update(@AuthenticationPrincipal UserPrincipal principal,
-                               @RequestBody UserUpdateRequest userUpdate) {
+                                               @RequestBody @Valid UserUpdateRequest userUpdate,
+                                               BindingResult result) {
+        if (result.hasErrors()) {
+            return new ResponseEntity<>(new UserResponse(getErrorList(result)), HttpStatus.OK);
+        }
+
         Optional<User> userOptional = userService.findByEmail(principal.getEmail());
         if (userOptional.isEmpty()) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         User user = userOptional.get();
@@ -118,6 +143,19 @@ public class AuthController {
         User user = userOptional.get();
         userService.delete(user);
         return new ResponseEntity<>("", HttpStatus.OK);
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Map<String, String> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        return errors;
     }
 
 }

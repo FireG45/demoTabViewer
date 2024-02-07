@@ -35,7 +35,9 @@ public class TabController {
     private final TabulatureSearchService tabulatureSearchService;
 
     @Autowired
-    public TabController(TabulatureService tabulatureService, UserService userService, TabReader tabReader, ReviewService reviewService, FavoriteService favoriteService, TabulatureSearchService tabulatureSearchService) {
+    public TabController(TabulatureService tabulatureService, UserService userService, TabReader tabReader,
+                         ReviewService reviewService, FavoriteService favoriteService,
+                         TabulatureSearchService tabulatureSearchService) {
         this.tabulatureService = tabulatureService;
         this.userService = userService;
         this.tabReader = tabReader;

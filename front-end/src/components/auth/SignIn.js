@@ -11,7 +11,7 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
-import { Alert } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
 import { useCookies } from "react-cookie";
 
 const defaultTheme = createTheme();
@@ -47,11 +47,30 @@ export default function SignIn() {
 
       if (result.ok) {
         const data = await result.json();
-        setCookie("token", data.accessToken)
-        setCookie("user", data.username)
-        navigate('/')
+
+        if (data.errorMessages) {
+          console.log(data.errorMessages);
+          setError(
+            <>
+              <Stack spacing={3}>
+                {data.errorMessages.map((element) => {
+                  return (
+                    <Alert severity="error">
+                      {element}
+                    </Alert>
+                  )
+                })}
+              </Stack>
+              <br />
+            </>
+          )
+        } else {
+          setCookie("token", data.accessToken)
+          setCookie("user", data.username)
+          navigate('/')
+        }
       } else {
-        setError(<><Alert severity="error">Неверный email или пароль!</Alert><br/></>);
+        setError(<><Alert severity="error">Неверный email или пароль!</Alert><br /></>);
       }
     } catch (error) {
       console.error(error);

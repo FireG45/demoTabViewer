@@ -11,11 +11,13 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
+import { Alert, Stack } from '@mui/material';
 
 const defaultTheme = createTheme();
 
 export default function SignUp() {
   const navigate = useNavigate();
+  const [error, setError] = React.useState(null);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -46,7 +48,27 @@ export default function SignUp() {
       console.log(data)
 
       if (result.ok) {
-        navigate('/signin')
+        if (data.errorMessages) {
+          console.log(data.errorMessages);
+          setError(
+            <>
+              <Stack spacing={3}>
+                {data.errorMessages.map((element, ind) => {
+                  return (
+                    <Alert key={ind} severity="error">
+                      {element}
+                    </Alert>
+                  )
+                })}
+              </Stack>
+              <br />
+            </>
+          )
+        } else {
+          navigate('/signin')
+        }
+      } else {
+        setError(<><Alert severity="error">Неверный email или пароль!</Alert><br /></>);
       }
     } catch (error) {
       console.error(error);
@@ -114,6 +136,7 @@ export default function SignUp() {
             >
               Зарегестрироваться
             </Button>
+            {error}
             <Grid container justifyContent="flex-end">
               <Grid item>
                 <Link href="/signin" variant="body2">

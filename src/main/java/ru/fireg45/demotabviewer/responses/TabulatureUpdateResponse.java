@@ -1,6 +1,6 @@
 package ru.fireg45.demotabviewer.responses;
 
-public class TabulatureUpdateResponse {
+public class TabulatureUpdateResponse extends AbstractResponse {
     public String title;
     public String author;
 

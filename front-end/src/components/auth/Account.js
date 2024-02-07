@@ -15,6 +15,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { Divider } from '@mui/material';
 import DeleteAccountDialogButton from '../DeleteAccountDialogButton';
 import { useCookies } from 'react-cookie';
+import { Alert, Stack } from '@mui/material';
 
 const defaultTheme = createTheme();
 
@@ -25,6 +26,7 @@ export default function Account() {
     const [email, setEmail] = React.useState("");
     const [username, setUsername] = React.useState("");
     const [initialUser, setInitialUser] = React.useState("");
+    const [error, setError] = React.useState(null);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -49,10 +51,30 @@ export default function Account() {
             console.log(data.username)
 
             if (result.ok) {
-                setCookie("user", data.username);
-                window.location.reload();
-                //navigate('/signin')
-            }
+                if (data.errorMessages) {
+                    console.log(data.errorMessages);
+                    setError(
+                        <>
+                            <Stack spacing={3}>
+                                {data.errorMessages.map((element, ind) => {
+                                    return (
+                                        <Alert key={ind} severity="error">
+                                            {element}
+                                        </Alert>
+                                    )
+                                })}
+                            </Stack>
+                            <br />
+                        </>
+                    )
+                } else {
+                    setCookie("user", data.username);
+                    window.location.reload();
+                    //navigate('/signin')
+                }
+            } else {
+                setError(<><Alert severity="error">Неверный email или пароль!</Alert><br /></>);
+              }
         } catch (error) {
             console.error(error);
         }
@@ -60,32 +82,32 @@ export default function Account() {
 
     const getParams = async () => {
         try {
-          const result = await fetch("http://localhost:8080/auth/update", {
-            method: "GET",
-            headers: new Headers({
-              'Authorization': 'Bearer ' + cookies["token"],
-            })
-          });
-    
-          if (result.ok) {
-            const data = await result.json();
-            setEmail(data.email)
-            setUsername(data.username)
-            setInitialUser(data.username)
-            console.log({
-                email : email,
-                username : username,
+            const result = await fetch("http://localhost:8080/auth/update", {
+                method: "GET",
+                headers: new Headers({
+                    'Authorization': 'Bearer ' + cookies["token"],
+                })
             });
-            setLoaded(true)
-          }
+
+            if (result.ok) {
+                const data = await result.json();
+                setEmail(data.email)
+                setUsername(data.username)
+                setInitialUser(data.username)
+                console.log({
+                    email: email,
+                    username: username,
+                });
+                setLoaded(true)
+            }
         } catch (error) {
-          console.error(error);
+            console.error(error);
         }
-      }
-    
-      React.useEffect(() => {
+    }
+
+    React.useEffect(() => {
         if (!loaded) getParams()
-      })
+    })
 
     return (
         <ThemeProvider theme={defaultTheme}>
@@ -148,7 +170,7 @@ export default function Account() {
                         <br />
                         <Divider />
                         <br />
-                        <DeleteAccountDialogButton username={initialUser}/>
+                        <DeleteAccountDialogButton username={initialUser} />
                         <br />
                         <Button
                             fullWidth
@@ -169,6 +191,7 @@ export default function Account() {
                         >
                             Выйти
                         </Button>
+                        {error}
                     </Box>
                 </Box>
             </Container>

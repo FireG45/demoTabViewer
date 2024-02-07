@@ -22,6 +22,13 @@ export default function UploadTab() {
   const handleFileChange = (e) => {
     if (e.target.files) {
       setFile(e.target.files[0]);
+      if (e.target.files[0] && ['gp1', 'gp2', 'gp3', 'gp4', 'gp5'].indexOf(e.target.files[0].name.split('.').pop()) != -1) {
+        setError(null)
+      } else {
+        setError(
+          <><Alert severity="error">Неверный формат файла! Допустимы только форматы: .gp1, .gp2, .gp3, .gp4, .gp5!</Alert><br /></>
+        )
+      }
     }
   };
 
@@ -39,7 +46,7 @@ export default function UploadTab() {
 
   const handleUpload = async (e) => {
     e.preventDefault()
-    if (file) {
+    if (file && !error && author && title) {
       console.log("Uploading file...");
       const formData = new FormData();
       formData.append("file", file);
