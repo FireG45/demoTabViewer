@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 
 import java.util.Collection;
 import java.util.Date;
@@ -12,6 +14,7 @@ import java.util.List;
 @Setter
 @Getter
 @Entity
+@Indexed
 @Table(name = "tabulature")
 public class Tabulature {
     @Id
@@ -19,9 +22,11 @@ public class Tabulature {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @FullTextField
     @Column(name = "title")
     private String title;
 
+    @FullTextField
     @Column(name = "author")
     private String author;
 

@@ -35,3 +35,4 @@ build/
 
 ### Test Guitar Pro Files ###
 *.gp*
+/Tabulature/

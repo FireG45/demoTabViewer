@@ -12,10 +12,7 @@ import ru.fireg45.demotabviewer.model.Favorite;
 import ru.fireg45.demotabviewer.model.Tabulature;
 import ru.fireg45.demotabviewer.model.User;
 import ru.fireg45.demotabviewer.security.UserPrincipal;
-import ru.fireg45.demotabviewer.services.FavoriteService;
-import ru.fireg45.demotabviewer.services.ReviewService;
-import ru.fireg45.demotabviewer.services.TabulatureService;
-import ru.fireg45.demotabviewer.services.UserService;
+import ru.fireg45.demotabviewer.services.*;
 import ru.fireg45.demotabviewer.util.tabs.dto.TabDTO;
 import ru.fireg45.demotabviewer.util.tabs.TabReader;
 import ru.fireg45.demotabviewer.util.tabs.dto.TabListDTO;
@@ -35,25 +32,34 @@ public class TabController {
     private final TabReader tabReader;
     private final ReviewService reviewService;
     private final FavoriteService favoriteService;
+    private final TabulatureSearchService tabulatureSearchService;
 
     @Autowired
-    public TabController(TabulatureService tabulatureService, UserService userService, TabReader tabReader, ReviewService reviewService, FavoriteService favoriteService) {
+    public TabController(TabulatureService tabulatureService, UserService userService, TabReader tabReader, ReviewService reviewService, FavoriteService favoriteService, TabulatureSearchService tabulatureSearchService) {
         this.tabulatureService = tabulatureService;
         this.userService = userService;
         this.tabReader = tabReader;
         this.reviewService = reviewService;
         this.favoriteService = favoriteService;
+        this.tabulatureSearchService = tabulatureSearchService;
     }
 
     @GetMapping("")
     public TabListDTO index(@RequestParam(name = "page", defaultValue = "0") int page,
                             @RequestParam(name = "pageCount", defaultValue = "1") int pageCount,
-                            @RequestParam(name = "author" , required = false) String author) {
+                            @RequestParam(name = "author" , required = false) String author,
+                            @RequestParam(name = "query" , required = false) String query) throws InterruptedException {
         int PAGE_SIZE = 20;
-        PageRequest pageRequest = PageRequest.of(page, PAGE_SIZE);
-        List<Tabulature> tabs = author == null || author.isEmpty() ? tabulatureService.findAll(pageRequest) :
-                tabulatureService.findAllByAuthor(author, pageRequest);
-        return new TabListDTO(tabs, tabulatureService.getPageCount(PAGE_SIZE), page);
+        List<Tabulature> tabs;
+        if (query == null) {
+            PageRequest pageRequest = PageRequest.of(page, PAGE_SIZE);
+            tabs = author == null || author.isEmpty() ? tabulatureService.findAll(pageRequest) :
+                    tabulatureService.findAllByAuthor(author, pageRequest);
+        } else {
+            tabs = tabulatureSearchService.search(query);
+        }
+
+        return new TabListDTO(tabs, query == null ? tabulatureService.getPageCount(PAGE_SIZE) : -1, page);
     }
 
     @GetMapping("/tabs/{id}")
