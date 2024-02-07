@@ -45,9 +45,12 @@ public class WebSecurityConfig {
                         .requestMatchers("/auth/register").permitAll()
                         .requestMatchers("/auth/*").permitAll()
                         .requestMatchers("/tabs/mytabs").authenticated()
+                        .requestMatchers("/tabs/favorites").authenticated()
                         .requestMatchers("/tabs/edit/*").authenticated()
                         .requestMatchers("/tabs/delete/*").authenticated()
                         .requestMatchers("/addreview").authenticated()
+                        .requestMatchers("/auth/update").authenticated()
+                        .requestMatchers("/auth/delete").authenticated()
                         .anyRequest().authenticated()
                 );
 

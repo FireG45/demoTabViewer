@@ -25,7 +25,7 @@ export default function NotFoundError() {
             />
           </Grid>
           <Grid> 
-            <Button variant="contained" onClick={() => navigate('/')}>Back Home</Button>
+            <Button variant="contained" onClick={() => navigate('/')}>На главную</Button>
           </Grid>
         </Stack>
       </Container>

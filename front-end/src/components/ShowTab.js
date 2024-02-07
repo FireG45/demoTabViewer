@@ -1,7 +1,7 @@
 import { Component, createRef } from "react";
 import Score from "./Score";
 import Stack from "@mui/material/Stack";
-import { Container, Grid, IconButton, Rating, Typography } from "@mui/material";
+import { ButtonGroup, Container, Grid, IconButton, Rating, Typography } from "@mui/material";
 import withRouter from './withRouter'
 import Box from '@mui/material/Box';
 import InputLabel from '@mui/material/InputLabel';
@@ -17,6 +17,11 @@ import CircleIcon from '@mui/icons-material/Circle';
 import styled from "@emotion/styled";
 import { tab } from "@testing-library/user-event/dist/tab";
 import { Link } from "react-router-dom";
+import Checkbox from '@mui/material/Checkbox';
+import FavoriteBorder from '@mui/icons-material/FavoriteBorder';
+import Favorite from '@mui/icons-material/Favorite';
+
+const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
 class ShowTab extends Component {
   static propTypes = {
@@ -60,6 +65,7 @@ class ShowTab extends Component {
       tab: null,
       track: 0,
       value: 0,
+      favorite: false,
     };
   }
 
@@ -80,7 +86,8 @@ class ShowTab extends Component {
       (result) => {
         this.setState({
           isLoaded: true,
-          tab: result
+          tab: result,
+          favorite: result.favorite,
         });
       },
       (error) => {
@@ -94,7 +101,7 @@ class ShowTab extends Component {
   }
 
   render() {
-    const { error, isLoaded, tab, value } = this.state;
+    const { error, isLoaded, tab, value, favorite } = this.state;
 
     if (error) {
       return <p>Error: {error.meassage} </p>
@@ -123,10 +130,30 @@ class ShowTab extends Component {
             <br></br>
             <Grid container spacing={0}>
               <Grid xs={6}>
-                <h2><Link to={`/${tab.author}`}>{tab.author}</Link> - {tab.title}</h2>
+                <h2><Link to={`/tabs/${tab.author}`}>{tab.author}</Link> - {tab.title}</h2>
               </Grid>
               <Grid xs={6} style={{ textAlign: "right" }}>
-                <TabInfoPopover data={{ user: tab.user, uploaded: tab.uploaded, id: this.id, owner: tab.userOwner }} />
+                <ButtonGroup>
+                  <Checkbox onChange={async (_, cheked) => {
+                    try {
+                      const result = await fetch(`http://localhost:8080/tabs/${cheked ? "setfavorite" : "removefavorite"}/` + this.id, {
+                        method: cheked ? "POST" : "DELETE",
+                        headers: new Headers({
+                          'Content-Type': 'application/json',
+                          'Authorization': 'Bearer ' + this.token
+                        })
+                      });
+                      if (result.ok) {
+                        this.setState({
+                          favorite: cheked
+                        });
+                      }
+                    } catch (error) {
+                      console.error(error);
+                    }
+                  }} checked={favorite} icon={<FavoriteBorder />} checkedIcon={<Favorite />} />
+                  <TabInfoPopover data={{ user: tab.user, uploaded: tab.uploaded, id: this.id, owner: tab.userOwner }} />
+                </ButtonGroup>
                 <Typography component="legend">Сложность табулатуры:</Typography>
                 <StyledRating
                   name="simple-controlled"

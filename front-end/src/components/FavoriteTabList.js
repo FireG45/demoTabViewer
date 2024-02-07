@@ -8,9 +8,15 @@ import NoTabsCard from "./NoTabsCard";
 import styled from "@emotion/styled";
 import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
 import CircleIcon from '@mui/icons-material/Circle';
+import Checkbox from '@mui/material/Checkbox';
+import FavoriteBorder from '@mui/icons-material/FavoriteBorder';
+import Favorite from '@mui/icons-material/Favorite';
+import HeartBrokenIcon from '@mui/icons-material/HeartBroken';
+import { log } from "vexflow";
 
-function MyTabList() {
+function FavoriteTabList() {
   const [tabs, setTabs] = useState([]);
+  const [changed, setChanged] = useState(false);
   const navigate = useNavigate();
   const [cookies, setCookie, removeCookie] = useCookies(["token"]);
 
@@ -19,8 +25,8 @@ function MyTabList() {
   }
 
   useEffect(() => {
-    document.title = 'Мои табулатуры';
-    fetch('http://localhost:8080/tabs/mytabs', {
+    document.title = 'Избранные табулатуры';
+    fetch('http://localhost:8080/tabs/favorite', {
       headers: new Headers({
         'Authorization': 'Bearer ' + cookies["token"]
       })
@@ -28,11 +34,12 @@ function MyTabList() {
       .then((response) => response.json())
       .then((data) => {
         setTabs(data);
+        setChanged(false);
       })
       .catch((err) => {
         console.log(err.message);
       });
-  }, []);
+  }, [changed]);
 
   const paperSX = {
     boxShadow: 3,
@@ -58,7 +65,7 @@ function MyTabList() {
         <>
           <Typography variant="h4" align={'center'} alignSelf={'center'}>
             <br />
-            Загруженные табулатуры:
+            Избранные табулатуры:
           </Typography>
           <Box fullwidth>
             <List>
@@ -85,10 +92,25 @@ function MyTabList() {
                             variant="contained"
                             aria-label="Disabled elevation buttons"
                           >
-                            <IconButton onClick={() => navigate('/update/' + tab.id)} variant={'outlined'} color={'warning'}>
-                              <EditIcon />
+                            <IconButton onClick={async () => {
+                              console.log(tab.id);
+                              try {
+                                const result = await fetch(`http://localhost:8080/tabs/removefavorite/` + tab.id, {
+                                  method: "DELETE",
+                                  headers: new Headers({
+                                    'Content-Type': 'application/json',
+                                    'Authorization': 'Bearer ' + cookies["token"]
+                                  })
+                                });
+                                if (result.ok) {
+                                  setChanged(true);
+                                }
+                              } catch (error) {
+                                console.error(error);
+                              }
+                            }} checked={tab.favorite}>
+                              <HeartBrokenIcon />
                             </IconButton>
-                            <DeleteDialogButton id={tab.id} deleteHandler={() => deleteHandler(tab.id)} />
                           </ButtonGroup>
                         </Grid>
                       </Grid>
@@ -105,14 +127,14 @@ function MyTabList() {
         <Stack spacing={5} alignContent={'center'} alignItems={'center'}>
           <Typography variant="h4" align={'center'} alignSelf={'center'}>
             <br />
-            У вас нет загруженных табулатур :{'('}
+            У вас нет избранных табулатур :{'('}
           </Typography>
-          <Button variant={'contained'} onClick={() => navigate('/upload')}>
-            Загрузить
+          <Button variant={'contained'} onClick={() => navigate('/Back Home')}>
+            На главную
           </Button>
         </Stack>
       }
     </Stack>
   );
 }
-export default MyTabList;
+export default FavoriteTabList;

@@ -11,29 +11,31 @@ import { useCookies } from 'react-cookie';
 import MyTabList from './components/MyTabList';
 import UpdateTab from './components/UpdateTab';
 import Account from './components/auth/Account';
- 
+import FavoriteTabList from './components/FavoriteTabList';
+
 function App() {
     const [cookies, setCookie, removeCookie] = useCookies(["token"]);
 
     return (
         <React.StrictMode>
             <Router>
-                <PrimarySearchAppBar/>
+                <PrimarySearchAppBar />
                 <Routes>
-                    <Route path='/' exact element={<TabList/>} />
-                    <Route path='/tabs/:id/:track' element={<ShowTab/>} />
-                    <Route path='/upload' element={!cookies["token"] ? <SignIn/> : <UploadTab/>} />
-                    <Route path='/signup' element={<SignUp/>} />
-                    <Route path='/signin' element={<SignIn/>} />
-                    <Route path='/mytabs' element={!cookies["token"] ? <SignIn/> : <MyTabList/>} />
-                    <Route path='/update/:id' element={!cookies["token"] ? <SignIn/> : <UpdateTab/>} />
-                    <Route path='/:author' element={<TabList/>} />
-                    <Route path='/account' element={!cookies["token"] ? <SignIn/> : <Account/>} />
-                    <Route path='*' element={<NotFoundError/>} />
+                    <Route path='/' exact element={<TabList />} />
+                    <Route path='/tabs/:id/:track' element={<ShowTab />} />
+                    <Route path='/upload' element={!cookies["token"] ? <SignIn /> : <UploadTab />} />
+                    <Route path='/signup' element={<SignUp />} />
+                    <Route path='/signin' element={<SignIn />} />
+                    <Route path='/mytabs' element={!cookies["token"] ? <SignIn /> : <MyTabList />} />
+                    <Route path='/favorite' element={!cookies["token"] ? <SignIn /> : <FavoriteTabList />} />
+                    <Route path='/update/:id' element={!cookies["token"] ? <SignIn /> : <UpdateTab />} />
+                    <Route path='/tabs/:author' element={<TabList />} />
+                    <Route path='/account' element={!cookies["token"] ? <SignIn /> : <Account />} />
+                    <Route path='*' element={<NotFoundError />} />
                 </Routes>
             </Router>
         </React.StrictMode>
     );
 }
- 
+
 export default App;

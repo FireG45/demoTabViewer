@@ -43,8 +43,21 @@ public class TabulatureService {
         return tabulaturesRepository.getAverageRating(id);
     }
 
+    public Integer getAverageRatingWithOutOne(int id, int reviewId) {
+        return tabulaturesRepository.getAverageRating(id, reviewId);
+    }
+
     public int getPageCount(int pageSize) {
         long totalCount = tabulaturesRepository.count();
         return totalCount < pageSize ? 1 : (int) (long) Math.ceil((double) totalCount / (double) pageSize);
+    }
+
+    public List<Tabulature> findFavoritesByEmail(String email) {
+        return tabulaturesRepository.findFavoritesByEmail(email);
+    }
+
+    public int countFavorites(Tabulature tabulature, String email) {
+        Integer count = tabulaturesRepository.countFavorites(tabulature.getId(), email);
+        return count == null ? 0 : count;
     }
 }

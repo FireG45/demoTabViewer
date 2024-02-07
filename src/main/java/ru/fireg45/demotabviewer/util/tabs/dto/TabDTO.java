@@ -11,6 +11,8 @@ public class TabDTO {
     public String uploaded;
     public boolean userOwner;
     public int rating;
+
+    public boolean favorite;
     public String[] tunings;
     public String[] trackNames;
     public MeasureDTO[] measures;

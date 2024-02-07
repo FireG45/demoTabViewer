@@ -38,8 +38,11 @@ export default function DeleteAccountDialogButton({ username = null }) {
 
     const handleDelte = async () => {
         try {
-            const result = await fetch("http://localhost:8080/auth/delete/" + username, {
+            const result = await fetch("http://localhost:8080/auth/delete", {
                 method: "DELETE",
+                body: JSON.stringify({
+                    username: username
+                }),
                 headers: new Headers({
                     'Authorization': 'Bearer ' + cookies["token"]
                 })

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Collection;
 import java.util.List;
 
 @Getter
@@ -32,12 +33,16 @@ public class User {
     private String role;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Tabulature> tabulatures;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "uploaded")
+    @OneToMany(mappedBy = "uploaded", cascade = CascadeType.ALL)
     private List<Review> reviews;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private Collection<Favorite> favorite;
 
     public User() {}
 
@@ -47,4 +52,5 @@ public class User {
         this.password = password;
         this.role = role;
     }
+
 }

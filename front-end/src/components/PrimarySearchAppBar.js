@@ -86,6 +86,11 @@ export default function PrimarySearchAppBar() {
   };
 
   const [open, setOpen] = React.useState(false);
+  const [user, setUser] = React.useState(cookies["user"]);
+
+  React.useEffect(() => {
+    setUser(cookies["user"])
+  }, [cookies["user"]])
 
   const toggleDrawer = (inOpen) => (event) => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -193,7 +198,7 @@ export default function PrimarySearchAppBar() {
                 <Stack alignItems={'center'}>
                   <AccountCircleIcon />
                   <Typography variant="caption">
-                    {cookies["user"] + " "}
+                    {user + " "}
                   </Typography>
                 </Stack>
               </Typography>

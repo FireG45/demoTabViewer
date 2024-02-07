@@ -4,6 +4,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
 import CircleIcon from '@mui/icons-material/Circle';
 import styled from "@emotion/styled";
+import Checkbox from '@mui/material/Checkbox';
+import FavoriteBorder from '@mui/icons-material/FavoriteBorder';
+import Favorite from '@mui/icons-material/Favorite';
 
 function TabList() {
   const [tabs, setTabs] = useState([]);
@@ -43,6 +46,7 @@ function TabList() {
     },
   });
 
+
   return (
     <Stack spacing={3} alignItems={'center'}>
       <Container>
@@ -58,6 +62,7 @@ function TabList() {
         <TextField fullWidth type="search" id="search" label="Поиск..." />
         <br /><br />
         {tabs.map((tab) => {
+          console.log(tab.favorite);
           return (
             <div className="post-card" key={tab.id}>
               <ListItemButton onClick={() => navigate('/tabs/' + tab.id + '/0')} sx={paperSX} elevation={5} style={{ borderRadius: '5px', margin: "10px", padding: "15px", textAlign: "left" }}>

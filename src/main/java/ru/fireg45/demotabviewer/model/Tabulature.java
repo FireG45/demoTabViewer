@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -39,11 +40,15 @@ public class Tabulature {
     private Date lastUpdate;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "tab")
+    @OneToMany(mappedBy = "tab", cascade = CascadeType.ALL)
     private List<Review> reviews;
 
     @Column(name = "rating")
     private int rating;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "tab", cascade = CascadeType.ALL)
+    private List<Favorite> favorite;
 
     public Tabulature() {}
 
@@ -56,5 +61,6 @@ public class Tabulature {
         this.lastUpdate = new Date();
         this.rating = rating;
     }
+
 
 }

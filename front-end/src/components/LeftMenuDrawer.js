@@ -11,7 +11,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { IconButton } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import GradeIcon from '@mui/icons-material/Grade';
+import Favorite from '@mui/icons-material/Favorite';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import { useCookies } from 'react-cookie';
 import { useNavigate } from 'react-router-dom';
@@ -36,6 +36,11 @@ export default function LeftMenuDrawer() {
 
   const [cookies, setCookie, removeCookie] = useCookies(["token"]);
   const navigate = useNavigate()
+  const [user, setUser] = React.useState(cookies["user"]);
+
+  React.useEffect(() => {
+    setUser(cookies["user"])
+  }, [cookies["user"]])
 
   const list = (anchor) => (
     <Box
@@ -52,14 +57,14 @@ export default function LeftMenuDrawer() {
                 <ListItemIcon>
                   <AccountCircleIcon />
                 </ListItemIcon>
-                <ListItemText primary={cookies["user"]} />
+                <ListItemText primary={user} />
               </ListItemButton>
             </ListItem>
 
             <ListItem disablePadding>
-              <ListItemButton disabled>
+              <ListItemButton onClick={() => navigate("/favorite")}>
                 <ListItemIcon>
-                  <GradeIcon />
+                  <Favorite />
                 </ListItemIcon>
                 <ListItemText primary={"Избранные табулатуры"} />
               </ListItemButton>

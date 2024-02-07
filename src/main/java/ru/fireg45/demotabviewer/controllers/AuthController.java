@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.fireg45.demotabviewer.model.User;
 import ru.fireg45.demotabviewer.requests.LoginRequest;
 import ru.fireg45.demotabviewer.requests.RegistrationRequest;
+import ru.fireg45.demotabviewer.requests.UserUpdateRequest;
 import ru.fireg45.demotabviewer.responses.LoginResponse;
 import ru.fireg45.demotabviewer.responses.RegistrationResponse;
 import ru.fireg45.demotabviewer.responses.UserResponse;
@@ -86,6 +87,37 @@ public class AuthController {
     @GetMapping("/auth/getuser")
     public UserResponse getUser(@AuthenticationPrincipal UserPrincipal principal) {
         return new UserResponse(principal.getUsername());
+    }
+
+    @GetMapping("/auth/update")
+    public ResponseEntity<UserResponse> getUpdate(@AuthenticationPrincipal UserPrincipal principal) {
+        if (principal == null)
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        User user = userService.findByEmail(principal.getEmail()).orElse(null);
+        return new ResponseEntity<>(new UserResponse(user != null ? user.getUsername() : "",
+                principal.getEmail()), HttpStatus.OK);
+    }
+
+    @PostMapping("/auth/update")
+    public ResponseEntity<UserResponse> update(@AuthenticationPrincipal UserPrincipal principal,
+                               @RequestBody UserUpdateRequest userUpdate) {
+        Optional<User> userOptional = userService.findByEmail(principal.getEmail());
+        if (userOptional.isEmpty()) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        User user = userOptional.get();
+        user.setEmail(userUpdate.email);
+        user.setUsername(userUpdate.username);
+        userService.save(user);
+        return new ResponseEntity<>(new UserResponse(user.getUsername(), user.getEmail()),
+                HttpStatus.OK);
+    }
+
+    @DeleteMapping("/auth/delete")
+    public ResponseEntity<String> delete(@AuthenticationPrincipal UserPrincipal principal) {
+        Optional<User> userOptional = userService.findByEmail(principal.getEmail());
+        if (userOptional.isEmpty()) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        User user = userOptional.get();
+        userService.delete(user);
+        return new ResponseEntity<>("", HttpStatus.OK);
     }
 
 }

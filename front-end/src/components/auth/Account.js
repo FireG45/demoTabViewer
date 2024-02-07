@@ -19,44 +19,73 @@ import { useCookies } from 'react-cookie';
 const defaultTheme = createTheme();
 
 export default function Account() {
-    const [cookies, setCookie, removeCookie] = useCookies(["token"]);
+    const [cookies, setCookie, removeCookie] = useCookies();
     const navigate = useNavigate()
+    const [loaded, setLoaded] = React.useState(false);
+    const [email, setEmail] = React.useState("");
+    const [username, setUsername] = React.useState("");
+    const [initialUser, setInitialUser] = React.useState("");
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
 
-        console.log({
-            email: formData.get('email'),
-            password: formData.get('password'),
-        });
-
         try {
-            const result = await fetch("http://localhost:8080/auth/register", {
+            const result = await fetch("http://localhost:8080/auth/update", {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
+                    'Authorization': 'Bearer ' + cookies["token"],
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(
                     {
                         username: formData.get('username'),
                         email: formData.get('email'),
-                        password: formData.get('password')
                     })
             });
 
             const data = await result.json();
 
-            console.log(data)
+            console.log(data.username)
 
             if (result.ok) {
-                navigate('/signin')
+                setCookie("user", data.username);
+                window.location.reload();
+                //navigate('/signin')
             }
         } catch (error) {
             console.error(error);
         }
     };
+
+    const getParams = async () => {
+        try {
+          const result = await fetch("http://localhost:8080/auth/update", {
+            method: "GET",
+            headers: new Headers({
+              'Authorization': 'Bearer ' + cookies["token"],
+            })
+          });
+    
+          if (result.ok) {
+            const data = await result.json();
+            setEmail(data.email)
+            setUsername(data.username)
+            setInitialUser(data.username)
+            console.log({
+                email : email,
+                username : username,
+            });
+            setLoaded(true)
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    
+      React.useEffect(() => {
+        if (!loaded) getParams()
+      })
 
     return (
         <ThemeProvider theme={defaultTheme}>
@@ -87,6 +116,10 @@ export default function Account() {
                                     id="username"
                                     label="Имя пользователя"
                                     autoFocus
+                                    value={username}
+                                    onChange={(e) => {
+                                        setUsername(e.target.value)
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12}>
@@ -97,19 +130,12 @@ export default function Account() {
                                     label="Email"
                                     name="email"
                                     autoComplete="email"
+                                    value={email}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value)
+                                    }}
                                 />
                             </Grid>
-                            {/* <Grid item xs={12}>
-                                <TextField
-                                    required
-                                    fullWidth
-                                    name="password"
-                                    label="Пароль"
-                                    type="password"
-                                    id="password"
-                                    autoComplete="new-password"
-                                />
-                            </Grid> */}
                         </Grid>
                         <Button
                             type="submit"
@@ -119,17 +145,10 @@ export default function Account() {
                         >
                             Сохранить
                         </Button>
-                        {/* <Grid container justifyContent="flex-end">
-                            <Grid item>
-                                <Link href="/signin" variant="body2">
-                                    Уже зарегестрированы? Войти
-                                </Link>
-                            </Grid>
-                        </Grid> */}
                         <br />
                         <Divider />
                         <br />
-                        <DeleteAccountDialogButton />
+                        <DeleteAccountDialogButton username={initialUser}/>
                         <br />
                         <Button
                             fullWidth
