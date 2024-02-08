@@ -18,12 +18,13 @@ import ru.fireg45.demotabviewer.util.tabs.dto.TabDTO;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 @Service
     public class TabReaderImpl implements TabReader {
     @Override
-    public TGSong readSong(String filename) throws IOException, TGFileFormatException {
+    public TGSong readSong(String filename, InputStream stream) throws TGFileFormatException {
         GTPInputStream gtpInputStream;
         String extension = filename.substring(filename.lastIndexOf('.'));
         switch (extension) {
@@ -35,7 +36,7 @@ import java.util.*;
         }
         TGFactory factory = new TGFactoryImpl();
         gtpInputStream.init(factory);
-        gtpInputStream.setStream(new FileInputStream(filename));
+        gtpInputStream.setStream(stream);
         return gtpInputStream.readSong();
     }
 
@@ -170,8 +171,8 @@ import java.util.*;
     }
 
     @Override
-    public TabDTO read(int track, String filename) throws TGFileFormatException, IOException {
-        TGSong song = readSong(filename);
+    public TabDTO read(int track, String filename, InputStream stream) throws TGFileFormatException, IOException {
+        TGSong song = readSong(filename, stream);
         List<TGMeasure> measures = getMeasuresList(song, track);
         TabDTO tabDTO = new TabDTO();
 

@@ -18,6 +18,7 @@ import ru.fireg45.demotabviewer.util.tabs.TabReader;
 import ru.fireg45.demotabviewer.util.tabs.dto.TabListDTO;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Objects;
@@ -33,17 +34,19 @@ public class TabController {
     private final ReviewService reviewService;
     private final FavoriteService favoriteService;
     private final TabulatureSearchService tabulatureSearchService;
+    private final FileService fileService;
 
     @Autowired
     public TabController(TabulatureService tabulatureService, UserService userService, TabReader tabReader,
                          ReviewService reviewService, FavoriteService favoriteService,
-                         TabulatureSearchService tabulatureSearchService) {
+                         TabulatureSearchService tabulatureSearchService, FileService fileService) {
         this.tabulatureService = tabulatureService;
         this.userService = userService;
         this.tabReader = tabReader;
         this.reviewService = reviewService;
         this.favoriteService = favoriteService;
         this.tabulatureSearchService = tabulatureSearchService;
+        this.fileService = fileService;
     }
 
     @GetMapping("")
@@ -76,7 +79,8 @@ public class TabController {
         Optional<Tabulature> tabulatureOptional = tabulatureService.findById(id);
         if (tabulatureOptional.isPresent()) {
             Tabulature tabulature = tabulatureOptional.get();
-            tab = tabReader.read(track ,tabulature.getFilepath());
+            InputStream stream = fileService.download(tabulature);
+            tab = tabReader.read(track ,tabulature.getFilepath(), stream);
             tab.title = tabulature.getTitle();
             tab.author = tabulature.getAuthor();
             tab.track = track;

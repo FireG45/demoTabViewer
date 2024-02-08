@@ -9,11 +9,12 @@ import ru.fireg45.demotabviewer.util.tabs.dto.NoteDTO;
 import ru.fireg45.demotabviewer.util.tabs.dto.TabDTO;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 
 public interface TabReader {
-    TGSong readSong(String filename) throws IOException, TGFileFormatException;
+    TGSong readSong(String filename, InputStream stream) throws IOException, TGFileFormatException;
 
     List<TGMeasure> getMeasuresList(TGSong song, int track);
 
@@ -25,5 +26,5 @@ public interface TabReader {
 
     MeasureDTO readMeasure(TGMeasure measure);
 
-    TabDTO read(int track, String filename) throws TGFileFormatException, IOException;
+    TabDTO read(int track, String filename, InputStream stream) throws TGFileFormatException, IOException;
 }

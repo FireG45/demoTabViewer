@@ -1,6 +1,7 @@
 package ru.fireg45.demotabviewer.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,9 @@ public class FileUploadController {
 
 
     @Autowired
-    public FileUploadController(FileService fileService, UserService userService, TabulatureService tabulatureService) {
+    public FileUploadController(FileService fileService,
+                                UserService userService,
+                                TabulatureService tabulatureService) {
         this.fileService = fileService;
         this.userService = userService;
         this.tabulatureService = tabulatureService;

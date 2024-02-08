@@ -15,7 +15,7 @@ import FavoriteTabList from './components/FavoriteTabList';
 
 function App() {
     const [cookies, setCookie, removeCookie] = useCookies(["token"]);
-
+    console.log(cookies["token"]);
     return (
         <React.StrictMode>
             <Router>

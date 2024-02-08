@@ -6,9 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.fireg45.demotabviewer.model.Tabulature;
 import ru.fireg45.demotabviewer.util.exceptions.FileUploadException;
 
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -53,7 +51,7 @@ public class FilesystemFileService implements FileService {
     }
 
     @Override
-    public MultipartFile download(Tabulature tabulature) {
-        return null;
+    public InputStream download(Tabulature tabulature) throws FileNotFoundException {
+        return new FileInputStream(tabulature.getFilepath());
     }
 }
