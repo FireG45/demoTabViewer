@@ -13,9 +13,14 @@ import UpdateTab from './components/UpdateTab';
 import Account from './components/auth/Account';
 import FavoriteTabList from './components/FavoriteTabList';
 
+const SERVER_NAME = "localhost"
+
 function App() {
     const [cookies, setCookie, removeCookie] = useCookies(["token"]);
     console.log(cookies["token"]);
+
+    console.log(process.env.SERVER_NAME)
+
     return (
         <React.StrictMode>
             <Router>

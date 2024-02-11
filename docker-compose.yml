@@ -1,0 +1,40 @@
+version: "3.9"
+services:
+  server:
+    build: .
+    ports:
+      - "8080:8080"
+
+#  client:
+#    build: front-end
+#    ports:
+#      - "3000:3000"
+
+  minio:
+    image: quay.io/minio/minio
+    command: server /data --console-address ":9090"
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    volumes:
+      - ~/minio/data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+
+  postgres:
+    image: postgres:14.8-alpine3.18
+    environment:
+      POSTGRES_DB: "tab_viewer_db"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "admin"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - ./dumps:/docker-entrypoint-initdb.d
+      - tab_viewer_db-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+volumes:
+  tab_viewer_db-data:

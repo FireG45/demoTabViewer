@@ -17,6 +17,7 @@ import ru.fireg45.demotabviewer.util.tabs.dto.TabDTO;
 import ru.fireg45.demotabviewer.util.tabs.TabReader;
 import ru.fireg45.demotabviewer.util.tabs.dto.TabListDTO;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;

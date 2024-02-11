@@ -129,7 +129,7 @@ function FavoriteTabList() {
             <br />
             У вас нет избранных табулатур :{'('}
           </Typography>
-          <Button variant={'contained'} onClick={() => navigate('/Back Home')}>
+          <Button variant={'contained'} onClick={() => navigate('/')}>
             На главную
           </Button>
         </Stack>
