@@ -9,11 +9,12 @@ export default class Score extends Component {
         this.id = props.id
         this.track = props.track
         this.state = {
-            error : null,
-            isLoaded : false,
+            error: null,
+            isLoaded: false,
             measures: [],
-            stringCount : 6,
-            tuning : "",
+            stringCount: 6,
+            tuning: "",
+            wide: false,
         };
     }
 
@@ -22,10 +23,10 @@ export default class Score extends Component {
         fetch(path).then(res => res.json()).then(
             (result) => {
                 this.setState({
-                    isLoaded : true,
+                    isLoaded: true,
                     measures: result.measures,
-                    stringCount : result.stringCount,
-                    tuning : result.tunings[this.track].split(" ").reverse(),
+                    stringCount: result.stringCount,
+                    tuning: result.tunings[this.track].split(" ").reverse(),
                 });
             },
             (error) => {
@@ -38,7 +39,12 @@ export default class Score extends Component {
     }
 
     render() {
-        const {error, isLoaded, measures, stringCount, tuning} = this.state;
+        const { error, isLoaded, measures, stringCount, tuning } = this.state;
+
+        const wide = measures.filter((m) => m.beatDTOS.filter((b) => b.noteDTOS.length > 0).length >= 25).length != 0
+
+        let cols = wide ? {} : { xs: 4, sm: 8, md: 40 }
+
         if (error) {
             return <p>Error: {error.meassage} </p>
         } else if (!isLoaded) {
@@ -46,26 +52,27 @@ export default class Score extends Component {
         } else {
             return (
                 <>
-                    <Grid container spacing={0} columns={{ xs: 4, sm: 8, md: 40 }}>
-                    {Array.from(Array(measures.length)).map((_, index) => {
-                        let tempo = index === 0 || measures[index - 1].tempo !== measures[index].tempo ? measures[index].tempo : false;
-                        let timeSignature = index === 0 || measures[index - 1].timeSignature !== measures[index].timeSignature ? measures[index].timeSignature : false;
-                        return (
-                            <Grid item xs={2} sm={4} md={10} key={index}>
-                                <Stave
-                                    measure={measures[index].beatDTOS}
-                                    tempo={tempo}
-                                    stringCount={stringCount}
-                                    timeSignature={timeSignature}
-                                    tuning={index === 0 ? tuning : false}
-                                    staveId={index + 1}
-                                    pmIndexes={measures[index].pmIndexes}
-                                    lrIndexes={measures[index].lrIndexes}
-                                    slidesAndTies={measures[index].slidesAndTies}
-                                />
-                            </Grid>
-                        )
-                    })}
+                    <Grid container spacing={0} columns={cols}>
+                        {Array.from(Array(measures.length)).map((_, index) => {
+                            let tempo = index === 0 || measures[index - 1].tempo !== measures[index].tempo ? measures[index].tempo : false;
+                            let timeSignature = index === 0 || measures[index - 1].timeSignature !== measures[index].timeSignature ? measures[index].timeSignature : false;
+                            return (
+                                <Grid item xs={2} sm={4} md={10} key={index}>
+                                    <Stave
+                                        measure={measures[index].beatDTOS}
+                                        tempo={tempo}
+                                        stringCount={stringCount}
+                                        timeSignature={timeSignature}
+                                        tuning={index === 0 ? tuning : false}
+                                        staveId={index + 1}
+                                        pmIndexes={measures[index].pmIndexes}
+                                        lrIndexes={measures[index].lrIndexes}
+                                        slidesAndTies={measures[index].slidesAndTies}
+                                        wide={wide}
+                                    />
+                                </Grid>
+                            )
+                        })}
                     </Grid>
                 </>
             )

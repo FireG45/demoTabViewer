@@ -8,7 +8,7 @@ import drawLetRing from './renderUtils/drawLetRing'
 const { Renderer, TabStave, TabNote, Formatter, StaveNote } = VexFlow.Flow
 
 export default function Stave({ measure = null, stringCount = 6, tempo = 0, timeSignature = "", tuning = "",
-                                staveId = 0, pmIndexes = null , slidesAndTies = null, lrIndexes = null}) {
+                                staveId = 0, pmIndexes = null , slidesAndTies = null, lrIndexes = null, wide = false}) {
   const container = useRef()
   const rendererRef = useRef()
 
@@ -21,11 +21,11 @@ export default function Stave({ measure = null, stringCount = 6, tempo = 0, time
     }
     const renderer = rendererRef.current
     
-    renderer.resize(500, 160 + (stringCount % 6 * 15));
+    renderer.resize(500 * (wide ? 4 : 1), 160 + (stringCount % 6 * 15));
     const context = renderer.getContext();
 
     let shift = tuning ? 20 : 0
-    const stave = new TabStave(shift, 0, 448 - shift);
+    const stave = new TabStave(shift, 0, 448 * (wide ? 4 : 1) - shift);
     stave.options.num_lines = stringCount;
     stave.options.line_config = new Array(stringCount).fill({visible : true});
     
