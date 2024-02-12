@@ -1,12 +1,9 @@
-import { Paper, Rating, Grid, Typography, Stack, Pagination, Container, TextField, ListItemButton } from "@mui/material";
+import { Rating, Grid, Typography, Stack, Pagination, Container, TextField, ListItemButton } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
 import CircleIcon from '@mui/icons-material/Circle';
 import styled from "@emotion/styled";
-import Checkbox from '@mui/material/Checkbox';
-import FavoriteBorder from '@mui/icons-material/FavoriteBorder';
-import Favorite from '@mui/icons-material/Favorite';
 
 function TabList() {
   const [tabs, setTabs] = useState([]);

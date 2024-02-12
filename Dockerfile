@@ -1,5 +1,5 @@
 FROM eclipse-temurin:20-alpine as builder
-WORKDIR /opt/app
+WORKDIR /app
 COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
 RUN ./mvnw dependency:go-offline
@@ -7,8 +7,8 @@ COPY ./src ./src
 RUN ./mvnw clean install
 
 FROM eclipse-temurin:20-alpine
-WORKDIR /opt/app
-COPY --from=builder /opt/app/target/*.jar /opt/app/*.jar
+WORKDIR /app
+COPY --from=builder /app/target/*.jar /app/*.jar
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/opt/app/*.jar"]
+ENTRYPOINT ["java", "-jar", "/app/*.jar"]
