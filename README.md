@@ -1,7 +1,7 @@
 
 
 # DemoTabViewer
-
+[![Build](https://github.com/FireG45/demoTabViewer/actions/workflows/docker-image.yml/badge.svg)](https://github.com/FireG45/demoTabViewer/actions/workflows/docker-image.yml)
 ## About demoTabViewer
 
 <img src="https://imgbly.com/ib/Ce1qh9chQO.png" style="max-width: 100%; max-height: 100vh; width: auto; margin: auto;" alt="">
