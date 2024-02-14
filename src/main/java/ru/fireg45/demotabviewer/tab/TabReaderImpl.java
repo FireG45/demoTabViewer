@@ -1,4 +1,4 @@
-package ru.fireg45.demotabviewer.util.tabs;
+package ru.fireg45.demotabviewer.tab;
 
 import org.herac.tuxguitar.graphics.control.TGFactoryImpl;
 import org.herac.tuxguitar.io.base.TGFileFormatException;
@@ -11,12 +11,11 @@ import org.herac.tuxguitar.song.models.*;
 import org.herac.tuxguitar.song.models.effects.TGEffectBend;
 import org.herac.tuxguitar.song.models.effects.TGEffectHarmonic;
 import org.springframework.stereotype.Service;
-import ru.fireg45.demotabviewer.util.tabs.dto.BeatDTO;
-import ru.fireg45.demotabviewer.util.tabs.dto.MeasureDTO;
-import ru.fireg45.demotabviewer.util.tabs.dto.NoteDTO;
-import ru.fireg45.demotabviewer.util.tabs.dto.TabDTO;
+import ru.fireg45.demotabviewer.tab.dto.BeatDTO;
+import ru.fireg45.demotabviewer.tab.dto.MeasureDTO;
+import ru.fireg45.demotabviewer.tab.dto.NoteDTO;
+import ru.fireg45.demotabviewer.tab.dto.TabDTO;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -121,8 +120,8 @@ import java.util.*;
                     case 2 -> effects.add("b " + "UP:" + value + " " + "DOWN:" + value);
                 }
             }
-            boolean[] effectsFlags = { effect.isPalmMute(), effect.isTapping(), effect.isSlapping(), effect.isPopping(),
-                    effect.isHarmonic(), effect.isAccentuatedNote(), effect.isLetRing(),
+            boolean[] effectsFlags = { effect.isPalmMute(), effect.isTapping(), effect.isSlapping(),
+                    effect.isPopping(), effect.isHarmonic(), effect.isAccentuatedNote(), effect.isLetRing(),
                     effect.isHeavyAccentuatedNote() };
             String[] effectsSigns = { "p",  "t", "s", "P", readHarmonic(effect, fret), ">", "L", "^" };
             int effectsSize = effectsFlags.length;

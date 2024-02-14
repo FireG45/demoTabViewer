@@ -40,10 +40,12 @@ public class WebSecurityConfig {
                 .sessionManagement(conf -> conf.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(registry -> registry
+
                         .requestMatchers("/").permitAll()
                         .requestMatchers("/tabs/*").permitAll()
                         .requestMatchers("/auth/register").permitAll()
                         .requestMatchers("/auth/*").permitAll()
+
                         .requestMatchers("/tabs/mytabs").authenticated()
                         .requestMatchers("/tabs/favorites").authenticated()
                         .requestMatchers("/tabs/edit/*").authenticated()

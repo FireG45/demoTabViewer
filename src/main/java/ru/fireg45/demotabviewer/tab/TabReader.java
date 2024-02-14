@@ -1,16 +1,14 @@
-package ru.fireg45.demotabviewer.util.tabs;
+package ru.fireg45.demotabviewer.tab;
 
 import org.herac.tuxguitar.io.base.TGFileFormatException;
 
 import org.herac.tuxguitar.song.models.*;
-import ru.fireg45.demotabviewer.util.tabs.dto.BeatDTO;
-import ru.fireg45.demotabviewer.util.tabs.dto.MeasureDTO;
-import ru.fireg45.demotabviewer.util.tabs.dto.NoteDTO;
-import ru.fireg45.demotabviewer.util.tabs.dto.TabDTO;
+import ru.fireg45.demotabviewer.tab.dto.BeatDTO;
+import ru.fireg45.demotabviewer.tab.dto.MeasureDTO;
+import ru.fireg45.demotabviewer.tab.dto.TabDTO;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 import java.util.List;
 
 public interface TabReader {

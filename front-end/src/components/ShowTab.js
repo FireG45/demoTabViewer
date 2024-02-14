@@ -77,10 +77,13 @@ class ShowTab extends Component {
     var path = "http://localhost:8080/tabs/" + this.id + "?track=" + this.track
     this.path = "/tabs/" + this.props.params.id + "/"
     fetch(path, {
-      headers: new Headers({
+      headers: new Headers(this.token ? {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + this.token
-      })
+      } : {
+        'Content-Type': 'application/json',
+      }
+      )
     }
     ).then(res => res.json()).then(
       (result) => {

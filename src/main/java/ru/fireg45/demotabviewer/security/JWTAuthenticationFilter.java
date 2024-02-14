@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -26,9 +27,9 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     private final JwtToPrincipleConverter jwtToPrincipleConverter;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,
+                                    @NotNull FilterChain filterChain)
             throws ServletException, IOException {
-
         try {
             extractToken(request)
                     .map(jwtDecoder::decode)
@@ -40,7 +41,6 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         } finally {
             filterChain.doFilter(request, response);
         }
-
     }
 
     private Optional<String> extractToken(HttpServletRequest request) {

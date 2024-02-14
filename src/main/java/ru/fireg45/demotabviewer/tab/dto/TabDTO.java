@@ -1,6 +1,4 @@
-package ru.fireg45.demotabviewer.util.tabs.dto;
-
-import java.util.Date;
+package ru.fireg45.demotabviewer.tab.dto;
 
 public class TabDTO {
     public String title;

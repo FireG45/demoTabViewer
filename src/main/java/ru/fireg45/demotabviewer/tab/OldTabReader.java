@@ -1,4 +1,4 @@
-package ru.fireg45.demotabviewer.util.tabs;
+package ru.fireg45.demotabviewer.tab;
 
 import org.herac.tuxguitar.graphics.control.TGFactoryImpl;
 import org.herac.tuxguitar.io.base.TGFileFormatException;

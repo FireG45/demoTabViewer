@@ -13,11 +13,10 @@ import ru.fireg45.demotabviewer.model.Tabulature;
 import ru.fireg45.demotabviewer.model.User;
 import ru.fireg45.demotabviewer.security.UserPrincipal;
 import ru.fireg45.demotabviewer.services.*;
-import ru.fireg45.demotabviewer.util.tabs.dto.TabDTO;
-import ru.fireg45.demotabviewer.util.tabs.TabReader;
-import ru.fireg45.demotabviewer.util.tabs.dto.TabListDTO;
+import ru.fireg45.demotabviewer.tab.dto.TabDTO;
+import ru.fireg45.demotabviewer.tab.TabReader;
+import ru.fireg45.demotabviewer.tab.dto.TabListDTO;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -89,8 +88,8 @@ public class TabController {
             tab.uploaded = new SimpleDateFormat("yyyy-MM-dd").format(tabulature.getUploaded());
             var principal = SecurityContextHolder.getContext().getAuthentication().getName();
             tab.userOwner = principal != null && Objects.equals(tabulature.getUser().getEmail(), principal);
-            tab.favorite = tabulatureService.countFavorites(tabulature, principal) != 0;
-            Optional<User> user = userService.findByEmail(principal);
+            tab.favorite = principal != null && tabulatureService.countFavorites(tabulature, principal) != 0;
+            Optional<User> user = principal != null ? userService.findByEmail(principal) : Optional.empty();
             if (user.isPresent()) {
                 int userId = user.get().getId();
                 Integer rating = reviewService.getRatingByUserAndTab(userId, id);
