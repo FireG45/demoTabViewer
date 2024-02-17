@@ -33,7 +33,7 @@ public class Tabulature {
     @Column(name = "filepath")
     private String filepath;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
     @Column(name = "uploaded")

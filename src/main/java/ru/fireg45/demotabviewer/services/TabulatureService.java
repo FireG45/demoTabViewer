@@ -16,7 +16,6 @@ public class TabulatureService {
     public TabulatureService(TabulaturesRepository tabulaturesRepository) {
         this.tabulaturesRepository = tabulaturesRepository;
     }
-
     public Optional<Tabulature> findById(int id) {
         return tabulaturesRepository.findById(id);
     }

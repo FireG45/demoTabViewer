@@ -5,13 +5,13 @@ services:
     ports:
       - "8080:8080"
 
-  client:
-    build: ./front-end
-    ports:
-      - '3000:3000'
-    volumes:
-      - ./front-end:/app
-    stdin_open: true
+#  client:
+#    build: ./front-end
+#    ports:
+#      - '3000:3000'
+#    volumes:
+#      - ./front-end:/app
+#    stdin_open: true
 
   minio:
     image: quay.io/minio/minio

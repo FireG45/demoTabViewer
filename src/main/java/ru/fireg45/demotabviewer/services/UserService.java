@@ -3,7 +3,6 @@ package ru.fireg45.demotabviewer.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.fireg45.demotabviewer.model.Review;
-import ru.fireg45.demotabviewer.model.Tabulature;
 import ru.fireg45.demotabviewer.model.User;
 import ru.fireg45.demotabviewer.repositories.UserRepository;
 
@@ -37,7 +36,7 @@ public class UserService {
         List<Review> revs = user.getReviews();
         revs.forEach(r -> {
             Integer rating = tabulatureService.getAverageRatingWithOutOne(r.getTab().getId(),
-                    r.getReviewId());
+                    r.getId());
             r.getTab().setRating(rating != null ? rating : 0);
         });
         userRepository.delete(user);

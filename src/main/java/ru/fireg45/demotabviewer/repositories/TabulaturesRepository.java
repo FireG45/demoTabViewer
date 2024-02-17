@@ -16,7 +16,7 @@ public interface TabulaturesRepository extends JpaRepository<Tabulature, Integer
 
     List<Tabulature> findAllByAuthor(String author, PageRequest pageRequest);
 
-    @Query("select avg(r.value) from Review r where r.tab.id = ?1 and r.reviewId != ?2")
+    @Query("select avg(r.value) from Review r where r.tab.id = ?1 and r.id != ?2")
     Integer getAverageRating(int id, int reviewId);
 
     @Query("select t from Tabulature t where t in (select f.tab from Favorite f where f.user.email = ?1)")

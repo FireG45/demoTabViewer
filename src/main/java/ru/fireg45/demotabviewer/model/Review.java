@@ -11,7 +11,7 @@ public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "review_id")
-    private int reviewId;
+    private int id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Tabulature tab;
@@ -19,6 +19,7 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     private User uploaded;
 
+    @Column(name = "review_value")
     private int value;
 
     public Review(Tabulature tabulature_id, User uploaded_by, int value) {
