@@ -15,6 +15,7 @@ import java.nio.file.Path;
 
 
 @Service
+@Deprecated
 public class FilesystemFileService implements FileService {
 
     @Value("${upload.defaultFilePath}")

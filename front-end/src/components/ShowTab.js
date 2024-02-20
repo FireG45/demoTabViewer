@@ -153,7 +153,7 @@ class ShowTab extends Component {
 
       return (
         <>
-          <Button variant={'contained'} onClick={() => {
+          {/* <Button variant={'contained'} onClick={() => {
             if (this.state.playing) {
               player.stop()
               this.setState({
@@ -167,9 +167,9 @@ class ShowTab extends Component {
             }
 
             //player.speed(0.5);
-          }}> {!this.state.playing ? <PlayArrowIcon/> : <StopIcon/>} </Button>
+          }}> {!this.state.playing ? <PlayArrowIcon/> : <StopIcon/>} </Button> */}
 
-          {/* <Container>
+          <Container>
             <Stack direction="column" justifyContent="flex-start" alignItems="stretch" spacing={0} ml={-40} mr={-40}>
               <br></br>
               <Grid container spacing={0}>
@@ -264,7 +264,7 @@ class ShowTab extends Component {
                 <Score ref={this.score} id={this.id} track={this.track} />
               </div>
             </Stack>
-          </Container> */}
+          </Container>
         </>
 
       )

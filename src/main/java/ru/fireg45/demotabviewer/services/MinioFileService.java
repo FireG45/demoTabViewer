@@ -25,7 +25,7 @@ public class MinioFileService implements FileService {
     private String defaultBucket;
 
     @Autowired
-    public MinioFileService(MinioUtil minioUtil, MinioClientConfig minioClientConfig) {
+    public MinioFileService(MinioUtil minioUtil) {
         this.minioUtil = minioUtil;
     }
 

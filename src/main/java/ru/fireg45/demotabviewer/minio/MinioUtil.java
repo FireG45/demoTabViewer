@@ -1,4 +1,5 @@
 package ru.fireg45.demotabviewer.minio;
+
 import io.minio.*;
 
 import io.minio.errors.*;
@@ -31,24 +32,29 @@ public class MinioUtil {
                 fileName = file.getOriginalFilename().replaceAll(" ", "_");
             }
 
-            InputStream inputStream = file.getInputStream();
-            PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(bucketName).object(fileName)
-                    .stream(inputStream, file.getSize(), -1).contentType(file.getContentType()).build();
+            InputStream inputStream;
+            if (file != null) {
+                inputStream = file.getInputStream();
 
-            minioClient.putObject(objectArgs);
-            return true;
+                PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(bucketName).object(fileName)
+                        .stream(inputStream, file.getSize(), -1).contentType(file.getContentType()).build();
+
+                minioClient.putObject(objectArgs);
+                return true;
+            }
         } catch (Exception e) {
-            //e.printStackTrace();
             log.error(e.getMessage());
             return false;
         }
+        return false;
     }
 
     public boolean bucketExists(String bucketName) {
         try {
             return MinioClientConfig.bucketExists(bucketName);
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
+            log.error(e.getMessage());
             return false;
         }
     }
@@ -58,7 +64,7 @@ public class MinioUtil {
             MinioClient minioClient = MinioClientConfig.getMinioClient();
             return minioClient.getObject(GetObjectArgs.builder().bucket(bucketName).object(fileName).build());
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
             log.error(e.getMessage());
         }
         return null;
@@ -76,7 +82,6 @@ public class MinioUtil {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             }
         } catch (Exception e) {
-            e.printStackTrace();
             log.error(e.getMessage());
         }
     }
@@ -108,7 +113,6 @@ public class MinioUtil {
                 minioClient.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
             }
         } catch (Exception e) {
-            e.printStackTrace();
             log.error(e.getMessage());
         }
     }
@@ -125,7 +129,6 @@ public class MinioUtil {
                 minioClient.deleteBucketEncryption(DeleteBucketEncryptionArgs.builder().bucket(bucketName).build());
             }
         } catch (Exception e) {
-            e.printStackTrace();
             log.error(e.getMessage());
         }
     }
@@ -135,7 +138,6 @@ public class MinioUtil {
             MinioClient minioClient = MinioClientConfig.getMinioClient();
             return minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder().bucket(bucketName).object(fileName).build());
         } catch (Exception e) {
-            e.printStackTrace();
             return "";
         }
     }
