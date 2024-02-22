@@ -6,8 +6,8 @@
 
 <img src="https://imgbly.com/ib/Ce1qh9chQO.png" style="max-width: 100%; max-height: 100vh; width: auto; margin: auto;" alt="">
 
-DemoTabViewer is web platform that can render, store and play Guitar Pro tabulatures in the browser. Built using open source libraries from the [TuxGuitar](https://github.com/pterodactylus42/tuxguitar-2.0beta)
-project for reading [Guitar Pro](https://www.guitar-pro.com/) format files, [VexFlow](https://www.vexflow.com/) libraries for tablature rendering, Spring Boot for implementing the server part, [Postgresql](https://www.postgresql.org/) for data storage and [MinIo](https://min.io/) for storing tab files.
+DemoTabViewer is web platform that can render, store and play Guitar Pro tabulatures in the browser. Built using libraries from the open source [TuxGuitar](https://github.com/pterodactylus42/tuxguitar-2.0beta)
+project for reading [Guitar Pro](https://www.guitar-pro.com/) files, [VexFlow](https://www.vexflow.com/) libraries for tablature rendering, Spring Boot for implementing the server part, [Postgresql](https://www.postgresql.org/) for data storage and [MinIo](https://min.io/) for storing tab files.
 
 - [Guitar Pro](https://www.guitar-pro.com/) is the de facto standard for storing guitar tab music.<br>
 - [VexFlow](https://www.vexflow.com/) is widely used for rendering sheet music. It features an extensive library of musical elements, but each measure and symbol has to be created and positioned by hand in Javascript.<br>
