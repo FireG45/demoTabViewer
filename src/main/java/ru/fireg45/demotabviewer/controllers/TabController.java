@@ -2,7 +2,9 @@ package ru.fireg45.demotabviewer.controllers;
 
 import org.herac.tuxguitar.io.base.TGFileFormatException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,6 +19,7 @@ import ru.fireg45.demotabviewer.tab.dto.TabDTO;
 import ru.fireg45.demotabviewer.tab.TabReader;
 import ru.fireg45.demotabviewer.tab.dto.TabListDTO;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -31,22 +34,20 @@ public class TabController {
     private final TabulatureService tabulatureService;
     private final UserService userService;
     private final TabReader tabReader;
-    private final ReviewService reviewService;
     private final FavoriteService favoriteService;
     private final TabulatureSearchService tabulatureSearchService;
-    private final FileService fileService;
+    private final MidiService midiService;
 
     @Autowired
     public TabController(TabulatureService tabulatureService, UserService userService, TabReader tabReader,
-                         ReviewService reviewService, FavoriteService favoriteService,
-                         TabulatureSearchService tabulatureSearchService, FileService fileService) {
+                         FavoriteService favoriteService, TabulatureSearchService tabulatureSearchService,
+                         MidiService midiService) {
         this.tabulatureService = tabulatureService;
         this.userService = userService;
         this.tabReader = tabReader;
-        this.reviewService = reviewService;
         this.favoriteService = favoriteService;
         this.tabulatureSearchService = tabulatureSearchService;
-        this.fileService = fileService;
+        this.midiService = midiService;
     }
 
     @GetMapping("")
@@ -75,30 +76,23 @@ public class TabController {
     public TabDTO tabViewer(@PathVariable("id") int id,
                             @RequestParam(name = "track", defaultValue = "0") int track)
             throws TGFileFormatException, IOException {
-        TabDTO tab;
-        Optional<Tabulature> tabulatureOptional = tabulatureService.findById(id);
-        if (tabulatureOptional.isPresent()) {
-            Tabulature tabulature = tabulatureOptional.get();
-            InputStream stream = fileService.download(tabulature);
-            tab = tabReader.read(track ,tabulature.getFilepath(), stream);
-            tab.title = tabulature.getTitle();
-            tab.author = tabulature.getAuthor();
-            tab.track = track;
-            tab.user = tabulature.getUser().getUsername();
-            tab.uploaded = new SimpleDateFormat("yyyy-MM-dd").format(tabulature.getUploaded());
-            var principal = SecurityContextHolder.getContext().getAuthentication().getName();
-            tab.userOwner = principal != null && Objects.equals(tabulature.getUser().getEmail(), principal);
-            tab.favorite = principal != null && tabulatureService.countFavorites(tabulature, principal) != 0;
-            Optional<User> user = principal != null ? userService.findByEmail(principal) : Optional.empty();
-            if (user.isPresent()) {
-                int userId = user.get().getId();
-                Integer rating = reviewService.getRatingByUserAndTab(userId, id);
-                tab.rating = rating == null ? 0 : rating;
-            }
-        } else {
-            tab = null;
-        }
-        return tab;
+        var principal = SecurityContextHolder.getContext().getAuthentication().getName();
+        Optional<User> user = principal != null ? userService.findByEmail(principal) : Optional.empty();
+        return tabulatureService.getTabDto(id, tabReader, track, user, principal);
+    }
+
+    @GetMapping("/tabs/midi/{id}")
+    public ResponseEntity<Resource> getMidi(@PathVariable(name = "id") int id) throws FileNotFoundException {
+
+        Optional<Tabulature> tabulature = tabulatureService.findById(id);
+
+        if (tabulature.isEmpty()) return ResponseEntity.badRequest().build();
+
+        Resource resource = midiService.convertToMidi(tabulature.get());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + resource.getFilename() + "\"").body(resource);
     }
 
     @GetMapping("/tabs/mytabs")

@@ -28,7 +28,8 @@
     "react-scripts": "5.0.1",
     "stream": "^0.0.2",
     "vexflow": "^4.2.3",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "webaudiofont": "^3.0.4"
   },
   "scripts": {
     "start": "react-scripts start",

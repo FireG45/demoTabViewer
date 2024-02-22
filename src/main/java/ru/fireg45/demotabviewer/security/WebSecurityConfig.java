@@ -45,6 +45,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/tabs/*").permitAll()
                         .requestMatchers("/auth/register").permitAll()
                         .requestMatchers("/auth/*").permitAll()
+                        .requestMatchers("/tabs/midi/*").permitAll()
 
                         .requestMatchers("/tabs/mytabs").authenticated()
                         .requestMatchers("/tabs/favorites").authenticated()

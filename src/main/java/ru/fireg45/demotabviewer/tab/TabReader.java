@@ -3,6 +3,7 @@ package ru.fireg45.demotabviewer.tab;
 import org.herac.tuxguitar.io.base.TGFileFormatException;
 
 import org.herac.tuxguitar.song.models.*;
+import org.springframework.stereotype.Service;
 import ru.fireg45.demotabviewer.tab.dto.BeatDTO;
 import ru.fireg45.demotabviewer.tab.dto.MeasureDTO;
 import ru.fireg45.demotabviewer.tab.dto.TabDTO;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+@Service
 public interface TabReader {
     TGSong readSong(String filename, InputStream stream) throws IOException, TGFileFormatException;
 
