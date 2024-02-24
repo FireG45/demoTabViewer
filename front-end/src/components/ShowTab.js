@@ -1,12 +1,9 @@
 import { Component, createRef } from "react";
 import Score from "./Score";
 import Stack from "@mui/material/Stack";
-import { AppBar, ButtonGroup, Container, Grid, IconButton, OutlinedInput, Rating, Slider, Toolbar, Typography, makeStyles } from "@mui/material";
+import { AppBar, ButtonGroup, Container, FormControl, Grid, IconButton, MenuItem, OutlinedInput, Rating, Select, Slider, Toolbar, Typography, makeStyles } from "@mui/material";
 import withRouter from './withRouter'
-import Box from '@mui/material/Box';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import Select from '@mui/material/Select';
+
 import TabInfoPopover from "./TabInfoPopover";
 import { withCookies, Cookies } from "react-cookie";
 import Loading from "./Loading";
@@ -18,11 +15,8 @@ import { Link } from "react-router-dom";
 import Checkbox from '@mui/material/Checkbox';
 import FavoriteBorder from '@mui/icons-material/FavoriteBorder';
 import Favorite from '@mui/icons-material/Favorite';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import EditIcon from '@mui/icons-material/Edit';
-import SpeedIcon from '@mui/icons-material/Speed';
-import AvTimerIcon from '@mui/icons-material/AvTimer';
-import { IconMetronome } from '@tabler/icons-react';
+import TabPlayer from "./TabPlayer";
+import InputLabel from "@mui/material/InputLabel";
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -63,6 +57,9 @@ class ShowTab extends Component {
     this.score = createRef()
     this.track = 0;
     this.token = "";
+
+
+
     this.state = {
       error: null,
       isLoaded: false,
@@ -73,6 +70,7 @@ class ShowTab extends Component {
       speed: 1
     };
   }
+
 
   componentDidMount() {
     const { cookies } = this.props;
@@ -103,10 +101,8 @@ class ShowTab extends Component {
           track: this.track,
           error
         })
-      }
-    )
+      })
   }
-
 
   render() {
     const { error, isLoaded, tab, value, favorite, speed } = this.state;
@@ -134,82 +130,7 @@ class ShowTab extends Component {
 
       return (
         <>
-          <AppBar position="fixed" sx={{ top: 'auto', bottom: 0 }}>
-            <Toolbar>
-              <Stack direction={'row'} alignItems="center" spacing={30}>
-                <FormControl sx={{ m: 1, width: 300 }} variant={'filled'} >
-                  <Select
-                    sx={{ color: 'white' }}
-                    labelId="demo-multiple-name-label"
-                    id="demo-multiple-name"
-                    value={this.track}
-                    onChange={
-                      (event) => {
-                        this.props.navigate(this.path + event.target.value, { replace: false });
-                        this.forceUpdate();
-                        this.props.navigate(0);
-                      }
-                    }
-                    input={<OutlinedInput label="Name" />}
-                  >
-                    {
-                      Array.from(Array(tracks.length)).map((_, index) => {
-                        return <MenuItem key={index} value={index}>
-                          <Typography>
-                            {tracks[index]}
-                          </Typography>
-                        </MenuItem>
-                      })
-                    }
-                  </Select>
-                </FormControl>
-                <Stack spacing={2} direction={'row'}>
-                  <IconButton color="inherit">
-                    <PlayArrowIcon />
-                  </IconButton>
-                  <Stack spacing={2} direction="row" sx={{ mb: 1, width: 200 }} alignItems="center">
-                    <SpeedIcon />
-                    <Box sx={{ minWidth: 120 }}>
-                      <FormControl fullWidth>
-                        <Select
-                          sx={{ color: 'white' }}
-                          labelId="demo-simple-select-label"
-                          id="demo-simple-select"
-                          value={speed}
-                          onChange={(e) => {
-                            this.setState({
-                              speed: e.target.value
-                            })
-                          }}
-                        >
-                          <MenuItem value={0.1}>10% </MenuItem>
-                          <MenuItem value={0.2}>20% </MenuItem>
-                          <MenuItem value={0.3}>30% </MenuItem>
-                          <MenuItem value={0.4}>40% </MenuItem>
-                          <MenuItem value={0.5}>50% </MenuItem>
-                          <MenuItem value={0.6}>60% </MenuItem>
-                          <MenuItem value={0.7}>70% </MenuItem>
-                          <MenuItem value={0.8}>80% </MenuItem>
-                          <MenuItem value={0.9}>90% </MenuItem>
-                          <MenuItem value={1.0}>100%</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Box>
-                  </Stack>
-                </Stack>
-                <IconButton color="inherit">
-                  <AvTimerIcon />
-                </IconButton>
-                <IconButton color="inherit">
-                  <IconMetronome />
-                </IconButton>
-                <IconButton color="inherit">
-                  <EditIcon />
-                </IconButton>
-              </Stack>
-            </Toolbar>
-          </AppBar>
-
+          <TabPlayer id={this.id} />
           <Container>
             <Stack direction="column" justifyContent="flex-start" alignItems="stretch" spacing={0} ml={-40} mr={-40}>
               <br></br>
@@ -274,13 +195,39 @@ class ShowTab extends Component {
                   />
                 </Grid>
               </Grid>
+              <FormControl sx={{ m: 1, width: 300 }} variant={'filled'} >
+                <InputLabel id="demo-simple-select-label">Age</InputLabel>
+                <Select
+                  labelId="demo-multiple-name-label"
+                  id="demo-multiple-name"
+                  value={this.track}
+                  label={'Трек'}
+                  onChange={
+                    (event) => {
+                      this.props.navigate(this.path + event.target.value, { replace: false });
+                      this.forceUpdate();
+                      this.props.navigate(0);
+                    }
+                  }
+                  input={<OutlinedInput label="Name" />}
+                >
+                  {
+                    Array.from(Array(tracks.length)).map((_, index) => {
+                      return <MenuItem key={index} value={index}>
+                        <Typography>
+                          {tracks[index]}
+                        </Typography>
+                      </MenuItem>
+                    })
+                  }
+                </Select>
+              </FormControl>
               <div>
                 <Score ref={this.score} id={this.id} track={this.track} />
               </div>
             </Stack>
           </Container>
         </>
-
       )
     }
   }

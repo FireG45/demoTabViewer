@@ -18,6 +18,8 @@
     "dotenv": "^16.4.2",
     "dotenv-expand": "^11.0.2",
     "fs": "^0.0.1-security",
+    "midi-sounds-react": "^1.2.54",
+    "midifile": "^2.0.0",
     "os": "^0.1.2",
     "path": "^0.12.7",
     "react": "^18.2.0",
@@ -28,8 +30,7 @@
     "react-scripts": "5.0.1",
     "stream": "^0.0.2",
     "vexflow": "^4.2.3",
-    "web-vitals": "^2.1.4",
-    "webaudiofont": "^3.0.4"
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -54,5 +55,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "webaudiofont": "^3.0.4"
   }
 }

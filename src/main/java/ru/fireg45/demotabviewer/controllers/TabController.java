@@ -83,12 +83,15 @@ public class TabController {
 
     @GetMapping("/tabs/midi/{id}")
     public ResponseEntity<Resource> getMidi(@PathVariable(name = "id") int id) throws FileNotFoundException {
+        System.out.println("MIDI DOWNLOAD START");
 
         Optional<Tabulature> tabulature = tabulatureService.findById(id);
 
         if (tabulature.isEmpty()) return ResponseEntity.badRequest().build();
 
         Resource resource = midiService.convertToMidi(tabulature.get());
+
+        System.out.println("MIDI DOWNLOAD OK");
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
