@@ -58,14 +58,13 @@ class ShowTab extends Component {
     this.track = 0;
     this.token = "";
 
-
-
     this.state = {
       error: null,
       isLoaded: false,
       tab: null,
       track: 0,
       value: 0,
+      note : 0,
       favorite: false,
       speed: 1
     };
@@ -73,6 +72,8 @@ class ShowTab extends Component {
 
 
   componentDidMount() {
+    console.log("ShowTab componentDidMount")
+
     const { cookies } = this.props;
     this.token = cookies.get("token")
     this.id = this.props.params.id
@@ -105,10 +106,11 @@ class ShowTab extends Component {
   }
 
   render() {
+    console.log("ShowTab render")
     const { error, isLoaded, tab, value, favorite, speed } = this.state;
 
     if (error) {
-      return <p>Error: {error.meassage} </p>
+      return <p>Error: {error.message} </p>
     } else if (!isLoaded) {
       return <Loading />
     } else {
@@ -130,7 +132,7 @@ class ShowTab extends Component {
 
       return (
         <>
-          <TabPlayer id={this.id} />
+          <TabPlayer score={this.score} id={this.id} />
           <Container>
             <Stack direction="column" justifyContent="flex-start" alignItems="stretch" spacing={0} ml={-40} mr={-40}>
               <br></br>
@@ -196,7 +198,7 @@ class ShowTab extends Component {
                 </Grid>
               </Grid>
               <FormControl sx={{ m: 1, width: 300 }} variant={'filled'} >
-                <InputLabel id="demo-simple-select-label">Age</InputLabel>
+                <InputLabel id="demo-simple-select-label">Трек</InputLabel>
                 <Select
                   labelId="demo-multiple-name-label"
                   id="demo-multiple-name"

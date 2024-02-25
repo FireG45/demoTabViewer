@@ -8,7 +8,8 @@ import drawLetRing from './renderUtils/drawLetRing'
 const { Renderer, TabStave, TabNote, Formatter, StaveNote } = VexFlow.Flow
 
 export default function Stave({ measure = null, stringCount = 6, tempo = 0, timeSignature = "", tuning = "",
-                                staveId = 0, pmIndexes = null , slidesAndTies = null, lrIndexes = null, wide = false}) {
+                                staveId = 0, pmIndexes = null , slidesAndTies = null, lrIndexes = null, wide = false,
+                              highlightNote = null}) {
   const container = useRef()
   const rendererRef = useRef()
 
@@ -59,7 +60,7 @@ export default function Stave({ measure = null, stringCount = 6, tempo = 0, time
     }
 
     stave.setContext(context).draw()
-    
+    let noteCount = 0;
     let notes = [];
     let beamNotes = [];
     for (let i = 0; i < measure.length; i++) {
@@ -71,11 +72,15 @@ export default function Stave({ measure = null, stringCount = 6, tempo = 0, time
 
       for (let j = 0; j < beat.length; j++) {
         pos.push({ str: beat[j].string, fret: beat[j].fret })
+        noteCount++;
       }
 
       if (pos.length > 0) {
         var note = new TabNote({positions: pos, duration: duration});
         note.setGhost(ghostNote)
+        if (noteCount === highlightNote) {
+          note.setStyle({fillStyle : "red", shadowBlur: 10, lineWidth: 5})
+        }
         let parsedEffects = parseEffects(effects);
         
         for (let i = 0; i < parsedEffects.length; i++) {

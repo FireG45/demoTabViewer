@@ -12,28 +12,31 @@ import {AppBar, IconButton, Stack, Toolbar} from "@mui/material";
 import MidiWebPlayer from "./midiUtils/MidiWebPlayer";
 import {Pause, Stop} from "@mui/icons-material";
 
-export default function TabPlayer({id = 0}) {
+
+export default function TabPlayer({id = 0, noteIdCallback = () => {}, score = null }) {
     const [speed, setSpeed] = useState(1.0);
     const [loaded, setLoaded] = useState(false);
 
     const [midiPlayer, setMidiPlayer] =
-        useState(new MidiWebPlayer('http://localhost:8080/tabs/midi/' + id))
+        useState(new MidiWebPlayer('http://localhost:8080/tabs/midi/' + id, score))
 
     const self = this;
 
+
     useEffect(() => {
-        setMidiPlayer(new MidiWebPlayer('http://localhost:8080/tabs/midi/' + id))
+        setMidiPlayer(new MidiWebPlayer('http://localhost:8080/tabs/midi/' + id, score))
         midiPlayer.handleMidi();
         midiPlayer.setSpeed(speed);
         setLoaded(true);
-    }, [speed]);
+    }, []);
+
+    console.log("TABPLAYER START")
 
     return (
         <>
             <AppBar position="fixed" sx={{top: 'auto', bottom: 0}}>
                 <Toolbar>
                     <Stack direction={'row'} alignItems="center" spacing={175}>
-
                         <Stack spacing={2} direction={'row'}>
                             <IconButton color="inherit" onClick={() => {
                                 midiPlayer.play();
@@ -45,7 +48,8 @@ export default function TabPlayer({id = 0}) {
                                 <Pause/>
                             </IconButton>
                             <IconButton color="inherit" onClick={() => {
-                                setMidiPlayer(new MidiWebPlayer('http://localhost:8080/tabs/midi/' + id));
+                                setMidiPlayer(
+                                    new MidiWebPlayer('http://localhost:8080/tabs/midi/' + id, score));
                                 midiPlayer.handleMidi();
                                 midiPlayer.setSpeed(speed);
                                 setLoaded(true);

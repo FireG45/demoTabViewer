@@ -6,9 +6,11 @@ import {WebAudioFontPlayer} from 'webaudiofont';
 var ex = null;
 
 export default class MidiWebPlayer {
-    constructor(path) {
+    constructor(path, score) {
+        console.log("MidiWebPlayer START")
         ex = this;
         ex.path = path;
+        ex.score = score;
         ex.audioContext = null;
         ex.player = null;
         ex.reverberator = null;
@@ -24,8 +26,9 @@ export default class MidiWebPlayer {
         ex.isPlaying = false;
         ex.isStarted = false;
 
+        ex.lastNoteIndex = 0;
+
         ex.play = function () {
-            console.log(ex.speed)
             if (!ex.isStarted) {
                 ex.audioContext.resume().then(r => {
                     ex.isPlaying = true;
@@ -69,6 +72,7 @@ export default class MidiWebPlayer {
         }
 
         ex.tick = function (song, stepDuration) {
+            ex.score.current.setNote(ex.getCurrNote());
             try {
                 if (ex.audioContext.currentTime > ex.nextStepTime - stepDuration) {
                     ex.sendNotes(song, ex.songStart, ex.currentSongTime, ex.currentSongTime + stepDuration, ex.audioContext, ex.input, ex.player);
@@ -93,6 +97,32 @@ export default class MidiWebPlayer {
             }
         }
 
+        ex.getCurrNote = function () {
+            let song = ex.loadedsong;
+            if (song === null || song.tracks === null) {
+                ex.lastNoteIndex = 0;
+                return 0;
+            }
+            let maxlength = 0;
+            for (let i = 0; i < song.tracks.length; i++) {
+                if (song.tracks[i].notes.length > song.tracks[maxlength].notes.length) maxlength = i;
+            }
+
+            let notes = song.tracks[maxlength].notes;
+
+            if (0.0 <= ex.currentSongTime && ex.currentSongTime <= notes[1].when * (1 / ex.speed)) ex.lastNoteIndex = 0;
+
+            let ind = ex.lastNoteIndex + 1 < notes.length ? ex.lastNoteIndex + 1 : notes.length - 1;
+
+            let nextNoteWhen= notes[ind].when * (1 / ex.speed);
+
+            if (ex.currentSongTime >= nextNoteWhen && ex.lastNoteIndex < notes.length - 1) {
+                ex.lastNoteIndex++;
+            }
+
+            return ex.lastNoteIndex;
+        }
+
         ex.sendNotes = function (song, songStart, start, end, audioContext, input, player) {
             for (let t = 0; t < song.tracks.length; t++) {
                 let track = song.tracks[t];
@@ -104,7 +134,7 @@ export default class MidiWebPlayer {
                             duration = 3;
                         }
                         var instr = track.info.variable;
-                        var v = track.volume / 7;
+                        var v = track.volume / 3;
                         ex.player.queueWaveTable(ex.audioContext, ex.input, window[instr], when, track.notes[i].pitch, duration, v, track.notes[i].slides);
                     }
                 }
@@ -116,7 +146,7 @@ export default class MidiWebPlayer {
                         var when = ex.songStart + beat.notes[i].when;
                         var duration = 1.5;
                         var instr = beat.info.variable;
-                        var v = beat.volume / 2;
+                        var v = beat.volume / 3;
                         ex.player.queueWaveTable(ex.audioContext, ex.input, window[instr], when, beat.n, duration, v);
                     }
                 }
@@ -154,6 +184,7 @@ export default class MidiWebPlayer {
                 self.resetEqlualizer();
             });
             ex.loadedsong = song
+            console.log("SONG: " + song)
         }
 
         ex.resetEqlualizer = function () {
