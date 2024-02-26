@@ -4,7 +4,6 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import EditIcon from '@mui/icons-material/Edit';
 import SpeedIcon from '@mui/icons-material/Speed';
 import AvTimerIcon from '@mui/icons-material/AvTimer';
 import {IconMetronome} from '@tabler/icons-react';
@@ -13,24 +12,29 @@ import MidiWebPlayer from "./midiUtils/MidiWebPlayer";
 import {Pause, Stop} from "@mui/icons-material";
 
 
-export default function TabPlayer({id = 0, noteIdCallback = () => {}, score = null }) {
+export default function TabPlayer({id = 0, score = null }) {
     const [speed, setSpeed] = useState(1.0);
     const [loaded, setLoaded] = useState(false);
 
+    var measuresLength = []
+
+    var measures = null
+
+    const newMidiPlayer = () => new MidiWebPlayer('http://localhost:8080/tabs/midi/' + id, score,
+        measures, measuresLength)
+
     const [midiPlayer, setMidiPlayer] =
-        useState(new MidiWebPlayer('http://localhost:8080/tabs/midi/' + id, score))
+        useState(newMidiPlayer())
 
     const self = this;
 
 
     useEffect(() => {
-        setMidiPlayer(new MidiWebPlayer('http://localhost:8080/tabs/midi/' + id, score))
+        setMidiPlayer(newMidiPlayer())
         midiPlayer.handleMidi();
         midiPlayer.setSpeed(speed);
         setLoaded(true);
-    }, []);
-
-    console.log("TABPLAYER START")
+    }, [speed]);
 
     return (
         <>
@@ -48,8 +52,7 @@ export default function TabPlayer({id = 0, noteIdCallback = () => {}, score = nu
                                 <Pause/>
                             </IconButton>
                             <IconButton color="inherit" onClick={() => {
-                                setMidiPlayer(
-                                    new MidiWebPlayer('http://localhost:8080/tabs/midi/' + id, score));
+                                setMidiPlayer(newMidiPlayer());
                                 midiPlayer.handleMidi();
                                 midiPlayer.setSpeed(speed);
                                 setLoaded(true);

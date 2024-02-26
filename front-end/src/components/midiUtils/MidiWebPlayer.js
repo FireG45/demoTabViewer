@@ -6,11 +6,13 @@ import {WebAudioFontPlayer} from 'webaudiofont';
 var ex = null;
 
 export default class MidiWebPlayer {
-    constructor(path, score) {
+    constructor(path, score, measures, measuresLengths) {
         console.log("MidiWebPlayer START")
         ex = this;
         ex.path = path;
         ex.score = score;
+        ex.measures = measures;
+        ex.measuresLengths = measuresLengths;
         ex.audioContext = null;
         ex.player = null;
         ex.reverberator = null;
@@ -22,7 +24,7 @@ export default class MidiWebPlayer {
         ex.nextPositionTime = 0;
         ex.loadedsong = null;
 
-        ex.speed = 0.9;
+        ex.speed = 1.0;
         ex.isPlaying = false;
         ex.isStarted = false;
 
@@ -72,7 +74,28 @@ export default class MidiWebPlayer {
         }
 
         ex.tick = function (song, stepDuration) {
-            ex.score.current.setNote(ex.getCurrNote());
+            let currentNote = ex.getCurrNote();
+            let measures = ex.score.current.state.measureObjs;
+            let lastMeasure = ex.score.current.state.lastMeasure;
+            let measuresLengths = ex.score.current.state.measuresLengths;
+
+            let noteCount =  measuresLengths.slice(0, lastMeasure + 1).reduce((a, b) => a + b);
+
+            if (currentNote >= noteCount) {
+                lastMeasure = (lastMeasure + 1) % measures.length;
+                ex.score.current.setMeasure(lastMeasure)
+                ex.score.current.state.measureObjs[lastMeasure - 1]
+                    .current.setNote(0);
+                ex.score.current.state.measureObjs[lastMeasure - 1].current.componentDidMount();
+            } else {
+                ex.score.current.state.measureObjs[lastMeasure]
+                    .current.setNote(currentNote % (measuresLengths[lastMeasure]) + 1);
+                ex.score.current.state.measureObjs[lastMeasure].current.componentDidMount();
+            }
+
+            ex.score.current.state.measureObjs[lastMeasure > 0 ? lastMeasure - 1 : 0].current.componentDidMount();
+
+
             try {
                 if (ex.audioContext.currentTime > ex.nextStepTime - stepDuration) {
                     ex.sendNotes(song, ex.songStart, ex.currentSongTime, ex.currentSongTime + stepDuration, ex.audioContext, ex.input, ex.player);
@@ -110,11 +133,12 @@ export default class MidiWebPlayer {
 
             let notes = song.tracks[maxlength].notes;
 
-            if (0.0 <= ex.currentSongTime && ex.currentSongTime <= notes[1].when * (1 / ex.speed)) ex.lastNoteIndex = 0;
+            if (0.0 <= ex.currentSongTime && ex.currentSongTime <= (notes[1].when * (1 / ex.speed)))
+                ex.lastNoteIndex = 0;
 
             let ind = ex.lastNoteIndex + 1 < notes.length ? ex.lastNoteIndex + 1 : notes.length - 1;
 
-            let nextNoteWhen= notes[ind].when * (1 / ex.speed);
+            let nextNoteWhen= (notes[ind].when * (1 / ex.speed));
 
             if (ex.currentSongTime >= nextNoteWhen && ex.lastNoteIndex < notes.length - 1) {
                 ex.lastNoteIndex++;

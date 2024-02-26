@@ -1,109 +1,136 @@
-import React, { useRef, useEffect } from 'react'
+import React, {Component} from 'react'
 import VexFlow from 'vexflow'
 import parseEffects from './renderUtils/parseEffects'
 import drawHummerSlide from './renderUtils/drawHummerSlide'
 import drawBeams from './renderUtils/drawBeams'
 import drawPalmMutes from './renderUtils/drawPalmMutes'
 import drawLetRing from './renderUtils/drawLetRing'
-const { Renderer, TabStave, TabNote, Formatter, StaveNote } = VexFlow.Flow
 
-export default function Stave({ measure = null, stringCount = 6, tempo = 0, timeSignature = "", tuning = "",
-                                staveId = 0, pmIndexes = null , slidesAndTies = null, lrIndexes = null, wide = false,
-                              highlightNote = null}) {
-  const container = useRef()
-  const rendererRef = useRef()
+const {Renderer, TabStave, TabNote, Formatter, StaveNote} = VexFlow.Flow
 
-  useEffect(() => {
-    if (rendererRef.current == null) {
-      rendererRef.current = new Renderer(
-        container.current,
-        Renderer.Backends.CANVAS
-      )
-    }
-    const renderer = rendererRef.current
-    
-    renderer.resize(500 * (wide ? 4 : 1), 160 + (stringCount % 6 * 15));
-    const context = renderer.getContext();
+class Stave extends Component {
+    constructor(props) {
+        super(props)
+        this.container = React.createRef()
+        this.rendererRef = React.createRef()
+        this.length = this.props.measure.length
 
-    let shift = tuning ? 20 : 0
-    const stave = new TabStave(shift, 0, 448 * (wide ? 4 : 1) - shift);
-    stave.options.num_lines = stringCount;
-    stave.options.line_config = new Array(stringCount).fill({visible : true});
-    
-    if (tempo) {
-      const bpm = tempo;
-      const x = measure[0] && measure[0].effects[0] === 't' ? -12 : 0;
-      const y = 0;
-      context.setFont("Arial", 20);
-      context.fillText("♩" , y + 5, x + 25);
-      context.setFont("Arial", 12);
-      context.fillText(bpm, y, x + 40);
-    }
-
-    if (staveId) {
-      const id = staveId;
-      
-      context.setFont("Arial", 8);
-      context.fillText(id, shift, 50);
-    }
-
-    if (tuning) {
-      context.setFont("Arial", 10);
-      for (let i = 1; i < tuning.length; i++) {
-        const element = tuning[i - 1];
-        context.fillText(element , 0, i * 13 + 43);
-      }
-    }
-
-    if (timeSignature) {
-      stave.addTimeSignature(timeSignature);
-    }
-
-    stave.setContext(context).draw()
-    let noteCount = 0;
-    let notes = [];
-    let beamNotes = [];
-    for (let i = 0; i < measure.length; i++) {
-      let beat = measure[i].noteDTOS;
-      let duration = measure[i].duration;
-      let effects = measure[i].effects;
-      let ghostNote = measure[i].ghostNote;
-      var pos = []
-
-      for (let j = 0; j < beat.length; j++) {
-        pos.push({ str: beat[j].string, fret: beat[j].fret })
-        noteCount++;
-      }
-
-      if (pos.length > 0) {
-        var note = new TabNote({positions: pos, duration: duration});
-        note.setGhost(ghostNote)
-        if (noteCount === highlightNote) {
-          note.setStyle({fillStyle : "red", shadowBlur: 10, lineWidth: 5})
-        }
-        let parsedEffects = parseEffects(effects);
-        
-        for (let i = 0; i < parsedEffects.length; i++) {
-          const element = parsedEffects[i];
-          note.addModifier(element)
+        this.state = {
+            note: 0,
         }
 
-        notes.push(note)
-        beamNotes.push(note)
-      } else {
-        notes.push(new StaveNote({ keys: ["b/4"], duration: duration + "r"}))
-      }
+        this.setNote = (noteID) => {
+            //console.log("SETNOTE: " + noteID);
+            this.setState({
+                note: noteID
+            })
+        }
     }
 
-    if (notes && notes.length > 0) Formatter.FormatAndDraw(context, stave, notes);
+    componentDidMount() {
+        if (this.rendererRef.current == null) {
+            this.rendererRef.current = new Renderer(
+                this.container.current,
+                Renderer.Backends.CANVAS
+            )
+        }
+        const renderer = this.rendererRef.current
 
-    drawPalmMutes(pmIndexes, notes, context, shift)
-    drawLetRing(lrIndexes, notes, context, shift)
+        renderer.resize(500 * (this.props.wide ? 4 : 1), 160 + (this.props.stringCount % 6 * 15))
+        const context = renderer.getContext()
 
-    drawBeams(notes, context)
+        let shift = this.props.tuning ? 20 : 0
+        const stave = new TabStave(shift, 0, 448 * (this.props.wide ? 4 : 1) - shift)
+        stave.options.num_lines = this.props.stringCount
+        stave.options.line_config = new Array(this.props.stringCount).fill({visible: true})
 
-    drawHummerSlide(slidesAndTies, notes, context)
-  })
+        if (this.props.tempo) {
+            const bpm = this.props.tempo
+            const x = this.props.measure[0] && this.props.measure[0].effects[0] === 't' ? -12 : 0
+            const y = 0
+            context.setFont("Arial", 20)
+            context.fillText("♩", y + 5, x + 25)
+            context.setFont("Arial", 12)
+            context.fillText(bpm, y, x + 40)
+        }
 
-  return <canvas ref={container} />
+        if (this.props.staveId) {
+            const id = this.props.staveId
+            context.setFont("Arial", 8)
+            context.fillText(id, shift, 50)
+        }
+
+        if (this.props.tuning && this.props.tuning.length > 0) {
+            context.setFont("Arial", 10)
+            for (let i = 1; i < this.props.tuning.length; i++) {
+                const element = this.props.tuning[i - 1]
+                context.fillText(element, 0, i * 13 + 43)
+            }
+        }
+
+        if (this.props.timeSignature) {
+            stave.addTimeSignature(this.props.timeSignature)
+        }
+
+        stave.setContext(context).draw()
+        var noteCount = 0
+        let notes = []
+        let beamNotes = []
+
+        for (let i = 0; i < this.props.measure.length; i++) {
+            let beat = this.props.measure[i].noteDTOS
+            let duration = this.props.measure[i].duration
+            let effects = this.props.measure[i].effects
+            let ghostNote = this.props.measure[i].ghostNote
+            let pos = []
+
+            for (let j = 0; j < beat.length; j++) {
+                pos.push({str: beat[j].string, fret: beat[j].fret})
+                noteCount++;
+            }
+
+            if (pos.length > 0) {
+                let note = new TabNote({positions: pos, duration: duration})
+                note.setGhost(ghostNote)
+
+                console.log(this.state.note + " " + noteCount)
+                if (this.state.note === noteCount) {
+                    note.setStyle({fillStyle: "red", shadowBlur: 10, lineWidth: 5})
+                }
+
+                let parsedEffects = parseEffects(effects)
+
+                for (let i = 0; i < parsedEffects.length; i++) {
+                    const element = parsedEffects[i]
+                    note.addModifier(element)
+                }
+
+                notes.push(note)
+                beamNotes.push(note)
+            } else {
+                notes.push(new StaveNote({keys: ["b/4"], duration: duration + "r"}))
+            }
+        }
+
+        if (notes && notes.length > 0) {
+            Formatter.FormatAndDraw(context, stave, notes)
+        }
+
+        drawPalmMutes(this.props.pmIndexes, notes, context, shift)
+        drawLetRing(this.props.lrIndexes, notes, context, shift)
+
+        drawBeams(notes, context)
+        drawHummerSlide(this.props.slidesAndTies, notes, context)
+    }
+
+    render() {
+        return (
+            <>
+                {/*<h1>{this.state.note}</h1>*/}
+                <canvas ref={this.container}/>
+            </>
+        )
+    }
 }
+
+export default Stave

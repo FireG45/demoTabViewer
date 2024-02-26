@@ -70,7 +70,6 @@ class ShowTab extends Component {
     };
   }
 
-
   componentDidMount() {
     console.log("ShowTab componentDidMount")
 
