@@ -13,7 +13,7 @@ export default class MidiWebPlayer {
         ex.score = score;
         ex.measures = measures;
         ex.measuresLengths = measuresLengths;
-        ex.audioContext = null;
+        ex.audioContext = new window.AudioContext();
         ex.player = null;
         ex.reverberator = null;
         ex.equalizer = null;
@@ -31,20 +31,25 @@ export default class MidiWebPlayer {
         ex.lastNoteIndex = 0;
 
         ex.play = function () {
-            if (!ex.isStarted) {
-                ex.audioContext.resume().then(r => {
-                    ex.isPlaying = true;
-                    ex.isStarted = true;
-                    ex.startPlay(ex.loadedsong);
-                });
-            } else {
-                if (!ex.isPlaying) {
-                    ex.audioContext.resume().then(() => {
+            try {
+                if (!ex.isStarted) {
+                    ex.audioContext.resume().then(r => {
                         ex.isPlaying = true;
-                        let stepDuration = 44 / 1000;
-                        ex.tick(ex.loadedsong, stepDuration);
+                        ex.isStarted = true;
+                        ex.startPlay(ex.loadedsong);
                     });
+                } else {
+                    if (!ex.isPlaying) {
+                        ex.audioContext.resume().then(() => {
+                            ex.isPlaying = true;
+                            let stepDuration = 44 / 1000;
+                            ex.tick(ex.loadedsong, stepDuration);
+                        });
+                    }
                 }
+            } catch (e) {
+                ex.handleMidi();
+                ex.play();
             }
         }
 
@@ -95,29 +100,31 @@ export default class MidiWebPlayer {
 
             ex.score.current.state.measureObjs[lastMeasure > 0 ? lastMeasure - 1 : 0].current.componentDidMount();
 
-
-            try {
-                if (ex.audioContext.currentTime > ex.nextStepTime - stepDuration) {
-                    ex.sendNotes(song, ex.songStart, ex.currentSongTime, ex.currentSongTime + stepDuration, ex.audioContext, ex.input, ex.player);
-                    ex.currentSongTime = ex.currentSongTime + stepDuration;
-                    ex.nextStepTime = ex.nextStepTime + stepDuration;
-                    if (ex.currentSongTime > song.duration) {
-                        ex.currentSongTime = ex.currentSongTime - song.duration;
-                        ex.sendNotes(song, ex.songStart, 0, ex.currentSongTime, ex.audioContext, ex.input, ex.player);
-                        ex.songStart = ex.songStart + song.duration;
-                    }
-                }
-                if (ex.nextPositionTime < ex.audioContext.currentTime) {
-                    ex.nextPositionTime = ex.audioContext.currentTime + 3;
-                }
-                if (ex.isPlaying && ex.isStarted) {
-                    window.requestAnimationFrame(function (t) {
-                        ex.tick(song, stepDuration);
+            if (ex.audioContext.currentTime  > ex.nextStepTime - stepDuration) {
+                ex.sendNotes(song, ex.songStart, ex.currentSongTime, ex.currentSongTime + stepDuration, ex.audioContext, ex.input, ex.player);
+                ex.currentSongTime = ex.currentSongTime + stepDuration;
+                ex.nextStepTime = ex.nextStepTime + stepDuration;
+                if (ex.currentSongTime > song.duration * (1 / ex.speed)) {
+                    ex.audioContext.suspend().then(() => {
+                        ex.handleMidi();
+                        ex.isPlaying = false;
+                        ex.isStarted = false
                     });
                 }
-            } catch (e) {
-                console.log(e)
             }
+            if (ex.nextPositionTime < ex.audioContext.currentTime) {
+                ex.nextPositionTime = ex.audioContext.currentTime + 3;
+            }
+            if (ex.isPlaying && ex.isStarted) {
+                window.requestAnimationFrame(function (t) {
+                    try {
+                        ex.tick(song, stepDuration);
+                    } catch (e) {
+
+                    }
+                });
+            }
+
         }
 
         ex.getCurrNote = function () {
@@ -126,12 +133,14 @@ export default class MidiWebPlayer {
                 ex.lastNoteIndex = 0;
                 return 0;
             }
-            let maxlength = 0;
-            for (let i = 0; i < song.tracks.length; i++) {
-                if (song.tracks[i].notes.length > song.tracks[maxlength].notes.length) maxlength = i;
-            }
+            let shift =  song.tracks[0].notes.length === 0 ? 1 : 0
+            let track = ex.score.current.state.track * 2 + shift;//0;
+            // for (let i = 0; i < song.tracks.length; i++) {
+            //     if (song.tracks[i].notes.length > song.tracks[maxlength].notes.length) maxlength = i;
+            // }
 
-            let notes = song.tracks[maxlength].notes;
+            //let notes = song.tracks.filter((t) => t.n === track)[0].notes;
+            let notes = song.tracks[track].notes;
 
             if (0.0 <= ex.currentSongTime && ex.currentSongTime <= (notes[1].when * (1 / ex.speed)))
                 ex.lastNoteIndex = 0;
@@ -179,8 +188,7 @@ export default class MidiWebPlayer {
 
         ex.startLoad = function (song) {
             console.log(song);
-            var AudioContextFunc = window.AudioContext || window.webkitAudioContext;
-            ex.audioContext = new AudioContextFunc();
+            ex.audioContext = new window.AudioContext();
             ex.player = new WebAudioFontPlayer();
 
             ex.equalizer = ex.player.createChannel(ex.audioContext);
@@ -212,32 +220,40 @@ export default class MidiWebPlayer {
         }
 
         ex.resetEqlualizer = function () {
-            ex.equalizer.band32.gain.setTargetAtTime(2, 0, 0.0001);
-            ex.equalizer.band64.gain.setTargetAtTime(2, 0, 0.0001);
-            ex.equalizer.band128.gain.setTargetAtTime(1, 0, 0.0001);
-            ex.equalizer.band256.gain.setTargetAtTime(0, 0, 0.0001);
-            ex.equalizer.band512.gain.setTargetAtTime(-1, 0, 0.0001);
-            ex.equalizer.band1k.gain.setTargetAtTime(5, 0, 0.0001);
-            ex.equalizer.band2k.gain.setTargetAtTime(4, 0, 0.0001);
-            ex.equalizer.band4k.gain.setTargetAtTime(3, 0, 0.0001);
-            ex.equalizer.band8k.gain.setTargetAtTime(-2, 0, 0.0001);
-            ex.equalizer.band16k.gain.setTargetAtTime(2, 0, 0.0001);
+            try {
+                ex.equalizer.band32.gain.setTargetAtTime(2, 0, 0.0001);
+                ex.equalizer.band64.gain.setTargetAtTime(2, 0, 0.0001);
+                ex.equalizer.band128.gain.setTargetAtTime(1, 0, 0.0001);
+                ex.equalizer.band256.gain.setTargetAtTime(0, 0, 0.0001);
+                ex.equalizer.band512.gain.setTargetAtTime(-1, 0, 0.0001);
+                ex.equalizer.band1k.gain.setTargetAtTime(5, 0, 0.0001);
+                ex.equalizer.band2k.gain.setTargetAtTime(4, 0, 0.0001);
+                ex.equalizer.band4k.gain.setTargetAtTime(3, 0, 0.0001);
+                ex.equalizer.band8k.gain.setTargetAtTime(-2, 0, 0.0001);
+                ex.equalizer.band16k.gain.setTargetAtTime(2, 0, 0.0001);
+            } catch (e) {
+                ex.handleMidi();
+            }
         }
 
         ex.handleMidi = function () {
-            var self = ex;
-            path = ex.path;
-            console.log(path);
-            var xmlHttpRequest = new XMLHttpRequest();
-            xmlHttpRequest.open("GET", path, true);
-            xmlHttpRequest.responseType = "arraybuffer";
-            xmlHttpRequest.onload = function (e) {
-                var arrayBuffer = xmlHttpRequest.response;
-                var midiFile = new MIDIFile(arrayBuffer);
-                var song = midiFile.parseSong();
-                self.startLoad(song);
-            };
-            xmlHttpRequest.send(null);
+            try {
+                var self = ex;
+                path = ex.path;
+                console.log(path);
+                var xmlHttpRequest = new XMLHttpRequest();
+                xmlHttpRequest.open("GET", path, true);
+                xmlHttpRequest.responseType = "arraybuffer";
+                xmlHttpRequest.onload = function (e) {
+                    var arrayBuffer = xmlHttpRequest.response;
+                    var midiFile = new MIDIFile(arrayBuffer);
+                    var song = midiFile.parseSong();
+                    self.startLoad(song);
+                };
+                xmlHttpRequest.send(null);
+            } catch (e) {
+                ex.handleMidi();
+            }
         }
     }
 }

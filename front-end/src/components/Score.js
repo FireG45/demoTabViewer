@@ -20,6 +20,7 @@ export default class Score extends Component {
             measureObjs: [],
             measuresLengths: [],
             lastMeasure: 0,
+            track : Number(this.track),
         };
 
         this.setNote = (id) => {

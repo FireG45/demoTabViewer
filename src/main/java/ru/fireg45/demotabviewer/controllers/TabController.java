@@ -83,15 +83,11 @@ public class TabController {
 
     @GetMapping("/tabs/midi/{id}")
     public ResponseEntity<Resource> getMidi(@PathVariable(name = "id") int id) throws FileNotFoundException {
-        System.out.println("MIDI DOWNLOAD START");
-
         Optional<Tabulature> tabulature = tabulatureService.findById(id);
 
         if (tabulature.isEmpty()) return ResponseEntity.badRequest().build();
 
         Resource resource = midiService.convertToMidi(tabulature.get());
-
-        System.out.println("MIDI DOWNLOAD OK");
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -113,7 +109,7 @@ public class TabController {
     @PostMapping("tabs/setfavorite/{id}")
     public ResponseEntity<String> setFavorite(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                               @PathVariable("id") int id) {
-        if (userPrincipal == null) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        if (userPrincipal == null) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         Optional<User> optionalUser = userService.findByEmail(userPrincipal.getEmail());
         Optional<Tabulature> tabulature = tabulatureService.findById(id);
         if (optionalUser.isEmpty() || tabulature.isEmpty()) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -124,7 +120,7 @@ public class TabController {
     @DeleteMapping("tabs/removefavorite/{id}")
     public ResponseEntity<String> removeFavorite(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                               @PathVariable("id") int id) {
-        if (userPrincipal == null) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        if (userPrincipal == null) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         Optional<Favorite> favorite = favoriteService.getFavorite(userPrincipal.getEmail(), id);
         if (favorite.isEmpty()) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         favoriteService.delete(favorite.get());

@@ -31,8 +31,14 @@ export default function TabPlayer({id = 0, score = null }) {
 
     useEffect(() => {
         setMidiPlayer(newMidiPlayer())
-        midiPlayer.handleMidi();
-        midiPlayer.setSpeed(speed);
+        try {
+            midiPlayer.handleMidi();
+            midiPlayer.setSpeed(speed);
+        } catch (e) {
+            setMidiPlayer(newMidiPlayer())
+            midiPlayer.handleMidi();
+            midiPlayer.setSpeed(speed);
+        }
         setLoaded(true);
     }, [speed]);
 
@@ -43,12 +49,25 @@ export default function TabPlayer({id = 0, score = null }) {
                     <Stack direction={'row'} alignItems="center" spacing={175}>
                         <Stack spacing={2} direction={'row'}>
                             <IconButton color="inherit" onClick={() => {
-                                midiPlayer.play();
-                                midiPlayer.setSpeed(speed);
+                                try {
+                                    midiPlayer.play();
+                                    midiPlayer.setSpeed(speed);
+                                } catch (e) {
+                                    setMidiPlayer(newMidiPlayer())
+                                    midiPlayer.play();
+                                    midiPlayer.setSpeed(speed);
+                                }
                             }}>
                                 <PlayArrowIcon/>
                             </IconButton>
-                            <IconButton color="inherit" onClick={midiPlayer.pause}>
+                            <IconButton color="inherit" onClick={() => {
+                                try {
+                                    midiPlayer.pause()
+                                } catch (e) {
+                                    setMidiPlayer(newMidiPlayer())
+                                    midiPlayer.pause();
+                                }
+                            }}>
                                 <Pause/>
                             </IconButton>
                             <IconButton color="inherit" onClick={() => {

@@ -24,7 +24,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
     private final JWTDecoder jwtDecoder;
-    private final JwtToPrincipleConverter jwtToPrincipleConverter;
+    private final JWTToPrincipleConverter jwtToPrincipleConverter;
 
     @Override
     protected void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,

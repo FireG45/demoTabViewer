@@ -86,8 +86,9 @@ class Stave extends Component {
 
             for (let j = 0; j < beat.length; j++) {
                 pos.push({str: beat[j].string, fret: beat[j].fret})
-                noteCount++;
             }
+
+            noteCount += beat.length;
 
             if (pos.length > 0) {
                 let note = new TabNote({positions: pos, duration: duration})
@@ -95,7 +96,7 @@ class Stave extends Component {
 
                 console.log(this.state.note + " " + noteCount)
                 if (this.state.note === noteCount) {
-                    note.setStyle({fillStyle: "red", shadowBlur: 10, lineWidth: 5})
+                    //note.setStyle({fillStyle: "red", shadowBlur: 10, lineWidth: 5})
                 }
 
                 let parsedEffects = parseEffects(effects)
@@ -112,7 +113,9 @@ class Stave extends Component {
             }
         }
 
+
         if (notes && notes.length > 0) {
+            stave.setStyle({strokeStyle: "red"})
             Formatter.FormatAndDraw(context, stave, notes)
         }
 
@@ -124,10 +127,11 @@ class Stave extends Component {
     }
 
     render() {
+        if (this.state.note > 0) this.container.current.scrollIntoView({ block: "start", behavior: "auto" });
         return (
             <>
                 {/*<h1>{this.state.note}</h1>*/}
-                <canvas ref={this.container}/>
+                <canvas ref={this.container} style={{backgroundColor: this.state.note > 0 ? "#AAD1FF" : "white"}}/>
             </>
         )
     }

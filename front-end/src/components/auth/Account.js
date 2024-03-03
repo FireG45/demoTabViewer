@@ -99,6 +99,11 @@ export default function Account() {
                     username: username,
                 });
                 setLoaded(true)
+            } else {
+                if (result.status === 401) {
+                    removeCookie("user")
+                    removeCookie("token")
+                }
             }
         } catch (error) {
             console.error(error);

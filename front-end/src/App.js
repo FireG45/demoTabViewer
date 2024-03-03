@@ -24,19 +24,20 @@ function App() {
     return (
         <React.StrictMode>
             <Router>
-                <PrimarySearchAppBar />
+                <PrimarySearchAppBar/>
+                <br/><br/><br/><br/>
                 <Routes>
-                    <Route path='/' exact element={<TabList />} />
-                    <Route path='/tabs/:id/:track' element={<ShowTab />} />
-                    <Route path='/upload' element={!cookies["token"] ? <SignIn /> : <UploadTab />} />
-                    <Route path='/signup' element={<SignUp />} />
-                    <Route path='/signin' element={<SignIn />} />
-                    <Route path='/mytabs' element={!cookies["token"] ? <SignIn /> : <MyTabList />} />
-                    <Route path='/favorite' element={!cookies["token"] ? <SignIn /> : <FavoriteTabList />} />
-                    <Route path='/update/:id' element={!cookies["token"] ? <SignIn /> : <UpdateTab />} />
-                    <Route path='/tabs/:author' element={<TabList />} />
-                    <Route path='/account' element={!cookies["token"] ? <SignIn /> : <Account />} />
-                    <Route path='*' element={<NotFoundError />} />
+                    <Route path='/' exact element={<TabList/>}/>
+                    <Route path='/tabs/:id/:track' element={<ShowTab/>}/>
+                    <Route path='/upload' element={!cookies["token"] ? <SignIn/> : <UploadTab/>}/>
+                    <Route path='/signup' element={<SignUp/>}/>
+                    <Route path='/signin' element={<SignIn/>}/>
+                    <Route path='/mytabs' element={!cookies["token"] ? <SignIn/> : <MyTabList/>}/>
+                    <Route path='/favorite' element={!cookies["token"] ? <SignIn/> : <FavoriteTabList/>}/>
+                    <Route path='/update/:id' element={!cookies["token"] ? <SignIn/> : <UpdateTab/>}/>
+                    <Route path='/tabs/:author' element={<TabList/>}/>
+                    <Route path='/account' element={!cookies["token"] ? <SignIn/> : <Account/>}/>
+                    <Route path='*' element={<NotFoundError/>}/>
                 </Routes>
             </Router>
         </React.StrictMode>
