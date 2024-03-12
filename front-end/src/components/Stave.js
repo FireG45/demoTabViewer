@@ -127,7 +127,7 @@ class Stave extends Component {
     }
 
     render() {
-        if (this.state.note > 0) this.container.current.scrollIntoView({ block: "start", behavior: "auto" });
+        // if (this.state.note > 0) this.container.current.scrollIntoView({block: "start", behavior: "auto"});
         return (
             <>
                 {/*<h1>{this.state.note}</h1>*/}

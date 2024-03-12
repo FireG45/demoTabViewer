@@ -135,12 +135,15 @@ export default class MidiWebPlayer {
             }
             let shift =  song.tracks[0].notes.length === 0 ? 1 : 0
             let track = ex.score.current.state.track * 2 + shift;//0;
+            let track2 = ex.score.current.state.track;// * 2 + shift;//0;
             // for (let i = 0; i < song.tracks.length; i++) {
             //     if (song.tracks[i].notes.length > song.tracks[maxlength].notes.length) maxlength = i;
             // }
 
             //let notes = song.tracks.filter((t) => t.n === track)[0].notes;
             let notes = song.tracks[track].notes;
+
+            if (notes.length === 0) notes = song.tracks.filter(t => t.notes.length > 0)[track2].notes;
 
             if (0.0 <= ex.currentSongTime && ex.currentSongTime <= (notes[1].when * (1 / ex.speed)))
                 ex.lastNoteIndex = 0;

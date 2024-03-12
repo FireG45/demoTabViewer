@@ -2,7 +2,8 @@ import {Component, createRef} from "react";
 import Score from "./Score";
 import Stack from "@mui/material/Stack";
 import {
-    ButtonGroup, Container, FormControl, Grid, MenuItem, OutlinedInput, Rating, Select, Typography
+    Alert,
+    ButtonGroup, Container, FormControl, Grid, MenuItem, OutlinedInput, Rating, Select, Snackbar, Typography
 } from "@mui/material";
 import withRouter from './withRouter'
 
@@ -27,6 +28,7 @@ class ShowTab extends Component {
 
     state = {
         user: this.props.cookies.get("user") || "", token: this.props.cookies.get("token") || "", playing: false,
+        snackbarOpen: false,
     };
 
     handleSetCookie = () => {
@@ -109,104 +111,123 @@ class ShowTab extends Component {
             });
 
             return (<>
-                    <TabPlayer score={this.score} id={this.id}/>
-                    <Container>
-                        <Stack direction="column" justifyContent="flex-start" alignItems="stretch" spacing={0} ml={-40}
-                               mr={-40}>
-                            <br></br>
-                            <Grid container spacing={0}>
-                                <Grid xs={6}>
-                                    <h2><Link to={`/tabs/${tab.author}`}>{tab.author}</Link> - {tab.title}</h2>
-                                </Grid>
-                                <Grid xs={6} style={{textAlign: "right"}}>
-                                    <ButtonGroup>
-                                        <Checkbox onChange={async (_, cheked) => {
-                                            try {
-                                                const result = await fetch(`http://localhost:8080/tabs/${cheked ? "setfavorite" : "removefavorite"}/` + this.id, {
-                                                    method: cheked ? "POST" : "DELETE", headers: new Headers({
-                                                        'Content-Type': 'application/json',
-                                                        'Authorization': 'Bearer ' + this.token
-                                                    })
-                                                });
-                                                if (result.ok) {
-                                                    this.setState({
-                                                        favorite: cheked
-                                                    });
-                                                }
-                                            } catch (error) {
-                                                console.error(error);
-                                            }
-                                        }} checked={favorite} icon={<FavoriteBorder/>} checkedIcon={<Favorite/>}/>
-                                        <TabInfoPopover data={{
-                                            user: tab.user, uploaded: tab.uploaded, id: this.id, owner: tab.userOwner
-                                        }}/>
-                                    </ButtonGroup>
-                                    <Typography component="legend">Сложность табулатуры:</Typography>
-                                    <StyledRating
-                                        name="simple-controlled"
-                                        icon={<CircleIcon fontSize="inherit" color="green"/>}
-                                        emptyIcon={<CircleOutlinedIcon fontSize="inherit" color="green"/>}
-                                        value={value || tab.rating}
-                                        onChange={async (event, newValue) => {
-                                            const formData = new FormData();
-                                            formData.append("tabId", this.id);
-                                            formData.append("value", newValue);
-                                            try {
-                                                const result = await fetch("http://localhost:8080/addreview", {
-                                                    method: "POST", body: JSON.stringify({
-                                                        "tabId": this.id, "value": newValue
-                                                    }), headers: new Headers({
-                                                        'Content-Type': 'application/json',
-                                                        'Authorization': 'Bearer ' + this.token
-                                                    })
-                                                });
-
-                                                if (result.ok) {
-                                                    this.setState({
-                                                        value: newValue
-                                                    });
-                                                }
-                                            } catch (error) {
-                                                console.error(error);
-                                            }
-                                        }}
-                                    />
-                                </Grid>
+                <TabPlayer score={this.score} id={this.id}/>
+                <Snackbar open={this.state.snackbarOpen}
+                          autoHideDuration={6000}
+                          anchorOrigin={{ vertical : 'top', horizontal : 'right' }}
+                          onClose={(event, reason) => {
+                              if (reason === 'clickaway') {
+                                  return;
+                              }
+                              this.setState({snackbarOpen: false});
+                          }}>
+                    <Alert
+                        severity="error"
+                        variant="filled"
+                        sx={{width: '100%'}}
+                    >
+                        Вы не авторизированы!
+                    </Alert>
+                </Snackbar>
+                <Container>
+                    <Stack direction="column" justifyContent="flex-start" alignItems="stretch" spacing={0} ml={-40}
+                           mr={-40}>
+                        <br></br>
+                        <Grid container spacing={0}>
+                            <Grid xs={6}>
+                                <h2><Link to={`/tabs/${tab.author}`}>{tab.author}</Link> - {tab.title}</h2>
                             </Grid>
-                            <FormControl sx={{m: 1, width: 300}} variant={'filled'}>
-                                <InputLabel id="demo-simple-select-label">Трек</InputLabel>
-                                <Select
-                                    labelId="demo-multiple-name-label"
-                                    id="demo-multiple-name"
-                                    value={this.track}
-                                    label={'Трек'}
-                                    onChange={(event) => {
-                                        this.props.navigate(this.path + event.target.value, {replace: false});
-                                        this.forceUpdate();
-                                        this.props.navigate(0);
+                            <Grid xs={6} style={{textAlign: "right"}}>
+                                <ButtonGroup>
+                                    <Checkbox onChange={async (_, cheked) => {
+                                        if (!this.token) { this.setState({snackbarOpen: true}); return; }
+                                        try {
+                                            const result = await fetch(`http://localhost:8080/tabs/${cheked ? "setfavorite" : "removefavorite"}/` + this.id, {
+                                                method: cheked ? "POST" : "DELETE", headers: new Headers({
+                                                    'Content-Type': 'application/json',
+                                                    'Authorization': 'Bearer ' + this.token
+                                                })
+                                            });
+                                            if (result.ok) {
+                                                this.setState({
+                                                    favorite: cheked
+                                                });
+                                            }
+                                        } catch (error) {
+                                            console.error(error);
+                                        }
+                                    }} checked={favorite} icon={<FavoriteBorder/>} checkedIcon={<Favorite/>}/>
+                                    <TabInfoPopover data={{
+                                        user: tab.user, uploaded: tab.uploaded, id: this.id, owner: tab.userOwner
+                                    }}/>
+                                </ButtonGroup>
+                                <Typography component="legend">Сложность табулатуры:</Typography>
+                                <StyledRating
+                                    name="simple-controlled"
+                                    icon={<CircleIcon fontSize="inherit" color="green"/>}
+                                    emptyIcon={<CircleOutlinedIcon fontSize="inherit" color="green"/>}
+                                    value={value || tab.rating}
+                                    onChange={async (event, newValue) => {
+                                        if (!this.token) { this.setState({snackbarOpen: true}); return; }
+                                        const formData = new FormData();
+                                        formData.append("tabId", this.id);
+                                        formData.append("value", newValue);
+                                        try {
+                                            const result = await fetch("http://localhost:8080/addreview", {
+                                                method: "POST", body: JSON.stringify({
+                                                    "tabId": this.id, "value": newValue
+                                                }), headers: new Headers({
+                                                    'Content-Type': 'application/json',
+                                                    'Authorization': 'Bearer ' + this.token
+                                                })
+                                            });
+
+                                            if (result.ok) {
+                                                this.setState({
+                                                    value: newValue
+                                                });
+                                            }
+                                        } catch (error) {
+                                            console.error(error);
+                                        }
                                     }}
-                                    input={<OutlinedInput label="Name"/>}
-                                >
-                                    {Array.from(Array(tracks.length)).map((_, index) => {
-                                        return <MenuItem key={index} value={index}>
-                                            <Typography>
-                                                {tracks[index]}
-                                            </Typography>
-                                        </MenuItem>
-                                    })}
-                                </Select>
-                            </FormControl>
-                            <div>
-                                <Score ref={this.score} id={this.id} track={this.track}/>
-                            </div>
-                        </Stack>
-                    </Container>
+                                />
+                            </Grid>
+                        </Grid>
+                        <FormControl sx={{m: 1, width: 300}} variant={'filled'}>
+                            <InputLabel id="demo-simple-select-label">Трек</InputLabel>
+                            <Select
+                                labelId="demo-multiple-name-label"
+                                id="demo-multiple-name"
+                                value={this.track}
+                                label={'Трек'}
+                                onChange={(event) => {
+                                    this.props.navigate(this.path + event.target.value, {replace: false});
+                                    this.forceUpdate();
+                                    this.props.navigate(0);
+                                }}
+                                input={<OutlinedInput label="Name"/>}
+                            >
+                                {Array.from(Array(tracks.length)).map((_, index) => {
+                                    return <MenuItem key={index} value={index}>
+                                        <Typography>
+                                            {tracks[index]}
+                                        </Typography>
+                                    </MenuItem>
+                                })}
+                            </Select>
+                        </FormControl>
+                        <div>
+                            <Score ref={this.score} id={this.id} track={this.track}/>
+                        </div>
+                    </Stack>
+                </Container>
                 <br/><br/>
                 <br/><br/>
                 <br/><br/>
                 <br/><br/>
                 <br/><br/>
-                </>)
+            </>)
         }
     }
 }

@@ -204,7 +204,10 @@ export default function PrimarySearchAppBar() {
                                 </Stack>
                             </Typography>
                             :
-                            ""
+                            <Button
+                                style={{'textDecoration': 'none', 'color': '#FFFF'}}
+                                onClick={() => navigate('/signin')}
+                            >Войти</Button>
                         }
                     </Box>
                 </Toolbar>
