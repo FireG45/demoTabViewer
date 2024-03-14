@@ -34,9 +34,15 @@ function FavoriteTabList() {
             headers: new Headers({
                 'Authorization': 'Bearer ' + cookies["token"]
             })
-        })
-            .then((response) => response.json())
-            .then((data) => {
+        }).then((response) => {
+                if (response.status === 403 || response.status === 401) {
+                    setCookie("token", null)
+                    setCookie("user", null)
+                    navigate('/signin');
+                    return;
+                }
+                return response.json();
+            }).then((data) => {
                 setTabs(data);
                 setLoaded(true);
                 setChanged(false);

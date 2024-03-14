@@ -58,14 +58,17 @@ public class TabController {
         int PAGE_SIZE = 20;
         List<Tabulature> tabs;
         long pagesCount;
-        if (query == null) {
+        System.out.println("QUERY: " + query);
+        if (query == null || query.isEmpty()) {
+            System.out.println("QUERY: NO");
             PageRequest pageRequest = PageRequest.of(page, PAGE_SIZE);
             tabs = author == null || author.isEmpty() ? tabulatureService.findAll(pageRequest) :
                     tabulatureService.findAllByAuthor(author, pageRequest);
             pagesCount = tabulatureService.getPageCount(PAGE_SIZE);
         } else {
-            var tuple = tabulatureSearchService.search(query, page, PAGE_SIZE, pageCount);
-            pagesCount = tuple.getValue2();
+            System.out.println("QUERY: YES");
+            var tuple = tabulatureSearchService.search(query);
+            pagesCount = 0;
             tabs = tuple.getValue1();
         }
 
@@ -95,15 +98,16 @@ public class TabController {
     }
 
     @GetMapping("/tabs/mytabs")
-    public List<Tabulature> myTabs(@AuthenticationPrincipal UserPrincipal principal) {
+    public ResponseEntity<List<Tabulature>> myTabs(@AuthenticationPrincipal UserPrincipal principal) {
+        if (principal == null) return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
         Optional<User> user = userService.findByEmail(principal.getEmail());
-        return user.map(User::getTabulatures).orElse(null);
+        return new ResponseEntity<>(user.map(User::getTabulatures).orElse(null), HttpStatus.OK);
     }
 
     @GetMapping("tabs/favorite")
-    public List<Tabulature> favoriteTabs(@AuthenticationPrincipal UserPrincipal principal) {
-        if (principal == null) return null;
-        return tabulatureService.findFavoritesByEmail(principal.getEmail());
+    public ResponseEntity<List<Tabulature>> favoriteTabs(@AuthenticationPrincipal UserPrincipal principal) {
+        if (principal == null) return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(tabulatureService.findFavoritesByEmail(principal.getEmail()), HttpStatus.OK);
     }
 
     @PostMapping("tabs/setfavorite/{id}")

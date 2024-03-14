@@ -19,7 +19,7 @@ public class TabulatureSearchService {
         this.searchRepository = searchRepository;
     }
 
-    public Tuple<List<Tabulature>, Long> search(String query, int page, int pageSize, int pageCount) throws InterruptedException {
-        return searchRepository.search(query, page, pageSize, pageCount);
+    public Tuple<List<Tabulature>, Long> search(String query) throws InterruptedException {
+        return searchRepository.search(query);
     }
 }

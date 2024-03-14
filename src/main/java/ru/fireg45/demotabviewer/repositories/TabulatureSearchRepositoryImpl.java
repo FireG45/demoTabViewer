@@ -21,16 +21,16 @@ public class TabulatureSearchRepositoryImpl implements TabulatureSearchRepositor
     EntityManager entityManager;
 
     @Override
-    public Tuple<List<Tabulature>, Long> search(String query, int page, int pageSize, int pageCount) throws InterruptedException {
+    public Tuple<List<Tabulature>, Long> search(String query) throws InterruptedException {
         SearchSession searchSession = Search.session(entityManager);
 
-        int start = page * pageSize;
+        searchSession.massIndexer(Tabulature.class).startAndWait();
 
         SearchResult<Tabulature> result = searchSession.search(Tabulature.class)
                 .where(f -> f.match()
                         .fields("title", "author")
                         .matching(query))
-                .fetch(start, start + pageSize);
+                .fetchAll();
 
         return new Tuple<>(result.hits(), result.total().hitCount());
     }

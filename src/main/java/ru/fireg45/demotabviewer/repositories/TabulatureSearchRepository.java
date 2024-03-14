@@ -11,5 +11,5 @@ import java.util.List;
 @Component
 @Repository
 public interface TabulatureSearchRepository {
-    Tuple<List<Tabulature>, Long> search(String query, int page, int pageSize, int pageCount) throws InterruptedException;
+    Tuple<List<Tabulature>, Long> search(String query) throws InterruptedException;
 }

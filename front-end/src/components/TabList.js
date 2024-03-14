@@ -25,10 +25,12 @@ function TabList() {
     const params = useParams();
 
     useEffect(() => {
+        console.log(query)
         document.title = params.author ? `Табулатуры ${params.author}` : 'Все табулатуры';
         fetch(`http://localhost:8080?page=${page - 1}&pageCount=${pageCount}${params.author ? `&author=${params.author}` : ''}${query ? `&query=${query}` : ''}`)
             .then((response) => response.json())
             .then((data) => {
+                console.log("queried " + data.tabs)
                 setTabs(data.tabs);
                 setPage(data.page + 1);
                 setPageCount(data.pageCount);
@@ -161,10 +163,11 @@ function TabList() {
                 {/*    );*/}
                 {/*})}*/}
             </Container>
-            {!!! (params.author || query) &&
-                <Pagination page={page} count={pageCount} onChange={(_, newPage) => {
-                    setPage(newPage)
-                }} color="primary"/>}
+            {/*{!!! (params.author || query) &&*/}
+            {/*    }*/}
+            <Pagination page={page} count={pageCount} onChange={(_, newPage) => {
+                setPage(newPage)
+            }} color="primary"/>
             <br/>
         </Stack>
     );

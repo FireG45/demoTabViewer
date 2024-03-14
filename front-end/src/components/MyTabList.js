@@ -40,7 +40,15 @@ function MyTabList() {
                 'Authorization': 'Bearer ' + cookies["token"]
             })
         })
-            .then((response) => response.json())
+            .then((response) => {
+                if (response.status === 403 || response.status === 401) {
+                    setCookie("token", null)
+                    setCookie("user", null)
+                    navigate('/signin');
+                    return;
+                }
+                return response.json();
+            })
             .then((data) => {
                 setLoaded(true)
                 setTabs(data);

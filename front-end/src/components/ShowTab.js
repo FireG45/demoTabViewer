@@ -114,7 +114,7 @@ class ShowTab extends Component {
                 <TabPlayer score={this.score} id={this.id}/>
                 <Snackbar open={this.state.snackbarOpen}
                           autoHideDuration={6000}
-                          anchorOrigin={{ vertical : 'top', horizontal : 'right' }}
+                          anchorOrigin={{vertical: 'top', horizontal: 'right'}}
                           onClose={(event, reason) => {
                               if (reason === 'clickaway') {
                                   return;
@@ -140,7 +140,10 @@ class ShowTab extends Component {
                             <Grid xs={6} style={{textAlign: "right"}}>
                                 <ButtonGroup>
                                     <Checkbox onChange={async (_, cheked) => {
-                                        if (!this.token) { this.setState({snackbarOpen: true}); return; }
+                                        if (!this.token) {
+                                            this.setState({snackbarOpen: true});
+                                            return;
+                                        }
                                         try {
                                             const result = await fetch(`http://localhost:8080/tabs/${cheked ? "setfavorite" : "removefavorite"}/` + this.id, {
                                                 method: cheked ? "POST" : "DELETE", headers: new Headers({
@@ -168,7 +171,10 @@ class ShowTab extends Component {
                                     emptyIcon={<CircleOutlinedIcon fontSize="inherit" color="green"/>}
                                     value={value || tab.rating}
                                     onChange={async (event, newValue) => {
-                                        if (!this.token) { this.setState({snackbarOpen: true}); return; }
+                                        if (!this.token) {
+                                            this.setState({snackbarOpen: true});
+                                            return;
+                                        }
                                         const formData = new FormData();
                                         formData.append("tabId", this.id);
                                         formData.append("value", newValue);
@@ -221,6 +227,11 @@ class ShowTab extends Component {
                             <Score ref={this.score} id={this.id} track={this.track}/>
                         </div>
                     </Stack>
+                    <Container sx={{justifyContent: 'center'}}>
+                        <Typography>
+                            Весь контент на этой странице является собственностью правообладателя оригинальной композиции.
+                        </Typography>
+                    </Container>
                 </Container>
                 <br/><br/>
                 <br/><br/>

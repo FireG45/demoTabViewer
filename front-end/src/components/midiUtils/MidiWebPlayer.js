@@ -1,5 +1,3 @@
-'use strict'
-
 import MIDIFile from "./MIDIFile";
 import {WebAudioFontPlayer} from 'webaudiofont';
 
@@ -29,6 +27,20 @@ export default class MidiWebPlayer {
         ex.isStarted = false;
 
         ex.lastNoteIndex = 0;
+
+        ex.remapInstrument = function (nn) {
+            if (315 <= nn && nn <= 332) { // overdrive guitar remap
+                return 327;
+            }
+            if (333 <= nn && nn <= 353) { // dist guitar remap
+                return 339;
+            }
+            if (274 <= nn && nn <= 285) { // jazz guitar remap
+                return 278;
+            }
+
+            return nn;
+        }
 
         ex.play = function () {
             try {
@@ -84,7 +96,7 @@ export default class MidiWebPlayer {
             let lastMeasure = ex.score.current.state.lastMeasure;
             let measuresLengths = ex.score.current.state.measuresLengths;
 
-            let noteCount =  measuresLengths.slice(0, lastMeasure + 1).reduce((a, b) => a + b);
+            let noteCount = measuresLengths.slice(0, lastMeasure + 1).reduce((a, b) => a + b);
 
             if (currentNote >= noteCount) {
                 lastMeasure = (lastMeasure + 1) % measures.length;
@@ -100,7 +112,7 @@ export default class MidiWebPlayer {
 
             ex.score.current.state.measureObjs[lastMeasure > 0 ? lastMeasure - 1 : 0].current.componentDidMount();
 
-            if (ex.audioContext.currentTime  > ex.nextStepTime - stepDuration) {
+            if (ex.audioContext.currentTime > ex.nextStepTime - stepDuration) {
                 ex.sendNotes(song, ex.songStart, ex.currentSongTime, ex.currentSongTime + stepDuration, ex.audioContext, ex.input, ex.player);
                 ex.currentSongTime = ex.currentSongTime + stepDuration;
                 ex.nextStepTime = ex.nextStepTime + stepDuration;
@@ -124,23 +136,20 @@ export default class MidiWebPlayer {
                     }
                 });
             }
-
         }
 
         ex.getCurrNote = function () {
+            return 0;
+
             let song = ex.loadedsong;
             if (song === null || song.tracks === null) {
                 ex.lastNoteIndex = 0;
                 return 0;
             }
-            let shift =  song.tracks[0].notes.length === 0 ? 1 : 0
+            let shift = song.tracks[0].notes.length === 0 ? 1 : 0
             let track = ex.score.current.state.track * 2 + shift;//0;
             let track2 = ex.score.current.state.track;// * 2 + shift;//0;
-            // for (let i = 0; i < song.tracks.length; i++) {
-            //     if (song.tracks[i].notes.length > song.tracks[maxlength].notes.length) maxlength = i;
-            // }
 
-            //let notes = song.tracks.filter((t) => t.n === track)[0].notes;
             let notes = song.tracks[track].notes;
 
             if (notes.length === 0) notes = song.tracks.filter(t => t.notes.length > 0)[track2].notes;
@@ -150,7 +159,7 @@ export default class MidiWebPlayer {
 
             let ind = ex.lastNoteIndex + 1 < notes.length ? ex.lastNoteIndex + 1 : notes.length - 1;
 
-            let nextNoteWhen= (notes[ind].when * (1 / ex.speed));
+            let nextNoteWhen = (notes[ind].when * (1 / ex.speed));
 
             if (ex.currentSongTime >= nextNoteWhen && ex.lastNoteIndex < notes.length - 1) {
                 ex.lastNoteIndex++;
@@ -170,7 +179,7 @@ export default class MidiWebPlayer {
                             duration = 3;
                         }
                         var instr = track.info.variable;
-                        var v = track.volume / 3;
+                        var v = track.volume / 2;
                         ex.player.queueWaveTable(ex.audioContext, ex.input, window[instr], when, track.notes[i].pitch, duration, v, track.notes[i].slides);
                     }
                 }
@@ -201,12 +210,15 @@ export default class MidiWebPlayer {
             ex.reverberator.output.connect(ex.audioContext.destination);
 
             for (var i = 0; i < song.tracks.length; i++) {
-                var nn = ex.player.loader.findInstrument(song.tracks[i].program);
+                var nn = ex.remapInstrument(ex.player.loader.findInstrument(song.tracks[i].program));
                 var info = ex.player.loader.instrumentInfo(nn);
+
                 song.tracks[i].info = info;
                 song.tracks[i].id = nn;
+                song.tracks[i].volume = 1.0;
                 ex.player.loader.startLoad(ex.audioContext, info.url, info.variable);
             }
+
             for (var i = 0; i < song.beats.length; i++) {
                 var nn = ex.player.loader.findDrum(song.beats[i].n);
                 var info = ex.player.loader.drumInfo(nn);
@@ -214,15 +226,16 @@ export default class MidiWebPlayer {
                 song.beats[i].id = nn;
                 ex.player.loader.startLoad(ex.audioContext, info.url, info.variable);
             }
-            var self = ex;
+
+            const self = ex;
             ex.player.loader.waitLoad(function () {
-                self.resetEqlualizer();
+                self.resetEqualizer();
             });
             ex.loadedsong = song
             console.log("SONG: " + song)
         }
 
-        ex.resetEqlualizer = function () {
+        ex.resetEqualizer = function () {
             try {
                 ex.equalizer.band32.gain.setTargetAtTime(2, 0, 0.0001);
                 ex.equalizer.band64.gain.setTargetAtTime(2, 0, 0.0001);
