@@ -21,6 +21,22 @@ import Favorite from '@mui/icons-material/Favorite';
 import TabPlayer from "./TabPlayer";
 import InputLabel from "@mui/material/InputLabel";
 
+function convertDuration(duration) {
+    let dDotted = 0;
+    dDotted += duration[0] === '.' ? 1 : 0;
+    dDotted += duration[1] === '.' ? 1 : 0;
+    duration = duration.slice(dDotted);
+    let durationValue = 0.0;
+    switch (duration) {
+        case "w" : durationValue =  1; break;
+        case "h" : durationValue =  1/2; break;
+        case "q" : durationValue = 1/4; break;
+        default : durationValue = 1 / parseInt(duration); break;
+    }
+    for (let i = 0; i < dDotted; i++) durationValue += (durationValue / 2);
+    return durationValue;
+}
+
 class ShowTab extends Component {
     static propTypes = {
         cookies: instanceOf(Cookies).isRequired
@@ -58,7 +74,15 @@ class ShowTab extends Component {
         this.token = "";
 
         this.state = {
-            error: null, isLoaded: false, tab: null, track: 0, value: 0, note: 0, favorite: false, speed: 1
+            error: null,
+            isLoaded: false,
+            tab: null,
+            track: 0,
+            value: 0,
+            note: 0,
+            favorite: false,
+            speed: 1,
+            tabBeats: [],
         };
     }
 
@@ -76,8 +100,25 @@ class ShowTab extends Component {
                 'Content-Type': 'application/json',
             })
         }).then(res => res.json()).then((result) => {
+            let beats = []
+            let last = 0.0;
+            for (let i = 0; i < result.measures.length; i++) {
+                let measure = result.measures[i];
+                let bpm = measure.tempo;
+                let timeSignature = parseInt(measure.timeSignature.split('/')[0]);
+                for (let j = 0; j < measure.beatDTOS.length; j++) {
+                    let beat =  measure.beatDTOS[j];
+                    let noteDuration = convertDuration(beat.duration);
+                    let duration
+                        = 60.0 / (bpm * (1 / 4) / (noteDuration / (1 / timeSignature)) * timeSignature);
+                    // 60/(120 × 1/4 ÷ ((1/1) ÷ (1/4)) × 4)
+                    beats.push({when : last, duration : duration});
+                    last += duration;
+                }
+            }
+
             this.setState({
-                isLoaded: true, tab: result, favorite: result.favorite,
+                isLoaded: true, tab: result, favorite: result.favorite, tabBeats: beats
             });
         }, (error) => {
             this.setState({
@@ -111,7 +152,7 @@ class ShowTab extends Component {
             });
 
             return (<>
-                <TabPlayer score={this.score} id={this.id}/>
+                <TabPlayer score={this.score} id={this.id} tabBeats={this.state.tabBeats}/>
                 <Snackbar open={this.state.snackbarOpen}
                           autoHideDuration={6000}
                           anchorOrigin={{vertical: 'top', horizontal: 'right'}}
@@ -200,7 +241,7 @@ class ShowTab extends Component {
                                 />
                             </Grid>
                         </Grid>
-                        <FormControl sx={{m: 1, width: 300}} variant={'filled'}>
+                        <FormControl sx={{m: 1, width: 500}} variant={'filled'}>
                             <InputLabel id="demo-simple-select-label">Трек</InputLabel>
                             <Select
                                 labelId="demo-multiple-name-label"
@@ -227,11 +268,6 @@ class ShowTab extends Component {
                             <Score ref={this.score} id={this.id} track={this.track}/>
                         </div>
                     </Stack>
-                    <Container sx={{justifyContent: 'center'}}>
-                        <Typography>
-                            Весь контент на этой странице является собственностью правообладателя оригинальной композиции.
-                        </Typography>
-                    </Container>
                 </Container>
                 <br/><br/>
                 <br/><br/>

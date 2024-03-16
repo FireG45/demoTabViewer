@@ -13,5 +13,6 @@ public class TabDTO {
     public boolean favorite;
     public String[] tunings;
     public String[] trackNames;
+    public int[] trackPrograms;
     public MeasureDTO[] measures;
 }

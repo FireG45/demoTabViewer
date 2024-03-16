@@ -12,7 +12,7 @@ import MidiWebPlayer from "./midiUtils/MidiWebPlayer";
 import {Pause, Stop} from "@mui/icons-material";
 
 
-export default function TabPlayer({id = 0, score = null }) {
+export default function TabPlayer({id = 0, score = null, tabBeats = [] }) {
     const [speed, setSpeed] = useState(1.0);
     const [loaded, setLoaded] = useState(false);
 
@@ -21,7 +21,7 @@ export default function TabPlayer({id = 0, score = null }) {
     var measures = null
 
     const newMidiPlayer = () => new MidiWebPlayer('http://localhost:8080/tabs/midi/' + id, score,
-        measures, measuresLength)
+        measures, measuresLength, tabBeats)
 
     const [midiPlayer, setMidiPlayer] =
         useState(newMidiPlayer())

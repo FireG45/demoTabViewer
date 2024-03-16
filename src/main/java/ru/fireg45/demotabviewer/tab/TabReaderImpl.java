@@ -52,6 +52,12 @@ import java.util.*;
                             List<List<Integer>> pmIndexes, List<List<Integer>> lrIndexes, List<Integer> lrsubList,
                             int i) {
         TGVoice voice = beat.getVoice(0);
+
+        if (beat.isRestBeat()) {
+            return new BeatDTO(readDuration(voice.getDuration()),
+                    false, false, List.of(), List.of());
+        }
+
         List<NoteDTO> notes = new ArrayList<>();
         List<String> effects = new ArrayList<>();
         boolean palmMute = false, ghostNote = false, letRing  = false;
@@ -96,7 +102,9 @@ import java.util.*;
                 TGDuration.WHOLE, TGDuration.HALF, TGDuration.QUARTER, TGDuration.EIGHTH, TGDuration.SIXTEENTH,
                         TGDuration.THIRTY_SECOND, TGDuration.SIXTY_FOURTH, (int)TGDuration.QUARTER_TIME);
         List<String> vexDurations = List.of( "w", "h", "q", "8", "16", "32", "64", "128");
-        return vexDurations.get(thDurations.indexOf(duration.getValue()));
+        String dotted = duration.isDotted() ? "." : "";
+        String doubleDotted = duration.isDoubleDotted() ? "." : "";
+        return dotted + doubleDotted + vexDurations.get(thDurations.indexOf(duration.getValue()));
     }
 
     @Override
@@ -112,7 +120,7 @@ import java.util.*;
                 TGEffectBend bend = effect.getBend();
                  String[] bendValues =
                          new String[] { "1/4", "1/4", "1/2", "3/4", "full", "1¼", "1½", "1¾", "2", "2¼",
-                                 "2½", "2¾", "3", "3¼", "3½"};
+                                 "2½", "2¾", "3", "3¼", "3½" };
                 String value = bendValues[bend.getBendValue() / 25];
 
                 switch (bend.getBendType()) {
@@ -178,10 +186,14 @@ import java.util.*;
         tabDTO.stringCount = song.getTrack(track).stringCount();
         tabDTO.trackNames = new String[song.countTracks()];
         tabDTO.tunings = new String[song.countTracks()];
+        tabDTO.trackPrograms = new int[song.countTracks()];
         List<TGTrack> tracks = song.getTrackList().stream().toList();
         for (int j = 0; j < tracks.size(); j++) {
-            tabDTO.trackNames[j] = tracks.get(j).getName();
-            tabDTO.tunings[j] = tracks.get(j).getTuning();
+            TGTrack tgTrack = tracks.get(j);
+            TGChannel tgChannel = song.getChannel(tgTrack.getChannelId() - 1);
+            tabDTO.trackNames[j] = tgTrack.getName() + "  |  (" + tgChannel.getName() + ")";
+            tabDTO.tunings[j] = tgTrack.getTuning();
+            tabDTO.trackPrograms[j] = tgChannel.getProgram();
         }
 
         int mSize = measures.size();

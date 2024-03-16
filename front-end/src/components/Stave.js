@@ -1,5 +1,5 @@
 import React, {Component} from 'react'
-import VexFlow from 'vexflow'
+import VexFlow, {Fraction} from 'vexflow'
 import parseEffects from './renderUtils/parseEffects'
 import drawHummerSlide from './renderUtils/drawHummerSlide'
 import drawBeams from './renderUtils/drawBeams'
@@ -14,6 +14,8 @@ class Stave extends Component {
         this.container = React.createRef()
         this.rendererRef = React.createRef()
         this.length = this.props.measure.length
+
+        this.noteCount = 0;
 
         this.state = {
             note: 0,
@@ -73,9 +75,26 @@ class Stave extends Component {
         }
 
         stave.setContext(context).draw()
-        var noteCount = 0
+        this.noteCount = 0
         let notes = []
         let beamNotes = []
+
+        function readDuration(duration) {
+            let dDotted = 0;
+            dDotted += duration[0] === '.' ? 1 : 0;
+            dDotted += duration[1] === '.' ? 1 : 0;
+            duration = duration.slice(dDotted);
+            let fraction;
+            switch (duration) {
+                case "w" : fraction = new Fraction(1, 1); break;
+                case "h" : fraction = new Fraction(1, 2); break;
+                case "q" : fraction = new Fraction(1, 4); break;
+                default : fraction = new Fraction(1, parseInt(duration)); break;
+            }
+            for (let i = 0; i < dDotted; i++)
+                fraction.add(fraction.multiply(new Fraction(1, 2)));
+            return fraction;
+        }
 
         for (let i = 0; i < this.props.measure.length; i++) {
             let beat = this.props.measure[i].noteDTOS
@@ -88,16 +107,13 @@ class Stave extends Component {
                 pos.push({str: beat[j].string, fret: beat[j].fret})
             }
 
-            noteCount += beat.length;
+            this.noteCount++;
 
+            let note;
             if (pos.length > 0) {
-                let note = new TabNote({positions: pos, duration: duration})
+                note = new TabNote({positions: pos, duration: duration})
                 note.setGhost(ghostNote)
-
-                console.log(this.state.note + " " + noteCount)
-                if (this.state.note === noteCount) {
-                    //note.setStyle({fillStyle: "red", shadowBlur: 10, lineWidth: 5})
-                }
+                note.setDuration(readDuration(duration))
 
                 let parsedEffects = parseEffects(effects)
 
@@ -109,7 +125,12 @@ class Stave extends Component {
                 notes.push(note)
                 beamNotes.push(note)
             } else {
-                notes.push(new StaveNote({keys: ["b/4"], duration: duration + "r"}))
+                note = new StaveNote({keys: ["b/4"], duration: duration + "r"});
+                notes.push(note)
+            }
+            note.setDuration(readDuration(duration))
+            if (this.state.note === this.noteCount) {
+                note.setStyle({fillStyle: "red", shadowBlur: 10, lineWidth: 5, strokeStyle: "red"})
             }
         }
 
@@ -130,8 +151,9 @@ class Stave extends Component {
         // if (this.state.note > 0) this.container.current.scrollIntoView({block: "start", behavior: "auto"});
         return (
             <>
-                {/*<h1>{this.state.note}</h1>*/}
-                <canvas ref={this.container} style={{backgroundColor: this.state.note > 0 ? "#AAD1FF" : "white"}}/>
+                {/*<h1>{this.state.note} {this.noteCount}</h1>*/}
+                {/*<canvas ref={this.container} style={{backgroundColor: this.state.note > 0 ? "#AAD1FF" : "white"}}/>*/}
+                <canvas ref={this.container}/>
             </>
         )
     }
