@@ -102,19 +102,27 @@ class ShowTab extends Component {
         }).then(res => res.json()).then((result) => {
             let beats = []
             let last = 0.0;
-            for (let i = 0; i < result.measures.length; i++) {
-                let measure = result.measures[i];
+            let measures = [...result.measures];
+            // let repeatStart = -1;
+            for (let i = 0; i < measures.length; i++) {
+                let measure = measures[i];
                 let bpm = measure.tempo;
+                // if (measure.repeatStart) repeatStart = i;
                 let timeSignature = parseInt(measure.timeSignature.split('/')[0]);
+
                 for (let j = 0; j < measure.beatDTOS.length; j++) {
                     let beat =  measure.beatDTOS[j];
                     let noteDuration = convertDuration(beat.duration);
                     let duration
                         = 60.0 / (bpm * (1 / 4) / (noteDuration / (1 / timeSignature)) * timeSignature);
-                    // 60/(120 × 1/4 ÷ ((1/1) ÷ (1/4)) × 4)
-                    beats.push({when : last, duration : duration});
+                    beats.push({when : last, duration : duration, pause: beat.noteDTOS.length === 0 });
                     last += duration;
                 }
+
+                // if (measure.repeatEnd !== 0) {
+                //     measure.repeatEnd--;
+                //     i = repeatStart;
+                // }
             }
 
             this.setState({

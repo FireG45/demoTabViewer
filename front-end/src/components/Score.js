@@ -102,6 +102,8 @@ export default class Score extends Component {
                                         lrIndexes={measures[index].lrIndexes}
                                         slidesAndTies={measures[index].slidesAndTies}
                                         wide={wide}
+                                        repeatStart={measures[index].repeatStart}
+                                        repeatEnd={measures[index].repeatEnd}
                                     />
                                 </Grid>
                             )

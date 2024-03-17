@@ -154,22 +154,13 @@ export default class MidiWebPlayer {
         }
 
         ex.getCurrNote = function () {
-
-            var tabBeats = ex.tabBeats;
+            let tabBeats = ex.tabBeats;
 
             let song = ex.loadedsong;
             if (song === null || song.tracks === null) {
                 ex.lastNoteIndex = 0;
                 return 0;
             }
-
-            if (ex.tracks.length === 0) {
-                for (let i = 0; i < song.tracks.length; i++) {
-                    if (song.tracks[i].notes.length !== 0) ex.tracks.push(song.tracks[i]);
-                }
-            }
-
-            let track = ex.score.current.state.track;
 
             let notes = tabBeats;
 
@@ -230,6 +221,13 @@ export default class MidiWebPlayer {
 
             let beats = ex.tabBeats;
 
+            let notes = []
+            for (let i = 0; i < song.tracks[1].notes.length; i++) {
+                let note = song.tracks[1].notes[i];
+                if (i > 0 && note.when === song.tracks[1].notes[i - 1].when) continue;
+                notes.push({when: note.when, duration: note.duration});
+            }
+
             for (var i = 0; i < song.tracks.length; i++) {
                 var nn = ex.remapInstrument(ex.player.loader.findInstrument(song.tracks[i].program));
                 var info = ex.player.loader.instrumentInfo(nn);
@@ -253,7 +251,6 @@ export default class MidiWebPlayer {
                 self.resetEqualizer();
             });
             ex.loadedsong = song
-            console.log("SONG: " + song)
             ex.loaded = true;
         }
 

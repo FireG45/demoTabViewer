@@ -162,6 +162,12 @@ import java.util.*;
         List<String> slidesAndTies = new ArrayList<>();
         List<Integer> subList = new ArrayList<>();
         List<Integer> lrsubList = new ArrayList<>();
+        if (beats.isEmpty()) {
+            beatDTOS.add(new BeatDTO("w", false, false, List.of(), List.of()));
+            return new MeasureDTO(tempo.getValue(),timeSignature.getNumerator() + "/"
+                    + timeSignature.getDenominator().getValue(), beatDTOS, pmIndexes, slidesAndTies, lrIndexes,
+                    measure.isRepeatOpen(), measure.getRepeatClose());
+        }
         int i = 0;
         for (TGBeat beat : beats) {
             beatDTOS.add(readBeat(beat, slidesAndTies, subList, pmIndexes, lrIndexes, lrsubList, i));
@@ -174,7 +180,8 @@ import java.util.*;
             lrIndexes.add(lrsubList);
         }
         return new MeasureDTO(tempo.getValue(),timeSignature.getNumerator() + "/"
-                + timeSignature.getDenominator().getValue(), beatDTOS, pmIndexes, slidesAndTies, lrIndexes);
+                + timeSignature.getDenominator().getValue(), beatDTOS, pmIndexes, slidesAndTies, lrIndexes,
+                measure.isRepeatOpen(), measure.getRepeatClose());
     }
 
     @Override
@@ -197,10 +204,30 @@ import java.util.*;
         }
 
         int mSize = measures.size();
-        tabDTO.measures = new MeasureDTO[mSize];
         for (int i = 0; i < mSize; i++) {
-            tabDTO.measures[i] = readMeasure(measures.get(i));
+            int repeat = measures.get(i).getHeader().getRepeatClose();
+            if (repeat > 0) {
+                var measure = measures.get(i);
+                var header = measure.getHeader();
+                header.setRepeatClose(repeat * 2);
+                measure.setHeader(header);
+                measures.set(i, measure);
+            }
         }
+        tabDTO.measures = new MeasureDTO[mSize];
+        List<MeasureDTO> measureDTOS = new ArrayList<>();
+        int repeatStart = -1;
+        for (int i = 0; i < mSize; i++) {
+            TGMeasure measure = measures.get(i);
+            if (measure.getHeader().isRepeatOpen()) repeatStart = i;
+            measureDTOS.add(readMeasure(measure));
+            if (measure.getHeader().getRepeatClose() > 0) {
+                measure.getHeader().setRepeatClose(measure.getHeader().getRepeatClose() - 1);
+                i = repeatStart;
+                measures.set(i, measure);
+            }
+        }
+        tabDTO.measures = measureDTOS.toArray(new MeasureDTO[0]);
 
         return tabDTO;
     }

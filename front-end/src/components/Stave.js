@@ -1,5 +1,5 @@
 import React, {Component} from 'react'
-import VexFlow, {Fraction} from 'vexflow'
+import VexFlow, {Fraction, Modifier} from 'vexflow'
 import parseEffects from './renderUtils/parseEffects'
 import drawHummerSlide from './renderUtils/drawHummerSlide'
 import drawBeams from './renderUtils/drawBeams'
@@ -74,6 +74,13 @@ class Stave extends Component {
             stave.addTimeSignature(this.props.timeSignature)
         }
 
+        // if (this.props.repeatStart) stave.setBegBarType(VexFlow.Barline.type.REPEAT_BEGIN);
+        // if (this.props.repeatEnd > 0) {
+        //     stave.setEndBarType(VexFlow.Barline.type.REPEAT_END);
+        //     context.setFont("Arial", 10);
+        //     context.fillText("x" + this.props.repeatEnd, 430, 50);
+        // }
+
         stave.setContext(context).draw()
         this.noteCount = 0
         let notes = []
@@ -91,8 +98,10 @@ class Stave extends Component {
                 case "q" : fraction = new Fraction(1, 4); break;
                 default : fraction = new Fraction(1, parseInt(duration)); break;
             }
-            for (let i = 0; i < dDotted; i++)
+
+            for (let i= 0; i < dDotted; i++)
                 fraction.add(fraction.multiply(new Fraction(1, 2)));
+
             return fraction;
         }
 
