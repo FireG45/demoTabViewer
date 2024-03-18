@@ -161,8 +161,8 @@ class Stave extends Component {
         return (
             <>
                 {/*<h1>{this.state.note} {this.noteCount}</h1>*/}
-                {/*<canvas ref={this.container} style={{backgroundColor: this.state.note > 0 ? "#AAD1FF" : "white"}}/>*/}
-                <canvas ref={this.container}/>
+                <canvas ref={this.container} style={{backgroundColor: this.state.note > 0 ? "#AAD1FF" : "white"}}/>
+                {/*<canvas ref={this.container}/>*/}
             </>
         )
     }
