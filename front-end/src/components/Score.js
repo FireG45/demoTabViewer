@@ -21,7 +21,8 @@ export default class Score extends Component {
             measuresLengths: [],
             lastMeasure: 0,
             track: Number(this.track),
-            start: 0
+            start: 0,
+            onStartChange: () => {}
         };
 
         this.setNote = (id) => {
@@ -92,6 +93,7 @@ export default class Score extends Component {
                             return (
                                 <Grid item xs={2} sm={4} md={10} key={index} onClick={() => {
                                     this.setState({start: index})
+                                    this.state.onStartChange();
                                 }}>
                                     <Stave
                                         ref={this.state.measureObjs[index]}

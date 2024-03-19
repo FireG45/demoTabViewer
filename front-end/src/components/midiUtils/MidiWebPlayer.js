@@ -4,7 +4,8 @@ import {WebAudioFontPlayer} from 'webaudiofont';
 var ex = null;
 
 export default class MidiWebPlayer {
-    constructor(path, score, measures, measuresLengths, tabBeats, metronomeTrack, enableMetronome, measuresStarts) {
+    constructor(path, score, measures, measuresLengths, tabBeats, metronomeTrack, enableMetronome, measuresStarts,
+                measuresStartNotesInds) {
         ex = this;
         ex.path = path;
         ex.score = score;
@@ -26,7 +27,7 @@ export default class MidiWebPlayer {
         ex.enableMetronome = enableMetronome;
 
         ex.measuresStarts = measuresStarts;
-        ex.shift = 0;
+        ex.measuresStartNotesInds = measuresStartNotesInds;
 
         ex.speed = 1.0;
         ex.isPlaying = false;
@@ -59,7 +60,6 @@ export default class MidiWebPlayer {
                     ex.audioContext.resume().then(r => {
                         ex.isPlaying = true;
                         ex.isStarted = true;
-                        ex.shift = ex.measuresStarts[ex.score.current.state.start];
                         ex.startPlay(ex.loadedsong);
                     });
                 } else {
@@ -99,10 +99,18 @@ export default class MidiWebPlayer {
         }
 
         ex.startPlay = function (song) {
-            ex.currentSongTime = ex.measuresStarts[ex.score.current.state.start];
+            ex.currentSongTime = 0;
             ex.songStart = ex.getContextTime();
             ex.nextStepTime = ex.getContextTime();
             let stepDuration = 44 / 1000;
+
+            ex.lastMeasure = ex.score.current.state.start;
+            ex.lastNoteIndex = ex.measuresStartNotesInds[ex.score.current.state.start] - 1
+
+            let next = ex.measuresStarts[ex.score.current.state.start];
+            ex.songStart = ex.songStart - (next - ex.currentSongTime);
+            ex.currentSongTime = next;
+
             ex.tick(song, stepDuration);
         }
 
@@ -171,12 +179,6 @@ export default class MidiWebPlayer {
                 ex.lastNoteIndex = 0;
                 return 0;
             }
-
-            if (ex.score.current.state.start !== 0) {
-                for (let i = 0; i < ex.score.current.state.start ; i++) {
-                    ex.lastNoteIndex += ex.measuresLengths[i] - 1;
-                }
-             }
 
             let notes = tabBeats;
 

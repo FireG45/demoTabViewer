@@ -28,10 +28,18 @@ function convertDuration(duration) {
     duration = duration.slice(dDotted);
     let durationValue = 0.0;
     switch (duration) {
-        case "w" : durationValue =  1; break;
-        case "h" : durationValue =  1/2; break;
-        case "q" : durationValue = 1/4; break;
-        default : durationValue = 1 / parseInt(duration); break;
+        case "w" :
+            durationValue = 1;
+            break;
+        case "h" :
+            durationValue = 1 / 2;
+            break;
+        case "q" :
+            durationValue = 1 / 4;
+            break;
+        default :
+            durationValue = 1 / parseInt(duration);
+            break;
     }
     for (let i = 0; i < dDotted; i++) durationValue += (durationValue / 2);
     return durationValue;
@@ -119,32 +127,35 @@ class ShowTab extends Component {
             let metronomeLast = 0.0;
             let measures = [...result.measures];
             let measuresStarts = []
+            let measuresStartNotesInds = []
             for (let i = 0; i < measures.length; i++) {
+                measuresStartNotesInds.push(beats.length);
                 let measure = measures[i];
                 let bpm = measure.tempo;
                 let timeSignature = parseInt(measure.timeSignature.split('/')[0]);
                 let basicDuration = parseInt(measure.timeSignature.split('/')[1]);
                 measuresStarts.push(last);
                 for (let j = 0; j < measure.beatDTOS.length; j++) {
-                    let beat =  measure.beatDTOS[j];
+                    let beat = measure.beatDTOS[j];
                     let noteDuration = convertDuration(beat.duration);
                     let duration
                         = 60.0 / (bpm * (1 / 4) / (noteDuration / (1 / timeSignature)) * timeSignature);
-                    beats.push({when : last, duration : duration, pause: beat.noteDTOS.length === 0 });
+                    beats.push({when: last, duration: duration, pause: beat.noteDTOS.length === 0});
                     last += duration;
                 }
 
                 for (let j = 0; j < timeSignature; j++) {
                     let duration
                         = 60.0 / (bpm * (1 / 4) / ((1 / basicDuration) / (1 / timeSignature)) * timeSignature);
-                    metronomeTrack.notes.push({when : metronomeLast});
+                    metronomeTrack.notes.push({when: metronomeLast});
                     metronomeLast += duration;
                 }
             }
 
             this.setState({
                 isLoaded: true, tab: result, favorite: result.favorite, tabBeats: beats,
-                metronomeTrack : metronomeTrack, measuresStarts: measuresStarts
+                metronomeTrack: metronomeTrack, measuresStarts: measuresStarts,
+                measuresStartNotesInds: measuresStartNotesInds,
             });
         }, (error) => {
             this.setState({
@@ -179,7 +190,8 @@ class ShowTab extends Component {
 
             return (<>
                 <TabPlayer score={this.score} id={this.id} tabBeats={this.state.tabBeats}
-                           metronomeTrack={this.state.metronomeTrack} measuresStarts={this.state.measuresStarts}/>
+                           metronomeTrack={this.state.metronomeTrack} measuresStarts={this.state.measuresStarts}
+                           measuresStartNotesInds={this.state.measuresStartNotesInds}/>
 
                 <Snackbar open={this.state.snackbarOpen}
                           autoHideDuration={6000}

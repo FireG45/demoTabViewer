@@ -14,7 +14,7 @@ import {Pause, Stop} from "@mui/icons-material";
 
 export default function TabPlayer({
                                       id = 0, score = null, tabBeats = [], metronomeTrack = {},
-                                      measuresStarts = {}
+                                      measuresStarts = {}, measuresStartNotesInds = []
                                   }) {
     const [speed, setSpeed] = useState(1.0);
     const [loaded, setLoaded] = useState(false);
@@ -27,16 +27,20 @@ export default function TabPlayer({
     var measures = null
 
     const newMidiPlayer = () => new MidiWebPlayer('http://localhost:8080/tabs/midi/' + id, score,
-        measures, measuresLength, tabBeats, metronomeTrack, enableMetronome, measuresStarts);
+        measures, measuresLength, tabBeats, metronomeTrack, enableMetronome, measuresStarts, measuresStartNotesInds);
 
     const [midiPlayer, setMidiPlayer] =
         useState(newMidiPlayer())
 
     const self = this;
 
-
     useEffect(() => {
         setMidiPlayer(newMidiPlayer())
+        score.current.setState({
+            onStartChange: () => {
+                setStartMeasure(score.current.state.start);
+            }
+        })
         try {
             midiPlayer.handleMidi();
             midiPlayer.setSpeed(speed);
@@ -46,7 +50,7 @@ export default function TabPlayer({
             midiPlayer.setSpeed(speed);
         }
         setLoaded(true);
-    }, [speed, enableMetronome]);
+    }, [speed, enableMetronome, enableCountdown]);
 
     return (
         <>
