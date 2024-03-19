@@ -101,15 +101,30 @@ class ShowTab extends Component {
             })
         }).then(res => res.json()).then((result) => {
             let beats = []
+
+            let metronomeTrack = {
+                "n": 37,
+                "notes": [],
+                "volume": 10,
+                "info": {
+                    "variable": "_drum_37_0_SBLive_sf2",
+                    "url": "https://surikov.github.io/webaudiofontdata/sound/12837_0_SBLive_sf2.js",
+                    "pitch": 37,
+                    "title": "Side Stick/Rimshot"
+                }
+            }
+
+            let metronomeBeats = []
             let last = 0.0;
+            let metronomeLast = 0.0;
             let measures = [...result.measures];
-            // let repeatStart = -1;
+            let measuresStarts = []
             for (let i = 0; i < measures.length; i++) {
                 let measure = measures[i];
                 let bpm = measure.tempo;
-                // if (measure.repeatStart) repeatStart = i;
                 let timeSignature = parseInt(measure.timeSignature.split('/')[0]);
-
+                let basicDuration = parseInt(measure.timeSignature.split('/')[1]);
+                measuresStarts.push(last);
                 for (let j = 0; j < measure.beatDTOS.length; j++) {
                     let beat =  measure.beatDTOS[j];
                     let noteDuration = convertDuration(beat.duration);
@@ -119,14 +134,17 @@ class ShowTab extends Component {
                     last += duration;
                 }
 
-                // if (measure.repeatEnd !== 0) {
-                //     measure.repeatEnd--;
-                //     i = repeatStart;
-                // }
+                for (let j = 0; j < timeSignature; j++) {
+                    let duration
+                        = 60.0 / (bpm * (1 / 4) / ((1 / basicDuration) / (1 / timeSignature)) * timeSignature);
+                    metronomeTrack.notes.push({when : metronomeLast});
+                    metronomeLast += duration;
+                }
             }
 
             this.setState({
-                isLoaded: true, tab: result, favorite: result.favorite, tabBeats: beats
+                isLoaded: true, tab: result, favorite: result.favorite, tabBeats: beats,
+                metronomeTrack : metronomeTrack, measuresStarts: measuresStarts
             });
         }, (error) => {
             this.setState({
@@ -160,7 +178,9 @@ class ShowTab extends Component {
             });
 
             return (<>
-                <TabPlayer score={this.score} id={this.id} tabBeats={this.state.tabBeats}/>
+                <TabPlayer score={this.score} id={this.id} tabBeats={this.state.tabBeats}
+                           metronomeTrack={this.state.metronomeTrack} measuresStarts={this.state.measuresStarts}/>
+
                 <Snackbar open={this.state.snackbarOpen}
                           autoHideDuration={6000}
                           anchorOrigin={{vertical: 'top', horizontal: 'right'}}

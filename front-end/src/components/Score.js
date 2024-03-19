@@ -1,6 +1,6 @@
 import {Component, createRef, forwardRef} from "react";
 import Stave from "./Stave";
-import { Grid, CircularProgress } from "@mui/material";
+import {Grid, CircularProgress} from "@mui/material";
 import Loading from "./Loading";
 import StaveWrapper from "./utils/StaveWrapper";
 
@@ -20,20 +20,21 @@ export default class Score extends Component {
             measureObjs: [],
             measuresLengths: [],
             lastMeasure: 0,
-            track : Number(this.track),
+            track: Number(this.track),
+            start: 0
         };
 
         this.setNote = (id) => {
             //console.log("SETNOTE " + id)
             this.setState({
-                note : id
+                note: id
             })
         }
 
         this.setMeasure = (id) => {
             //console.log("SETMEASURE " + id)
             this.setState({
-                lastMeasure : id
+                lastMeasure: id
             })
         }
     }
@@ -52,7 +53,7 @@ export default class Score extends Component {
                     stringCount: result.stringCount,
                     tuning: result.tunings[this.track].split(" ").reverse(),
 
-                    measureObjs : Array(result.measures.length).fill().map((_, i) =>
+                    measureObjs: Array(result.measures.length).fill().map((_, i) =>
                         this.state.measureObjs[i] || createRef()),
                     measuresLengths: measuresLengths
                 });
@@ -67,17 +68,17 @@ export default class Score extends Component {
     }
 
     render() {
-        const { error, isLoaded, measures, stringCount, tuning } = this.state;
+        const {error, isLoaded, measures, stringCount, tuning} = this.state;
 
         const wide = measures.filter((m) => m.beatDTOS.filter((b) => b.noteDTOS.length > 0).length >= 25).length != 0
 
-        let cols = wide ? {} : { xs: 4, sm: 8, md: 40 }
+        let cols = wide ? {} : {xs: 4, sm: 8, md: 40}
         var totalMeasures = 0;
 
         if (error) {
             return <p>Error: {error.meassage} </p>
         } else if (!isLoaded) {
-            return <Loading />
+            return <Loading/>
         } else {
             return (
                 <>
@@ -89,7 +90,9 @@ export default class Score extends Component {
                             totalMeasures++;
 
                             return (
-                                <Grid item xs={2} sm={4} md={10} key={index}>
+                                <Grid item xs={2} sm={4} md={10} key={index} onClick={() => {
+                                    this.setState({start: index})
+                                }}>
                                     <Stave
                                         ref={this.state.measureObjs[index]}
                                         measure={measures[index].beatDTOS}
@@ -104,6 +107,7 @@ export default class Score extends Component {
                                         wide={wide}
                                         repeatStart={measures[index].repeatStart}
                                         repeatEnd={measures[index].repeatEnd}
+                                        start={this.state.start === index}
                                     />
                                 </Grid>
                             )

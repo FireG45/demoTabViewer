@@ -162,12 +162,12 @@ import java.util.*;
         List<String> slidesAndTies = new ArrayList<>();
         List<Integer> subList = new ArrayList<>();
         List<Integer> lrsubList = new ArrayList<>();
-//        if (beats.isEmpty()) {
-//            beatDTOS.add(new BeatDTO("w", false, false, List.of(), List.of()), be);
-//            return new MeasureDTO(tempo.getValue(),timeSignature.getNumerator() + "/"
-//                    + timeSignature.getDenominator().getValue(), beatDTOS, pmIndexes, slidesAndTies, lrIndexes,
-//                    measure.isRepeatOpen(), measure.getRepeatClose());
-//        }
+        if (beats.isEmpty()) {
+            beatDTOS.add(new BeatDTO("w", false, false, List.of(), List.of()));
+            return new MeasureDTO(tempo.getValue(),timeSignature.getNumerator() + "/"
+                    + timeSignature.getDenominator().getValue(), beatDTOS, pmIndexes, slidesAndTies, lrIndexes,
+                    measure.isRepeatOpen(), measure.getRepeatClose());
+        }
 
         int i = 0;
         for (TGBeat beat : beats) {

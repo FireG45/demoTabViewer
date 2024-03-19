@@ -12,16 +12,22 @@ import MidiWebPlayer from "./midiUtils/MidiWebPlayer";
 import {Pause, Stop} from "@mui/icons-material";
 
 
-export default function TabPlayer({id = 0, score = null, tabBeats = [] }) {
+export default function TabPlayer({
+                                      id = 0, score = null, tabBeats = [], metronomeTrack = {},
+                                      measuresStarts = {}
+                                  }) {
     const [speed, setSpeed] = useState(1.0);
     const [loaded, setLoaded] = useState(false);
+    const [enableMetronome, setEnableMetronome] = useState(false);
+    const [enableCountdown, setEnableCountdown] = useState(false);
+    const [startMeasure, setStartMeasure] = useState(0);
 
     var measuresLength = []
 
     var measures = null
 
     const newMidiPlayer = () => new MidiWebPlayer('http://localhost:8080/tabs/midi/' + id, score,
-        measures, measuresLength, tabBeats)
+        measures, measuresLength, tabBeats, metronomeTrack, enableMetronome, measuresStarts);
 
     const [midiPlayer, setMidiPlayer] =
         useState(newMidiPlayer())
@@ -40,7 +46,7 @@ export default function TabPlayer({id = 0, score = null, tabBeats = [] }) {
             midiPlayer.setSpeed(speed);
         }
         setLoaded(true);
-    }, [speed]);
+    }, [speed, enableMetronome]);
 
     return (
         <>
@@ -109,10 +115,14 @@ export default function TabPlayer({id = 0, score = null, tabBeats = [] }) {
 
 
                         <Stack spacing={2} direction="row">
-                            <IconButton color="inherit">
+                            <IconButton color={enableCountdown ? "error" : "inherit"} onClick={() => {
+                                setEnableCountdown(!enableCountdown);
+                            }}>
                                 <AvTimerIcon/>
                             </IconButton>
-                            <IconButton color="inherit">
+                            <IconButton color={enableMetronome ? "error" : "inherit"} onClick={() => {
+                                setEnableMetronome(!enableMetronome);
+                            }}>
                                 <IconMetronome/>
                             </IconButton>
                             {/*<IconButton color="inherit">*/}

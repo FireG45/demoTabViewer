@@ -29,6 +29,7 @@ class Stave extends Component {
         }
     }
 
+
     componentDidMount() {
         if (this.rendererRef.current == null) {
             this.rendererRef.current = new Renderer(
@@ -157,11 +158,14 @@ class Stave extends Component {
     }
 
     render() {
+        let bgColor = "white";
+        if (this.state.note > 0) bgColor = "#AAD1FF"
+        else if (this.props.start) bgColor = "#e6e6e6";
         // if (this.state.note > 0) this.container.current.scrollIntoView({block: "start", behavior: "auto"});
         return (
             <>
                 {/*<h1>{this.state.note} {this.noteCount}</h1>*/}
-                <canvas ref={this.container} style={{backgroundColor: this.state.note > 0 ? "#AAD1FF" : "white"}}/>
+                <canvas ref={this.container} style={{backgroundColor:bgColor}}/>
                 {/*<canvas ref={this.container}/>*/}
             </>
         )

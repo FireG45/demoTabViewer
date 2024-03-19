@@ -4,7 +4,7 @@ import {WebAudioFontPlayer} from 'webaudiofont';
 var ex = null;
 
 export default class MidiWebPlayer {
-    constructor(path, score, measures, measuresLengths, tabBeats) {
+    constructor(path, score, measures, measuresLengths, tabBeats, metronomeTrack, enableMetronome, measuresStarts) {
         ex = this;
         ex.path = path;
         ex.score = score;
@@ -22,6 +22,11 @@ export default class MidiWebPlayer {
         ex.loadedsong = null;
 
         ex.tabBeats = tabBeats;
+        ex.metronomeTrack = metronomeTrack;
+        ex.enableMetronome = enableMetronome;
+
+        ex.measuresStarts = measuresStarts;
+        ex.shift = 0;
 
         ex.speed = 1.0;
         ex.isPlaying = false;
@@ -54,6 +59,7 @@ export default class MidiWebPlayer {
                     ex.audioContext.resume().then(r => {
                         ex.isPlaying = true;
                         ex.isStarted = true;
+                        ex.shift = ex.measuresStarts[ex.score.current.state.start];
                         ex.startPlay(ex.loadedsong);
                     });
                 } else {
@@ -88,10 +94,14 @@ export default class MidiWebPlayer {
             return ex.isPlaying;
         };
 
+        ex.getContextTime = function () {
+            return ex.audioContext.currentTime;
+        }
+
         ex.startPlay = function (song) {
-            ex.currentSongTime = 0;
-            ex.songStart = ex.audioContext.currentTime;
-            ex.nextStepTime = ex.audioContext.currentTime;
+            ex.currentSongTime = ex.measuresStarts[ex.score.current.state.start];
+            ex.songStart = ex.getContextTime();
+            ex.nextStepTime = ex.getContextTime();
             let stepDuration = 44 / 1000;
             ex.tick(song, stepDuration);
         }
@@ -127,7 +137,7 @@ export default class MidiWebPlayer {
 
             ex.score.current.state.measureObjs[lastMeasure > 0 ? lastMeasure - 1 : 0].current.componentDidMount();
 
-            if (ex.audioContext.currentTime > ex.nextStepTime - stepDuration) {
+            if (ex.getContextTime() > ex.nextStepTime - stepDuration) {
                 ex.sendNotes(song, ex.songStart, ex.currentSongTime, ex.currentSongTime + stepDuration, ex.audioContext, ex.input, ex.player);
                 ex.currentSongTime = ex.currentSongTime + stepDuration;
                 ex.nextStepTime = ex.nextStepTime + stepDuration;
@@ -139,8 +149,8 @@ export default class MidiWebPlayer {
                     });
                 }
             }
-            if (ex.nextPositionTime < ex.audioContext.currentTime) {
-                ex.nextPositionTime = ex.audioContext.currentTime + 3;
+            if (ex.nextPositionTime < ex.getContextTime()) {
+                ex.nextPositionTime = ex.getContextTime() + 3;
             }
             if (ex.isPlaying && ex.isStarted) {
                 window.requestAnimationFrame(function (t) {
@@ -161,6 +171,12 @@ export default class MidiWebPlayer {
                 ex.lastNoteIndex = 0;
                 return 0;
             }
+
+            if (ex.score.current.state.start !== 0) {
+                for (let i = 0; i < ex.score.current.state.start ; i++) {
+                    ex.lastNoteIndex += ex.measuresLengths[i] - 1;
+                }
+             }
 
             let notes = tabBeats;
 
@@ -221,12 +237,12 @@ export default class MidiWebPlayer {
 
             let beats = ex.tabBeats;
 
-            let notes = []
-            for (let i = 0; i < song.tracks[1].notes.length; i++) {
-                let note = song.tracks[1].notes[i];
-                if (i > 0 && note.when === song.tracks[1].notes[i - 1].when) continue;
-                notes.push({when: note.when, duration: note.duration});
-            }
+            // let notes = []
+            // for (let i = 0; i < song.tracks[1].notes.length; i++) {
+            //     let note = song.tracks[1].notes[i];
+            //     if (i > 0 && note.when === song.tracks[1].notes[i - 1].when) continue;
+            //     notes.push({when: note.when, duration: note.duration});
+            // }
 
             for (var i = 0; i < song.tracks.length; i++) {
                 var nn = ex.remapInstrument(ex.player.loader.findInstrument(song.tracks[i].program));
@@ -237,6 +253,8 @@ export default class MidiWebPlayer {
                 song.tracks[i].volume = 1.0;
                 ex.player.loader.startLoad(ex.audioContext, info.url, info.variable);
             }
+
+            if (ex.enableMetronome) song.beats.push(ex.metronomeTrack);
 
             for (var i = 0; i < song.beats.length; i++) {
                 var nn = ex.player.loader.findDrum(song.beats[i].n);
