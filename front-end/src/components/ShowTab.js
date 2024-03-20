@@ -128,7 +128,9 @@ class ShowTab extends Component {
             let measures = [...result.measures];
             let measuresStarts = []
             let measuresStartNotesInds = []
+            let measuresDurations = []
             for (let i = 0; i < measures.length; i++) {
+                let measureDuration = 0.0;
                 measuresStartNotesInds.push(beats.length);
                 let measure = measures[i];
                 let bpm = measure.tempo;
@@ -149,13 +151,15 @@ class ShowTab extends Component {
                         = 60.0 / (bpm * (1 / 4) / ((1 / basicDuration) / (1 / timeSignature)) * timeSignature);
                     metronomeTrack.notes.push({when: metronomeLast});
                     metronomeLast += duration;
+                    measureDuration += duration;
                 }
+                measuresDurations.push(measureDuration);
             }
 
             this.setState({
                 isLoaded: true, tab: result, favorite: result.favorite, tabBeats: beats,
                 metronomeTrack: metronomeTrack, measuresStarts: measuresStarts,
-                measuresStartNotesInds: measuresStartNotesInds,
+                measuresStartNotesInds: measuresStartNotesInds, measuresDurations: measuresDurations
             });
         }, (error) => {
             this.setState({
@@ -191,7 +195,8 @@ class ShowTab extends Component {
             return (<>
                 <TabPlayer score={this.score} id={this.id} tabBeats={this.state.tabBeats}
                            metronomeTrack={this.state.metronomeTrack} measuresStarts={this.state.measuresStarts}
-                           measuresStartNotesInds={this.state.measuresStartNotesInds}/>
+                           measuresStartNotesInds={this.state.measuresStartNotesInds}
+                           measuresDurations={this.state.measuresDurations} measures={this.state.tab.measures}/>
 
                 <Snackbar open={this.state.snackbarOpen}
                           autoHideDuration={6000}

@@ -5,7 +5,9 @@ var ex = null;
 
 export default class MidiWebPlayer {
     constructor(path, score, measures, measuresLengths, tabBeats, metronomeTrack, enableMetronome, measuresStarts,
-                measuresStartNotesInds) {
+                measuresStartNotesInds, enableCountdown, start, measuresDurations) {
+        console.log("CONTRUCTOR MidiWebPlayer");
+
         ex = this;
         ex.path = path;
         ex.score = score;
@@ -28,6 +30,13 @@ export default class MidiWebPlayer {
 
         ex.measuresStarts = measuresStarts;
         ex.measuresStartNotesInds = measuresStartNotesInds;
+        ex.enableCountdown = enableCountdown;
+        ex.countdownTrack = {};
+        ex.measuresDurations = measuresDurations;
+
+        ex.shift = 0.0;
+
+        ex.start = start;
 
         ex.speed = 1.0;
         ex.isPlaying = false;
@@ -165,7 +174,6 @@ export default class MidiWebPlayer {
                     try {
                         ex.tick(song, stepDuration);
                     } catch (e) {
-
                     }
                 });
             }
@@ -237,14 +245,50 @@ export default class MidiWebPlayer {
             ex.equalizer.output.connect(ex.reverberator.input);
             ex.reverberator.output.connect(ex.audioContext.destination);
 
-            let beats = ex.tabBeats;
+            let measuresDurations = ex.measuresDurations;
 
-            // let notes = []
-            // for (let i = 0; i < song.tracks[1].notes.length; i++) {
-            //     let note = song.tracks[1].notes[i];
-            //     if (i > 0 && note.when === song.tracks[1].notes[i - 1].when) continue;
-            //     notes.push({when: note.when, duration: note.duration});
-            // }
+            if (ex.enableCountdown) {
+                ex.shift = ex.measuresDurations[ex.start];
+
+                let newNotes = []
+                for (let j = 0; j < ex.tabBeats.length; j++) {
+                    if (ex.tabBeats[j].when >= ex.measuresStarts[ex.start]) {
+                        ex.tabBeats[j].when += ex.shift;
+                        newNotes.push(ex.tabBeats[j])
+                    }
+                }
+
+                ex.tabBeats = [...newNotes]
+
+                newNotes = []
+                let countdownTrack = {
+                    "n": 37,
+                    "notes": [],
+                    "volume": 10,
+                    "info": {
+                        "variable": "_drum_37_0_SBLive_sf2",
+                        "url": "https://surikov.github.io/webaudiofontdata/sound/12837_0_SBLive_sf2.js",
+                        "pitch": 37,
+                        "title": "Side Stick/Rimshot"
+                    },
+                    "countdown" : true
+                };
+
+                let measure = ex.measures[ex.start];
+                let bpm = measure.tempo;
+                let timeSignature = parseInt(measure.timeSignature.split('/')[0]);
+                let basicDuration = parseInt(measure.timeSignature.split('/')[1]);
+                let metronomeLast = ex.measuresStarts[ex.start];
+                for (let j = 0; j < timeSignature; j++) {
+                    let duration
+                        = 60.0 / (bpm * (1 / 4) / ((1 / basicDuration) / (1 / timeSignature)) * timeSignature);
+                    countdownTrack.notes.push({when: metronomeLast});
+                    metronomeLast += duration;
+                }
+
+                song.beats.push(countdownTrack);
+                ex.metronomeTrack.countdown = true;
+            }
 
             for (var i = 0; i < song.tracks.length; i++) {
                 var nn = ex.remapInstrument(ex.player.loader.findInstrument(song.tracks[i].program));
@@ -253,16 +297,42 @@ export default class MidiWebPlayer {
                 song.tracks[i].info = info;
                 song.tracks[i].id = nn;
                 song.tracks[i].volume = 1.0;
+
+                let newNotes = []
+                for (let j = 0; j < song.tracks[i].notes.length; j++) {
+                    let note = song.tracks[i].notes[j];
+                    if (note.when >= ex.measuresStarts[ex.start]) {
+                        note.when += ex.shift;
+                        newNotes.push(note)
+                    }
+                }
+
+                song.tracks[i].notes = [...newNotes]
+
                 ex.player.loader.startLoad(ex.audioContext, info.url, info.variable);
             }
 
-            if (ex.enableMetronome) song.beats.push(ex.metronomeTrack);
+            if (!ex.enableCountdown && ex.enableMetronome) song.beats.push(ex.metronomeTrack);
 
             for (var i = 0; i < song.beats.length; i++) {
                 var nn = ex.player.loader.findDrum(song.beats[i].n);
                 var info = ex.player.loader.drumInfo(nn);
                 song.beats[i].info = info;
                 song.beats[i].id = nn;
+
+                let newNotes = []
+                for (let j = 0; j < song.beats[i].notes.length; j++) {
+                    let note = song.beats[i].notes[j];
+                    if (song.beats[i].countdown) {
+                        newNotes.push(note)
+                    } else if (note.when >= ex.measuresStarts[ex.start]) {
+                        note.when += ex.shift;
+                        newNotes.push(note)
+                    }
+                }
+
+                song.beats[i].notes = [...newNotes]
+
                 ex.player.loader.startLoad(ex.audioContext, info.url, info.variable);
             }
 
