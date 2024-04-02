@@ -109,10 +109,13 @@ export default class MidiWebPlayer {
         }
 
         ex.startPlay = function (song) {
+            ex.start = score.current.state.start;
             ex.currentSongTime = 0;
             ex.songStart = ex.getContextTime();
             ex.nextStepTime = ex.getContextTime();
             let stepDuration = 44 / 1000;
+
+
 
             ex.lastMeasure = ex.score.current.state.start;
             ex.lastNoteIndex = ex.measuresStartNotesInds[ex.score.current.state.start] - 1
@@ -132,9 +135,9 @@ export default class MidiWebPlayer {
 
 
             if (currentNote === 0 && lastMeasure !== 0) {
-                //let prevId = lastMeasure;
+                let prevId = lastMeasure;
                 ex.score.current.setMeasure(0)
-                //ex.score.current.state.measureObjs[prevId].current.componentDidMount();
+                ex.score.current.state.measureObjs[prevId].current.componentDidMount();
             }
 
             let noteCount = measuresLengths.slice(0, lastMeasure + 1).reduce((a, b) => a + b);
@@ -246,17 +249,12 @@ export default class MidiWebPlayer {
             ex.equalizer.output.connect(ex.reverberator.input);
             ex.reverberator.output.connect(ex.audioContext.destination);
 
-            let startTime = ex.measuresStarts[ex.start];
+            ex.start = score.current.state.start;
+
+            ex.startInMillis = ex.measuresStarts[score.current.state.start];
+            ex.shift = ex.measuresDurations[score.current.state.start];
 
             if (ex.enableCountdown) {
-
-                ex.shiftWhen = ex.measuresDurations.slice(ex.start, ex.measuresDurations.length - 1)
-                    .reduce((partialSum, a) => partialSum + a, 0);
-
-                ex.shift = ex.measuresDurations[ex.start];
-
-                ex.tabBeats = ex.tabBeats.filter((b) => b.when >= startTime)
-                ex.tabBeats.forEach((b) => b.when += ex.shift / 2)
 
                 let countdownTrack = {
                     "n": 37,
@@ -275,16 +273,23 @@ export default class MidiWebPlayer {
                 let bpm = measure.tempo;
                 let timeSignature = parseInt(measure.timeSignature.split('/')[0]);
                 let basicDuration = parseInt(measure.timeSignature.split('/')[1]);
-                let metronomeLast = ex.measuresStarts[ex.start === 0 ? 0 : ex.start - 1] + ex.shift * (ex.start);
+                let metronomeLast = ex.measuresStarts[ex.start];
+                let duration;
                 for (let j = 0; j < timeSignature; j++) {
-                    let duration
+                    duration
                         = 60.0 / (bpm * (1 / 4) / ((1 / basicDuration) / (1 / timeSignature)) * timeSignature);
                     countdownTrack.notes.push({when: metronomeLast});
                     metronomeLast += duration;
                 }
 
+
+                let _notes = [...ex.tabBeats];
+                ex.tabBeats.length = 0;
+                for (let j = 0; j < _notes.length; j++) {
+                    _notes[j].when += metronomeLast - duration * 2;
+                    ex.tabBeats.push(_notes[j])
+                }
                 song.beats.push(countdownTrack);
-                ex.metronomeTrack.countdown = true;
             }
 
             // LOAD INSTRUMENT TRACKS
@@ -296,16 +301,17 @@ export default class MidiWebPlayer {
                 song.tracks[i].id = nn;
                 song.tracks[i].volume = 1.0;
 
-                let newNotes = []
-                for (let j = 0; j < song.tracks[i].notes.length; j++) {
-                    let note = song.tracks[i].notes[j];
-                    if (note.when >= startTime) {
-                        note.when += ex.shift;
-                        newNotes.push(note)
+
+                if (ex.enableCountdown) {
+                    let _notes = [...song.tracks[i].notes];
+                    song.tracks[i].notes.length = 0;
+                    for (let j = 0; j < _notes.length; j++) {
+                        if (_notes[j].when >= ex.startInMillis) {
+                            _notes[j].when += ex.shift;
+                            song.tracks[i].notes.push(_notes[j])
+                        }
                     }
                 }
-
-                song.tracks[i].notes = [...newNotes]
 
                 ex.player.loader.startLoad(ex.audioContext, info.url, info.variable);
             }
@@ -319,18 +325,17 @@ export default class MidiWebPlayer {
                 song.beats[i].info = info;
                 song.beats[i].id = nn;
 
-                let newNotes = []
-                for (let j = 0; j < song.beats[i].notes.length; j++) {
-                    let note = song.beats[i].notes[j];
-                    if (song.beats[i].countdown) {
-                        newNotes.push(note)
-                    } else if (note.when >= startTime) {
-                        note.when += ex.shift;
-                        newNotes.push(note)
+
+                if (ex.enableCountdown && !song.beats[i].countdown) {
+                    let _notes = [...song.beats[i].notes];
+                    song.beats[i].notes.length = 0;
+                    for (let j = 0; j < _notes.length; j++) {
+                        if (_notes[j].when >= ex.startInMillis) {
+                            _notes[j].when += ex.shift;
+                            song.beats[i].notes.push(_notes[j])
+                        }
                     }
                 }
-
-                song.beats[i].notes = [...newNotes]
 
                 ex.player.loader.startLoad(ex.audioContext, info.url, info.variable);
             }

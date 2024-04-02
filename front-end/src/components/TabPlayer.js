@@ -42,9 +42,12 @@ export default function TabPlayer({
     }
 
     useEffect(() => {
-        setMidiPlayer(newMidiPlayer())
+        setMidiPlayer(newMidiPlayer());
         score.current.setState({
             onStartChange: () => {
+                if (midiPlayer !== null) {
+                    stop();
+                }
                 setStartMeasure(score.current.state.start);
             }
         })
