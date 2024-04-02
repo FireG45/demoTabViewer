@@ -34,6 +34,13 @@ export default function TabPlayer({
 
     const self = this;
 
+    const stop = function () {
+        setMidiPlayer(newMidiPlayer());
+        midiPlayer.handleMidi();
+        midiPlayer.setSpeed(speed);
+        setLoaded(true);
+    }
+
     useEffect(() => {
         setMidiPlayer(newMidiPlayer())
         score.current.setState({
@@ -80,12 +87,7 @@ export default function TabPlayer({
                             }}>
                                 <Pause/>
                             </IconButton>
-                            <IconButton color="inherit" onClick={() => {
-                                setMidiPlayer(newMidiPlayer());
-                                midiPlayer.handleMidi();
-                                midiPlayer.setSpeed(speed);
-                                setLoaded(true);
-                            }}>
+                            <IconButton color="inherit" onClick={stop}>
                                 <Stop/>
                             </IconButton>
                             <Stack spacing={2} direction="row" sx={{mb: 1, width: 200}} alignItems="center">
@@ -120,6 +122,7 @@ export default function TabPlayer({
 
                         <Stack spacing={2} direction="row">
                             <IconButton color={enableCountdown ? "error" : "inherit"} onClick={() => {
+                                stop();
                                 setEnableCountdown(!enableCountdown);
                             }}>
                                 <AvTimerIcon/>

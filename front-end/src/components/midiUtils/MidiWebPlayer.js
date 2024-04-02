@@ -6,7 +6,7 @@ var ex = null;
 export default class MidiWebPlayer {
     constructor(path, score, measures, measuresLengths, tabBeats, metronomeTrack, enableMetronome, measuresStarts,
                 measuresStartNotesInds, enableCountdown, start, measuresDurations) {
-        console.log("CONTRUCTOR MidiWebPlayer");
+        console.log("START: " + start);
 
         ex = this;
         ex.path = path;
@@ -63,6 +63,7 @@ export default class MidiWebPlayer {
         }
 
         ex.play = function () {
+            console.log("START: " + ex.start);
             if (!ex.loaded || !ex.loaded || !ex.audioContext) return;
             try {
                 if (!ex.isStarted) {
@@ -245,22 +246,18 @@ export default class MidiWebPlayer {
             ex.equalizer.output.connect(ex.reverberator.input);
             ex.reverberator.output.connect(ex.audioContext.destination);
 
-            let measuresDurations = ex.measuresDurations;
+            let startTime = ex.measuresStarts[ex.start];
 
             if (ex.enableCountdown) {
+
+                ex.shiftWhen = ex.measuresDurations.slice(ex.start, ex.measuresDurations.length - 1)
+                    .reduce((partialSum, a) => partialSum + a, 0);
+
                 ex.shift = ex.measuresDurations[ex.start];
 
-                let newNotes = []
-                for (let j = 0; j < ex.tabBeats.length; j++) {
-                    if (ex.tabBeats[j].when >= ex.measuresStarts[ex.start]) {
-                        ex.tabBeats[j].when += ex.shift;
-                        newNotes.push(ex.tabBeats[j])
-                    }
-                }
+                ex.tabBeats = ex.tabBeats.filter((b) => b.when >= startTime)
+                ex.tabBeats.forEach((b) => b.when += ex.shift / 2)
 
-                ex.tabBeats = [...newNotes]
-
-                newNotes = []
                 let countdownTrack = {
                     "n": 37,
                     "notes": [],
@@ -278,7 +275,7 @@ export default class MidiWebPlayer {
                 let bpm = measure.tempo;
                 let timeSignature = parseInt(measure.timeSignature.split('/')[0]);
                 let basicDuration = parseInt(measure.timeSignature.split('/')[1]);
-                let metronomeLast = ex.measuresStarts[ex.start];
+                let metronomeLast = ex.measuresStarts[ex.start === 0 ? 0 : ex.start - 1] + ex.shift * (ex.start);
                 for (let j = 0; j < timeSignature; j++) {
                     let duration
                         = 60.0 / (bpm * (1 / 4) / ((1 / basicDuration) / (1 / timeSignature)) * timeSignature);
@@ -290,6 +287,7 @@ export default class MidiWebPlayer {
                 ex.metronomeTrack.countdown = true;
             }
 
+            // LOAD INSTRUMENT TRACKS
             for (var i = 0; i < song.tracks.length; i++) {
                 var nn = ex.remapInstrument(ex.player.loader.findInstrument(song.tracks[i].program));
                 var info = ex.player.loader.instrumentInfo(nn);
@@ -301,7 +299,7 @@ export default class MidiWebPlayer {
                 let newNotes = []
                 for (let j = 0; j < song.tracks[i].notes.length; j++) {
                     let note = song.tracks[i].notes[j];
-                    if (note.when >= ex.measuresStarts[ex.start]) {
+                    if (note.when >= startTime) {
                         note.when += ex.shift;
                         newNotes.push(note)
                     }
@@ -312,8 +310,9 @@ export default class MidiWebPlayer {
                 ex.player.loader.startLoad(ex.audioContext, info.url, info.variable);
             }
 
-            if (!ex.enableCountdown && ex.enableMetronome) song.beats.push(ex.metronomeTrack);
+            if (ex.enableMetronome) song.beats.push(ex.metronomeTrack);
 
+            // LOAD DRUMS
             for (var i = 0; i < song.beats.length; i++) {
                 var nn = ex.player.loader.findDrum(song.beats[i].n);
                 var info = ex.player.loader.drumInfo(nn);
@@ -325,7 +324,7 @@ export default class MidiWebPlayer {
                     let note = song.beats[i].notes[j];
                     if (song.beats[i].countdown) {
                         newNotes.push(note)
-                    } else if (note.when >= ex.measuresStarts[ex.start]) {
+                    } else if (note.when >= startTime) {
                         note.when += ex.shift;
                         newNotes.push(note)
                     }
