@@ -92,8 +92,8 @@ export default class Score extends Component {
 
                             return (
                                 <Grid item xs={2} sm={4} md={10} key={index} onClick={() => {
-                                    this.setState({start: index})
-                                    this.state.onStartChange();
+                                    //this.setState({start: index})
+                                    //this.state.onStartChange();
                                 }}>
                                     <Stave
                                         ref={this.state.measureObjs[index]}

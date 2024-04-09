@@ -5,6 +5,7 @@ import drawHummerSlide from './renderUtils/drawHummerSlide'
 import drawBeams from './renderUtils/drawBeams'
 import drawPalmMutes from './renderUtils/drawPalmMutes'
 import drawLetRing from './renderUtils/drawLetRing'
+import {ClickAwayListener} from "@mui/material";
 
 const {Renderer, TabStave, TabNote, Formatter, StaveNote} = VexFlow.Flow
 
@@ -17,8 +18,12 @@ class Stave extends Component {
 
         this.noteCount = 0;
 
+        this.notes = []
+
         this.state = {
             note: 0,
+            selectedNote: -1,
+            notes: []
         }
 
         this.setNote = (noteID) => {
@@ -26,6 +31,67 @@ class Stave extends Component {
             this.setState({
                 note: noteID
             })
+        }
+
+        this.handleClickAway = () => {
+            this.componentDidMount();
+        }
+
+        this.handleClick = (event) => {
+            console.clear()
+
+            const DISTANCE = 10;
+
+            let bounds = event.target.getBoundingClientRect();
+            let x = event.clientX - bounds.left;
+            let y = event.clientY - bounds.top;
+            let shift = this.props.tuning ? 40 : 20
+            const distance =
+                (x1, x2, y1, y2) => Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            let stave = this.state.notes[0].stave;
+
+            let shiftX = stave.getX()
+            let shiftY = stave.getY();
+
+            let xx = x - shiftX - shift;
+            let yy = y - shiftY;
+            let note = null;
+            let noteJ = 0;
+            let noteIndex = 0;
+            for (let n in this.state.notes) {
+                let el = this.state.notes[n];
+                let nn = el.postFormat();
+                for (let i = 0; i < nn.getYs().length; i++) {
+                    if (distance(xx, nn.getX(), yy, nn.getYs()[i]) < DISTANCE) {
+                        note = el;
+                        noteJ = i;
+                        break;
+                    }
+                    noteIndex++;
+                }
+                if (note) break;
+            }
+            if (note) {
+                this.componentDidMount();
+                let context = stave.getContext();
+                let initFont = context.getFont();
+                context.setFont({
+                    size: 17,
+                });
+                context
+                    .fillText('▢', note.getX() + shiftX + shift - 9.5, note.getYs()[noteJ] + shiftY + 4.5);
+                context.setFont(initFont);
+                this.setState({
+                    selectedNote: 1
+                })
+            } else {
+                this.componentDidMount();
+                this.setState({
+                    selectedNote: -1
+                })
+            }
+            if (note !== null && note.positions !== undefined)
+                console.log("Clicked on: " + note.positions[noteJ].fret + " : " + note.positions[noteJ].str)
         }
     }
 
@@ -38,6 +104,8 @@ class Stave extends Component {
             )
         }
         const renderer = this.rendererRef.current
+
+        const ex = this;
 
         renderer.resize(500 * (this.props.wide ? 4 : 1), 160 + (this.props.stringCount % 6 * 15))
         const context = renderer.getContext()
@@ -84,7 +152,7 @@ class Stave extends Component {
 
         stave.setContext(context).draw()
         this.noteCount = 0
-        let notes = []
+        this.notes = []
         let beamNotes = []
 
         function readDuration(duration) {
@@ -94,13 +162,21 @@ class Stave extends Component {
             duration = duration.slice(dDotted);
             let fraction;
             switch (duration) {
-                case "w" : fraction = new Fraction(1, 1); break;
-                case "h" : fraction = new Fraction(1, 2); break;
-                case "q" : fraction = new Fraction(1, 4); break;
-                default : fraction = new Fraction(1, parseInt(duration)); break;
+                case "w" :
+                    fraction = new Fraction(1, 1);
+                    break;
+                case "h" :
+                    fraction = new Fraction(1, 2);
+                    break;
+                case "q" :
+                    fraction = new Fraction(1, 4);
+                    break;
+                default :
+                    fraction = new Fraction(1, parseInt(duration));
+                    break;
             }
 
-            for (let i= 0; i < dDotted; i++)
+            for (let i = 0; i < dDotted; i++)
                 fraction.add(fraction.multiply(new Fraction(1, 2)));
 
             return fraction;
@@ -132,11 +208,11 @@ class Stave extends Component {
                     note.addModifier(element)
                 }
 
-                notes.push(note)
+                this.notes.push(note)
                 beamNotes.push(note)
             } else {
                 note = new StaveNote({keys: ["b/4"], duration: duration + "r"});
-                notes.push(note)
+                this.notes.push(note)
             }
             note.setDuration(readDuration(duration))
             if (this.state.note === this.noteCount) {
@@ -145,28 +221,35 @@ class Stave extends Component {
         }
 
 
-        if (notes && notes.length > 0) {
+        if (this.notes && this.notes.length > 0) {
             stave.setStyle({strokeStyle: "red"})
-            Formatter.FormatAndDraw(context, stave, notes)
+            Formatter.FormatAndDraw(context, stave, this.notes)
         }
 
-        drawPalmMutes(this.props.pmIndexes, notes, context, shift)
-        drawLetRing(this.props.lrIndexes, notes, context, shift)
+        drawPalmMutes(this.props.pmIndexes, this.notes, context, shift)
+        drawLetRing(this.props.lrIndexes, this.notes, context, shift)
 
-        drawBeams(notes, context)
-        drawHummerSlide(this.props.slidesAndTies, notes, context)
+        drawBeams(this.notes, context)
+        drawHummerSlide(this.props.slidesAndTies, this.notes, context)
+
+        ex.setState({
+            notes: ex.notes
+        })
     }
 
     render() {
         let bgColor = "white";
         if (this.state.note > 0) bgColor = "#AAD1FF"
         else if (this.props.start) bgColor = "#e6e6e6";
-        // if (this.state.note > 0) this.container.current.scrollIntoView({block: "start", behavior: "auto"});
         return (
             <>
-                {/*<h1>{this.state.note} {this.noteCount}</h1>*/}
-                <canvas ref={this.container} style={{backgroundColor:bgColor}}/>
-                {/*<canvas ref={this.container}/>*/}
+                <ClickAwayListener onClickAway={this.state.selectedNote > 0 ? this.handleClickAway : () => {}}>
+                    <canvas onClick={this.handleClick}
+                            ref={this.container}
+                            style={{backgroundColor: bgColor}}
+
+                    />
+                </ClickAwayListener>
             </>
         )
     }

@@ -309,9 +309,7 @@ class ShowTab extends Component {
                                 })}
                             </Select>
                         </FormControl>
-                        <div onClick={() => {
-                            //this.score.current.state.onStartChange();
-                        }}>
+                        <div>
                             <Score ref={this.score} id={this.id} track={this.track}/>
                         </div>
                     </Stack>
