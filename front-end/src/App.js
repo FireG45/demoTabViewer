@@ -12,6 +12,7 @@ import MyTabList from './components/MyTabList';
 import UpdateTab from './components/UpdateTab';
 import Account from './components/auth/Account';
 import FavoriteTabList from './components/FavoriteTabList';
+import EditTab from "./components/EditTab";
 
 const SERVER_NAME = "localhost"
 
@@ -29,6 +30,7 @@ function App() {
                 <Routes>
                     <Route path='/' exact element={<TabList/>}/>
                     <Route path='/tabs/:id/:track' element={<ShowTab/>}/>
+                    <Route path='/edit/:id/:track' element={<EditTab/>}/>
                     <Route path='/upload' element={!cookies["token"] ? <SignIn/> : <UploadTab/>}/>
                     <Route path='/signup' element={<SignUp/>}/>
                     <Route path='/signin' element={<SignIn/>}/>

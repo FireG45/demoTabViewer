@@ -10,6 +10,7 @@ import {IconMetronome} from '@tabler/icons-react';
 import {AppBar, IconButton, Stack, Toolbar} from "@mui/material";
 import MidiWebPlayer from "./midiUtils/MidiWebPlayer";
 import {Pause, Stop} from "@mui/icons-material";
+import EditIcon from "@mui/icons-material/Edit";
 
 
 export default function TabPlayer({
@@ -135,9 +136,6 @@ export default function TabPlayer({
                             }}>
                                 <IconMetronome/>
                             </IconButton>
-                            {/*<IconButton color="inherit">*/}
-                            {/*    <EditIcon/>*/}
-                            {/*</IconButton>*/}
                         </Stack>
                     </Stack>
                 </Toolbar>

@@ -5,11 +5,18 @@ import drawHummerSlide from './renderUtils/drawHummerSlide'
 import drawBeams from './renderUtils/drawBeams'
 import drawPalmMutes from './renderUtils/drawPalmMutes'
 import drawLetRing from './renderUtils/drawLetRing'
-import {ClickAwayListener} from "@mui/material";
+import {Button, ClickAwayListener, IconButton, Input, Stack} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import NumberInputBasic from "./QuantityInput";
+import {Form} from "react-router-dom";
+import QuantityInput from "./QuantityInput";
 
 const {Renderer, TabStave, TabNote, Formatter, StaveNote} = VexFlow.Flow
 
-class Stave extends Component {
+class EditStave extends Component {
     constructor(props) {
         super(props)
         this.container = React.createRef()
@@ -23,7 +30,9 @@ class Stave extends Component {
         this.state = {
             note: 0,
             selectedNote: -1,
-            notes: []
+            notes: [],
+            menuAnchor: null,
+            menuOpen: false,
         }
 
         this.setNote = (noteID) => {
@@ -35,6 +44,20 @@ class Stave extends Component {
 
         this.handleClickAway = () => {
             this.componentDidMount();
+        }
+
+        this.handleContextMenuOpen = (event) => {
+            this.setState({
+                menuAnchor: event.currentTarget,
+                menuOpen: true,
+            });
+        }
+
+        this.handleContextMenuClose = (event) => {
+            this.setState({
+                menuAnchor: null,
+                menuOpen: false,
+            });
         }
 
         this.handleClick = (event) => {
@@ -90,6 +113,9 @@ class Stave extends Component {
                     selectedNote: -1
                 })
             }
+            this.setState({
+                menuOpen: false
+            })
             if (note !== null && note.positions !== undefined)
                 console.log("Clicked on: " + note.positions[noteJ].fret + " : " + note.positions[noteJ].str)
         }
@@ -243,10 +269,37 @@ class Stave extends Component {
         else if (this.props.start) bgColor = "#e6e6e6";
         return (
             <>
-                <canvas ref={this.container} style={{backgroundColor: bgColor}}/>
+                <ClickAwayListener onClickAway={this.state.selectedNote > 0 ? this.handleClickAway : () => {
+                }}>
+                    <canvas onClick={this.handleClick} ref={this.container} onDoubleClick={this.handleContextMenuOpen}/>
+                </ClickAwayListener>
+                <ClickAwayListener onClickAway={(event) => {
+                    this.setState({
+                        openMenu: false
+                    })
+                }}>
+                    <>
+                        <Menu
+                            open={this.state.menuOpen}
+                            anchorEl={this.state.menuAnchor}
+                        >
+                            <Stack direction={'column'} spacing={1} sx={{mx: 'auto', p: '10px'}}>
+                                <h5>Изменить темп</h5>
+                                <QuantityInput startVal={this.props.tempo}/>
+                                <Button fullWidth variant={'contained'} type={'info'} onClick={(event) => {
+                                    this.setState({
+                                        openMenu: false
+                                    })
+                                }}>
+                                    Сохранить
+                                </Button>
+                            </Stack>
+                        </Menu>
+                    </>
+                </ClickAwayListener>
             </>
         )
     }
 }
 
-export default Stave
+export default EditStave

@@ -3,8 +3,9 @@ import Stave from "./Stave";
 import {Grid, CircularProgress} from "@mui/material";
 import Loading from "./Loading";
 import StaveWrapper from "./utils/StaveWrapper";
+import EditStave from "./EditStave";
 
-export default class Score extends Component {
+export default class EditScore extends Component {
     constructor(props) {
         super(props);
         this.id = props.id
@@ -92,10 +93,10 @@ export default class Score extends Component {
 
                             return (
                                 <Grid item xs={2} sm={4} md={10} key={index} onClick={() => {
-                                    this.setState({start: index})
-                                    this.state.onStartChange();
+                                    //this.setState({start: index})
+                                    //this.state.onStartChange();
                                 }}>
-                                    <Stave
+                                    <EditStave
                                         ref={this.state.measureObjs[index]}
                                         measure={measures[index].beatDTOS}
                                         tempo={tempo}

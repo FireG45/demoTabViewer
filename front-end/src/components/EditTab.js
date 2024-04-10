@@ -20,6 +20,7 @@ import FavoriteBorder from '@mui/icons-material/FavoriteBorder';
 import Favorite from '@mui/icons-material/Favorite';
 import TabPlayer from "./TabPlayer";
 import InputLabel from "@mui/material/InputLabel";
+import EditScore from "./EditScore";
 
 function convertDuration(duration) {
     let dDotted = 0;
@@ -45,7 +46,7 @@ function convertDuration(duration) {
     return durationValue;
 }
 
-class ShowTab extends Component {
+class EditTab extends Component {
     static propTypes = {
         cookies: instanceOf(Cookies).isRequired
     };
@@ -100,7 +101,7 @@ class ShowTab extends Component {
         this.id = this.props.params.id
         this.track = this.props.params.track
         var path = "http://localhost:8080/tabs/" + this.id + "?track=" + this.track
-        this.path = "/tabs/" + this.props.params.id + "/"
+        this.path = "/tabs/edit/" + this.props.params.id + "/"
         fetch(path, {
             headers: new Headers(this.token ? {
                 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + this.token
@@ -193,11 +194,6 @@ class ShowTab extends Component {
             });
 
             return (<>
-                <TabPlayer score={this.score} id={this.id} tabBeats={this.state.tabBeats}
-                           metronomeTrack={this.state.metronomeTrack} measuresStarts={this.state.measuresStarts}
-                           measuresStartNotesInds={this.state.measuresStartNotesInds}
-                           measuresDurations={this.state.measuresDurations} measures={this.state.tab.measures}/>
-
                 <Snackbar open={this.state.snackbarOpen}
                           autoHideDuration={6000}
                           anchorOrigin={{vertical: 'top', horizontal: 'right'}}
@@ -222,68 +218,6 @@ class ShowTab extends Component {
                         <Grid container spacing={0}>
                             <Grid xs={6}>
                                 <h2><Link to={`/tabs/${tab.author}`}>{tab.author}</Link> - {tab.title}</h2>
-                            </Grid>
-                            <Grid xs={6} style={{textAlign: "right"}}>
-                                <ButtonGroup>
-                                    <Checkbox onChange={async (_, cheked) => {
-                                        if (!this.token) {
-                                            this.setState({snackbarOpen: true});
-                                            return;
-                                        }
-                                        try {
-                                            const result = await fetch(`http://localhost:8080/tabs/${cheked ? "setfavorite" : "removefavorite"}/` + this.id, {
-                                                method: cheked ? "POST" : "DELETE", headers: new Headers({
-                                                    'Content-Type': 'application/json',
-                                                    'Authorization': 'Bearer ' + this.token
-                                                })
-                                            });
-                                            if (result.ok) {
-                                                this.setState({
-                                                    favorite: cheked
-                                                });
-                                            }
-                                        } catch (error) {
-                                            console.error(error);
-                                        }
-                                    }} checked={favorite} icon={<FavoriteBorder/>} checkedIcon={<Favorite/>}/>
-                                    <TabInfoPopover data={{
-                                        user: tab.user, uploaded: tab.uploaded, id: this.id, owner: tab.userOwner, track: this.track
-                                    }}/>
-                                </ButtonGroup>
-                                <Typography component="legend">Сложность табулатуры:</Typography>
-                                <StyledRating
-                                    name="simple-controlled"
-                                    icon={<CircleIcon fontSize="inherit" color="green"/>}
-                                    emptyIcon={<CircleOutlinedIcon fontSize="inherit" color="green"/>}
-                                    value={value || tab.rating}
-                                    onChange={async (event, newValue) => {
-                                        if (!this.token) {
-                                            this.setState({snackbarOpen: true});
-                                            return;
-                                        }
-                                        const formData = new FormData();
-                                        formData.append("tabId", this.id);
-                                        formData.append("value", newValue);
-                                        try {
-                                            const result = await fetch("http://localhost:8080/addreview", {
-                                                method: "POST", body: JSON.stringify({
-                                                    "tabId": this.id, "value": newValue
-                                                }), headers: new Headers({
-                                                    'Content-Type': 'application/json',
-                                                    'Authorization': 'Bearer ' + this.token
-                                                })
-                                            });
-
-                                            if (result.ok) {
-                                                this.setState({
-                                                    value: newValue
-                                                });
-                                            }
-                                        } catch (error) {
-                                            console.error(error);
-                                        }
-                                    }}
-                                />
                             </Grid>
                         </Grid>
                         <FormControl sx={{m: 1, width: 500}} variant={'filled'}>
@@ -310,7 +244,7 @@ class ShowTab extends Component {
                             </Select>
                         </FormControl>
                         <div>
-                            <Score ref={this.score} id={this.id} track={this.track}/>
+                            <EditScore ref={this.score} id={this.id} track={this.track}/>
                         </div>
                     </Stack>
                 </Container>
@@ -324,4 +258,4 @@ class ShowTab extends Component {
     }
 }
 
-export default withCookies(withRouter(ShowTab));
+export default withCookies(withRouter(EditTab));
