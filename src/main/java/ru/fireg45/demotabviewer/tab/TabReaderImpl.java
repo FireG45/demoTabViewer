@@ -128,11 +128,25 @@ import java.util.*;
                     case 2 -> effects.add("b " + "UP:" + value + " " + "DOWN:" + value);
                 }
             }
-            boolean[] effectsFlags = { effect.isPalmMute(), effect.isTapping(), effect.isSlapping(),
-                    effect.isPopping(), effect.isHarmonic(), effect.isAccentuatedNote(), effect.isLetRing(),
-                    effect.isHeavyAccentuatedNote() };
+
+            boolean[] effectsFlags = {
+                    effect.isPalmMute(),
+                    effect.isTapping(),
+                    effect.isSlapping(),
+                    effect.isPopping(),
+                    effect.isHarmonic(),
+                    effect.isAccentuatedNote(),
+                    effect.isLetRing(),
+                    effect.isHeavyAccentuatedNote(),
+
+                    effect.isVibrato(),
+                    effect.isDeadNote(),
+                    effect.isGhostNote(),
+                    effect.isHammer()
+            };
+
             String[] effectsSigns = { "p",  "t", "s", "P", readHarmonic(effect, fret), ">", "L", "^" };
-            int effectsSize = effectsFlags.length;
+            int effectsSize = effectsSigns.length;
             for (int i = 0; i < effectsSize; i++) {
                 if (effectsFlags[i]) effects.add(effectsSigns[i]);
             }

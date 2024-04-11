@@ -3,7 +3,7 @@ import { Unstable_NumberInput as BaseNumberInput } from '@mui/base/Unstable_Numb
 import { styled } from '@mui/system';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddIcon from '@mui/icons-material/Add';
-import {useState} from "react";
+import {Component, useState} from "react";
 
 const NumberInput = React.forwardRef(function CustomNumberInput(props, ref) {
     return (
@@ -29,12 +29,32 @@ const NumberInput = React.forwardRef(function CustomNumberInput(props, ref) {
     );
 });
 
-export default function QuantityInput({startVal = 0}) {
-    const [value, setValue] = useState(startVal);
-    return <NumberInput value={value} aria-label="Quantity Input" min={30} max={320} onChange={(event, value) => {
-        setValue(value);
-    }}/>;
+class QuantityInput extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            value: this.props.startVal || 0,
+        };
+    }
+
+    handleChange = (event, value) => {
+        this.setState({ value });
+    };
+
+    render() {
+        return (
+            <NumberInput
+                value={this.state.value}
+                aria-label="Quantity Input"
+                min={30}
+                max={320}
+                onChange={this.handleChange}
+            />
+        );
+    }
 }
+
+export default QuantityInput;
 
 const blue = {
     100: '#daecff',

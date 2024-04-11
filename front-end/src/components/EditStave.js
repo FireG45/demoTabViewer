@@ -5,7 +5,7 @@ import drawHummerSlide from './renderUtils/drawHummerSlide'
 import drawBeams from './renderUtils/drawBeams'
 import drawPalmMutes from './renderUtils/drawPalmMutes'
 import drawLetRing from './renderUtils/drawLetRing'
-import {Button, ClickAwayListener, IconButton, Input, Stack} from "@mui/material";
+import {Box, Button, ClickAwayListener, Grid, IconButton, Input, Paper, Stack} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from "@mui/material/Menu";
@@ -13,6 +13,9 @@ import MenuItem from "@mui/material/MenuItem";
 import NumberInputBasic from "./QuantityInput";
 import {Form} from "react-router-dom";
 import QuantityInput from "./QuantityInput";
+import Dialog from "@mui/material/Dialog";
+import Card from "@mui/material/Card";
+import {styled} from "@mui/system";
 
 const {Renderer, TabStave, TabNote, Formatter, StaveNote} = VexFlow.Flow
 
@@ -27,12 +30,20 @@ class EditStave extends Component {
 
         this.notes = []
 
+        this.tempoField = React.createRef();
+
+        this.showTempo = this.props.showTempo;
+        this.tempo = this.props.tempo;
+
+        this.effectsMap = []
+
         this.state = {
             note: 0,
             selectedNote: -1,
             notes: [],
             menuAnchor: null,
             menuOpen: false,
+            noteDialogOpen: false,
         }
 
         this.setNote = (noteID) => {
@@ -47,16 +58,17 @@ class EditStave extends Component {
         }
 
         this.handleContextMenuOpen = (event) => {
+            event.preventDefault();
             this.setState({
                 menuAnchor: event.currentTarget,
-                menuOpen: true,
+                openMenu: true,
             });
         }
 
         this.handleContextMenuClose = (event) => {
             this.setState({
                 menuAnchor: null,
-                menuOpen: false,
+                openMenu: false,
             });
         }
 
@@ -94,6 +106,11 @@ class EditStave extends Component {
                 }
                 if (note) break;
             }
+            if (this.state.selectedNote >= 0 && this.state.selectedNote === noteIndex) {
+                this.setState({
+                    noteDialogOpen: true
+                })
+            }
             if (note) {
                 this.componentDidMount();
                 let context = stave.getContext();
@@ -105,7 +122,7 @@ class EditStave extends Component {
                     .fillText('▢', note.getX() + shiftX + shift - 9.5, note.getYs()[noteJ] + shiftY + 4.5);
                 context.setFont(initFont);
                 this.setState({
-                    selectedNote: 1
+                    selectedNote: noteIndex
                 })
             } else {
                 this.componentDidMount();
@@ -114,7 +131,7 @@ class EditStave extends Component {
                 })
             }
             this.setState({
-                menuOpen: false
+                openMenu: false
             })
             if (note !== null && note.positions !== undefined)
                 console.log("Clicked on: " + note.positions[noteJ].fret + " : " + note.positions[noteJ].str)
@@ -141,8 +158,29 @@ class EditStave extends Component {
         stave.options.num_lines = this.props.stringCount
         stave.options.line_config = new Array(this.props.stringCount).fill({visible: true})
 
-        if (this.props.tempo) {
-            const bpm = this.props.tempo
+        for (let i = 0; i < this.props.measure.length; i++) {
+            let beat = this.props.measure[i];
+            for (let j = 0; j < beat.noteDTOS.length; j++) {
+                this.effectsMap.push([
+                    {name: 'P.M', selected: false},
+                    {name: 'T', selected: false},
+                    {name: 'S', selected: false},
+                    {name: 'P', selected: false},
+                    {name: 'A.H', selected: false},
+                    {name: '>', selected: false},
+                    {name: 'L.R', selected: false},
+                    {name: '^', selected: false},
+
+                    {name: '~', selected: false},
+                    {name: 'X', selected: false},
+                    {name: '()', selected: false},
+                    {name: 'H.O', selected: false},
+                ])
+            }
+        }
+
+        if (this.showTempo) {
+            const bpm = this.tempo
             const x = this.props.measure[0] && this.props.measure[0].effects[0] === 't' ? -12 : 0
             const y = 0
             context.setFont("Arial", 20)
@@ -267,36 +305,70 @@ class EditStave extends Component {
         let bgColor = "white";
         if (this.state.note > 0) bgColor = "#AAD1FF"
         else if (this.props.start) bgColor = "#e6e6e6";
+
+        const Item = styled(Paper)(({theme}) => ({
+            backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
+            padding: theme.spacing(2),
+            textAlign: 'center',
+        }));
+
         return (
             <>
                 <ClickAwayListener onClickAway={this.state.selectedNote > 0 ? this.handleClickAway : () => {
                 }}>
-                    <canvas onClick={this.handleClick} ref={this.container} onDoubleClick={this.handleContextMenuOpen}/>
+                    <canvas onClick={this.handleClick} ref={this.container} onContextMenu={this.handleContextMenuOpen}/>
                 </ClickAwayListener>
-                <ClickAwayListener onClickAway={(event) => {
-                    this.setState({
-                        openMenu: false
-                    })
-                }}>
-                    <>
-                        <Menu
-                            open={this.state.menuOpen}
-                            anchorEl={this.state.menuAnchor}
-                        >
-                            <Stack direction={'column'} spacing={1} sx={{mx: 'auto', p: '10px'}}>
-                                <h5>Изменить темп</h5>
-                                <QuantityInput startVal={this.props.tempo}/>
-                                <Button fullWidth variant={'contained'} type={'info'} onClick={(event) => {
-                                    this.setState({
-                                        openMenu: false
-                                    })
-                                }}>
-                                    Сохранить
-                                </Button>
-                            </Stack>
-                        </Menu>
-                    </>
-                </ClickAwayListener>
+
+                <Menu
+                    open={this.state.openMenu}
+                    anchorEl={this.state.menuAnchor}
+                >
+                    <ClickAwayListener onClickAway={(event) => {
+                        this.setState({
+                            openMenu: false
+                        })
+                    }}>
+                        <Stack direction={'column'} spacing={1} sx={{mx: 'auto', p: '10px'}}>
+                            <h5>Изменить темп</h5>
+                            <QuantityInput startVal={this.tempo} ref={this.tempoField}/>
+                            <Button fullWidth variant={'contained'} type={'info'} onClick={(event) => {
+                                this.tempo = this.tempoField.current.state.value;
+                                this.setState({
+                                    openMenu: false
+                                });
+                                this.componentDidMount();
+                            }}>
+                                Сохранить
+                            </Button>
+                        </Stack>
+                    </ClickAwayListener>
+                </Menu>
+
+                <Dialog open={this.state.noteDialogOpen}>
+                    <Stack sx={{mx: 'auto', p: '10px'}}>
+                        <ClickAwayListener onClickAway={(event) => {
+                            this.setState({
+                                noteDialogOpen: false
+                            })
+                        }}>
+                            <Box sx={{flexGrow: 1}}>
+                                <Grid container spacing={{xs: 0.5, md: 0.5}} columns={{xs: 4, sm: 8, md: 12}}>
+                                    {this.state.selectedNote > 0 ?
+                                        this.effectsMap[this.state.selectedNote].map((el, index) => (
+                                            <Grid item xs={2} sm={2} md={4} key={index}>
+                                                <Button fullWidth variant={el.selected ? 'contained' : 'outlined'}
+                                                        onClick={() => el.selected = !el.selected}>
+                                                    {el.name}
+                                                </Button>
+                                            </Grid>
+                                        )) :
+                                        <></>
+                                    }
+                                </Grid>
+                            </Box>
+                        </ClickAwayListener>
+                    </Stack>
+                </Dialog>
             </>
         )
     }

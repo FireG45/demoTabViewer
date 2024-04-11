@@ -130,4 +130,9 @@ public class TabController {
         favoriteService.delete(favorite.get());
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    @ExceptionHandler(com.auth0.jwt.exceptions.TokenExpiredException.class)
+    public ResponseEntity<String> handleTokenExpiredException(com.auth0.jwt.exceptions.TokenExpiredException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
 }

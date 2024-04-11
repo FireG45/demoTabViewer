@@ -86,7 +86,8 @@ export default class EditScore extends Component {
                 <>
                     <Grid container spacing={0} columns={cols}>
                         {Array.from(Array(measures.length)).map((_, index) => {
-                            let tempo = index === 0 || measures[index - 1].tempo !== measures[index].tempo ? measures[index].tempo : false;
+                            let tempo = measures[index].tempo;
+                            let showTempo = index === 0 || measures[index - 1].tempo !== measures[index].tempo
                             let timeSignature = index === 0 || measures[index - 1].timeSignature !== measures[index].timeSignature ? measures[index].timeSignature : false;
 
                             totalMeasures++;
@@ -100,6 +101,7 @@ export default class EditScore extends Component {
                                         ref={this.state.measureObjs[index]}
                                         measure={measures[index].beatDTOS}
                                         tempo={tempo}
+                                        showTempo={true}
                                         stringCount={stringCount}
                                         timeSignature={timeSignature}
                                         tuning={index === 0 ? tuning : false}
