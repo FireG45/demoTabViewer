@@ -101,7 +101,7 @@ class EditTab extends Component {
         this.id = this.props.params.id
         this.track = this.props.params.track
         var path = "http://localhost:8080/tabs/" + this.id + "?track=" + this.track
-        this.path = "/tabs/edit/" + this.props.params.id + "/"
+        this.path = "/edit/" + this.props.params.id + "/"
         fetch(path, {
             headers: new Headers(this.token ? {
                 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + this.token
@@ -217,7 +217,7 @@ class EditTab extends Component {
                         <br></br>
                         <Grid container spacing={0}>
                             <Grid xs={6}>
-                                <h2><Link to={`/tabs/${tab.author}`}>{tab.author}</Link> - {tab.title}</h2>
+                                <h2>{tab.author} - {tab.title}</h2>
                             </Grid>
                         </Grid>
                         <FormControl sx={{m: 1, width: 500}} variant={'filled'}>

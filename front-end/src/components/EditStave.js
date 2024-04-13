@@ -1,21 +1,16 @@
 import React, {Component} from 'react'
-import VexFlow, {Fraction, Modifier} from 'vexflow'
-import parseEffects from './renderUtils/parseEffects'
+import VexFlow, {Fraction} from 'vexflow'
 import drawHummerSlide from './renderUtils/drawHummerSlide'
 import drawBeams from './renderUtils/drawBeams'
 import drawPalmMutes from './renderUtils/drawPalmMutes'
 import drawLetRing from './renderUtils/drawLetRing'
-import {Box, Button, ClickAwayListener, Grid, IconButton, Input, Paper, Stack} from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import {Box, Button, ClickAwayListener, Grid, Paper, Stack, Tooltip} from "@mui/material";
+
 import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import NumberInputBasic from "./QuantityInput";
-import {Form} from "react-router-dom";
 import QuantityInput from "./QuantityInput";
 import Dialog from "@mui/material/Dialog";
-import Card from "@mui/material/Card";
 import {styled} from "@mui/system";
+import parseEditEffects from "./renderUtils/parseEditEffects";
 
 const {Renderer, TabStave, TabNote, Formatter, StaveNote} = VexFlow.Flow
 
@@ -37,9 +32,16 @@ class EditStave extends Component {
 
         this.effectsMap = []
 
+        this.selectedNote = -1
+        this.selectedBeat = -1
+        this.selectedString = -1;
+        this.noteJ = -1;
+
+        this.slidesAndTies = this.props.slidesAndTies
+        this.measure = this.props.measure;
+
         this.state = {
             note: 0,
-            selectedNote: -1,
             notes: [],
             menuAnchor: null,
             menuOpen: false,
@@ -72,6 +74,22 @@ class EditStave extends Component {
             });
         }
 
+        this.drawNoteSelection = (note) => {
+            let stave = this.state.notes[0].stave;
+            let shift = this.props.tuning ? 40 : 20
+
+            let shiftX = stave.getX()
+            let shiftY = stave.getY()
+            let context = stave.getContext();
+            let initFont = context.getFont();
+            context.setFont({
+                size: 17,
+            });
+            context
+                .fillText('▢', note.getX() + shiftX + shift - 9.5, note.getYs()[this.noteJ] + shiftY + 4.5);
+            context.setFont(initFont);
+        }
+
         this.handleClick = (event) => {
             console.clear()
 
@@ -83,6 +101,7 @@ class EditStave extends Component {
             let shift = this.props.tuning ? 40 : 20
             const distance =
                 (x1, x2, y1, y2) => Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+
             let stave = this.state.notes[0].stave;
 
             let shiftX = stave.getX()
@@ -93,6 +112,7 @@ class EditStave extends Component {
             let note = null;
             let noteJ = 0;
             let noteIndex = 0;
+            let beatIndex = 0;
             for (let n in this.state.notes) {
                 let el = this.state.notes[n];
                 let nn = el.postFormat();
@@ -104,39 +124,64 @@ class EditStave extends Component {
                     }
                     noteIndex++;
                 }
+                beatIndex++;
                 if (note) break;
             }
-            if (this.state.selectedNote >= 0 && this.state.selectedNote === noteIndex) {
+            if (this.selectedNote >= 0 && this.selectedNote === noteIndex) {
                 this.setState({
                     noteDialogOpen: true
                 })
             }
             if (note) {
                 this.componentDidMount();
-                let context = stave.getContext();
-                let initFont = context.getFont();
-                context.setFont({
-                    size: 17,
-                });
-                context
-                    .fillText('▢', note.getX() + shiftX + shift - 9.5, note.getYs()[noteJ] + shiftY + 4.5);
-                context.setFont(initFont);
-                this.setState({
-                    selectedNote: noteIndex
-                })
+                this.drawNoteSelection(note)
+                this.selectedNote = noteIndex
+                this.selectedBeat = beatIndex
+                this.selectedString = note.positions[noteJ].str;
+                this.noteJ = noteJ;
+                this.selectedNoteObj = note;
             } else {
                 this.componentDidMount();
-                this.setState({
-                    selectedNote: -1
-                })
+                this.selectedNote = -1
             }
             this.setState({
                 openMenu: false
             })
             if (note !== null && note.positions !== undefined)
                 console.log("Clicked on: " + note.positions[noteJ].fret + " : " + note.positions[noteJ].str)
+            console.log("SELECTED NOTE:", noteIndex);
         }
+
+        this.changeEffects = () => {
+            let noteIndex = this.selectedNote;
+            this.effectsMap[noteIndex].filter((el) => el.changed).forEach((el) => {
+                el.action();
+                el.changed = false;
+            });
+            this.componentDidMount();
+        }
+
+        document.addEventListener(
+            "keypress",
+            (event) => {
+                if (this.selectedNote === -1 || this.state.openMenu || this.state.noteDialogOpen) return;
+                const keyName = event.key;
+                let note = this.selectedNoteObj;
+                if (!isNaN(keyName)) {
+                    let noteID = this.selectedNote;
+                    let noteDTO = this.measure[this.selectedBeat - 1].noteDTOS[this.noteJ];
+                    noteDTO.fret = noteDTO.fret + keyName
+                    if (noteDTO.fret.length > 2 || noteDTO.fret[0] === '0' || Number(noteDTO.fret) > 24)
+                        noteDTO.fret = keyName;
+                    this.componentDidMount();
+                    this.selectedNote = noteID;
+                    this.drawNoteSelection(note);
+                }
+            },
+            false,
+        );
     }
+
 
 
     componentDidMount() {
@@ -158,30 +203,117 @@ class EditStave extends Component {
         stave.options.num_lines = this.props.stringCount
         stave.options.line_config = new Array(this.props.stringCount).fill({visible: true})
 
-        for (let i = 0; i < this.props.measure.length; i++) {
-            let beat = this.props.measure[i];
-            for (let j = 0; j < beat.noteDTOS.length; j++) {
-                this.effectsMap.push([
-                    {name: 'P.M', selected: false},
-                    {name: 'T', selected: false},
-                    {name: 'S', selected: false},
-                    {name: 'P', selected: false},
-                    {name: 'A.H', selected: false},
-                    {name: '>', selected: false},
-                    {name: 'L.R', selected: false},
-                    {name: '^', selected: false},
+        const changeBooleanEffect = (effect, beat) => {
+            let ind = beat.effects.indexOf(effect);
+            if (ind === -1) {
+                beat.effects.push(effect);
+            } else {
+                delete beat.effects[ind];
+            }
+        }
 
-                    {name: '~', selected: false},
-                    {name: 'X', selected: false},
-                    {name: '()', selected: false},
-                    {name: 'H.O', selected: false},
-                ])
+        const changeBooleanHammerSlideEffect = (effect, beat) => {
+            let i = this.selectedBeat - 1;
+            let search = `${i}|${i + 1}|${effect}|${this.noteJ}`;
+            let ind = this.slidesAndTies.indexOf(search);
+            if (ind === -1) {
+                this.slidesAndTies.push(search);
+            } else {
+                delete this.slidesAndTies[ind];
+            }
+        }
+
+        for (let i = 0; i < this.measure.length; i++) {
+            let beat = this.measure[i];
+            for (let j = 0; j < beat.noteDTOS.length; j++) {
+                let noteDTO = beat.noteDTOS[j];
+                let map = [
+                    {
+                        name: 'P.M', selected: false, title: "Palm Mute", action: () => {
+                            changeBooleanEffect('p', beat)
+                        }
+                    },
+                    {
+                        name: 'T', selected: false, title: "Тэппинг", action: () => {
+                            changeBooleanEffect('t', beat)
+                        }
+                    },
+                    {
+                        name: 'S', selected: false, title: "Слэп", action: () => {
+                            changeBooleanEffect('s', beat)
+                        }
+                    },
+                    {
+                        name: 'P', selected: false, title: "Поппинг", action: () => {
+                            changeBooleanEffect('P', beat)
+                        }
+                    },
+                    {
+                        name: 'A.H', selected: false, title: "Флажолет", action: () => {
+                            changeBooleanEffect('h|H|' + noteDTO.fret, beat);
+                        }
+                    },
+                    {
+                        name: '>', selected: false, title: "Акцентированная нота", action: () => {
+                            changeBooleanEffect('>', beat);
+                        }
+                    },
+                    {
+                        name: 'L.R', selected: false, title: "Let Ring", action: () => {
+                            changeBooleanEffect('L', beat);
+                        }
+                    },
+                    {
+                        name: '^', selected: false, changed: false, title: "Сильно акцентированная нота", action: () => {
+                            changeBooleanEffect('^', beat);
+                        }
+                    },
+
+                    {
+                        name: '~', selected: false, changed: false, title: "Вибрато", action: () => {
+                            changeBooleanEffect('v', beat)
+                        }
+                    },
+                    {
+                        name: 'X', selected: false, changed: false, title: "Мертвая нота", action: () => {
+                            if (noteDTO.fret === 'x') {
+                                noteDTO.fret = noteDTO.rawFret;
+                            } else {
+                                noteDTO.fret = 'x';
+                            }
+                        }
+                    },
+                    {
+                        name: '()', selected: false, changed: false, title: "Нота призрак", action: () => {
+                            beat.ghostNote = !beat.ghostNote;
+                        }
+                    },
+                    {
+                        name: 'H.O', selected: false, changed: false, title: "Hammer-on", action: () => {
+                            changeBooleanEffect('H', beat)
+                            changeBooleanHammerSlideEffect('H', beat);
+                        }
+                    },
+                    {
+                        name: '⎯', selected: false, changed: false, title: "Слайд", action: () => {
+                            changeBooleanEffect('S', beat)
+                            changeBooleanHammerSlideEffect('S', beat);
+                        }
+                    },
+                ]
+                let note = beat.noteDTOS[j];
+                if (note.effectsFlags.length > 0) {
+                    for (let l = 0; l < note.effectsFlags.length; l++) {
+                        map[l].selected = note.effectsFlags[l];
+                    }
+                }
+                this.effectsMap.push(map)
             }
         }
 
         if (this.showTempo) {
             const bpm = this.tempo
-            const x = this.props.measure[0] && this.props.measure[0].effects[0] === 't' ? -12 : 0
+            const x = this.measure[0] && this.measure[0].effects[0] === 't' ? -12 : 0
             const y = 0
             context.setFont("Arial", 20)
             context.fillText("♩", y + 5, x + 25)
@@ -246,11 +378,11 @@ class EditStave extends Component {
             return fraction;
         }
 
-        for (let i = 0; i < this.props.measure.length; i++) {
-            let beat = this.props.measure[i].noteDTOS
-            let duration = this.props.measure[i].duration
-            let effects = this.props.measure[i].effects
-            let ghostNote = this.props.measure[i].ghostNote
+        for (let i = 0; i < this.measure.length; i++) {
+            let beat = this.measure[i].noteDTOS
+            let duration = this.measure[i].duration
+            let effects = this.measure[i].effects
+            let ghostNote = this.measure[i].ghostNote
             let pos = []
 
             for (let j = 0; j < beat.length; j++) {
@@ -265,7 +397,7 @@ class EditStave extends Component {
                 note.setGhost(ghostNote)
                 note.setDuration(readDuration(duration))
 
-                let parsedEffects = parseEffects(effects)
+                let parsedEffects = parseEditEffects(effects)
 
                 for (let i = 0; i < parsedEffects.length; i++) {
                     const element = parsedEffects[i]
@@ -290,11 +422,11 @@ class EditStave extends Component {
             Formatter.FormatAndDraw(context, stave, this.notes)
         }
 
-        drawPalmMutes(this.props.pmIndexes, this.notes, context, shift)
-        drawLetRing(this.props.lrIndexes, this.notes, context, shift)
+        //drawPalmMutes(this.props.pmIndexes, this.notes, context, shift)
+        //drawLetRing(this.props.lrIndexes, this.notes, context, shift)
 
         drawBeams(this.notes, context)
-        drawHummerSlide(this.props.slidesAndTies, this.notes, context)
+        drawHummerSlide(this.slidesAndTies, this.notes, context)
 
         ex.setState({
             notes: ex.notes
@@ -314,7 +446,7 @@ class EditStave extends Component {
 
         return (
             <>
-                <ClickAwayListener onClickAway={this.state.selectedNote > 0 ? this.handleClickAway : () => {
+                <ClickAwayListener onClickAway={this.selectedNote > 0 ? this.handleClickAway : () => {
                 }}>
                     <canvas onClick={this.handleClick} ref={this.container} onContextMenu={this.handleContextMenuOpen}/>
                 </ClickAwayListener>
@@ -345,21 +477,32 @@ class EditStave extends Component {
                 </Menu>
 
                 <Dialog open={this.state.noteDialogOpen}>
-                    <Stack sx={{mx: 'auto', p: '10px'}}>
+                    <Stack sx={{mx: 'auto', p: '10px'}} spacing={2}>
+                        <h5>Изменить эффекты</h5>
                         <ClickAwayListener onClickAway={(event) => {
                             this.setState({
                                 noteDialogOpen: false
                             })
                         }}>
                             <Box sx={{flexGrow: 1}}>
-                                <Grid container spacing={{xs: 0.5, md: 0.5}} columns={{xs: 4, sm: 8, md: 12}}>
-                                    {this.state.selectedNote > 0 ?
-                                        this.effectsMap[this.state.selectedNote].map((el, index) => (
-                                            <Grid item xs={2} sm={2} md={4} key={index}>
-                                                <Button fullWidth variant={el.selected ? 'contained' : 'outlined'}
-                                                        onClick={() => el.selected = !el.selected}>
-                                                    {el.name}
-                                                </Button>
+                                <Grid container spacing={{xs: 0.5, md: 0.5}} columns={{xs: 2, sm: 8, md: 14}}>
+                                    {this.selectedNote >= 0 ?
+                                        this.effectsMap[this.selectedNote].map((el, index) => (
+                                            <Grid item xs={1} sm={2} md={2} key={index}>
+                                                <Tooltip title={el.title}>
+                                                    <Button fullWidth variant={el.selected ? 'contained' : 'outlined'}
+                                                            onClick={() => {
+                                                                el.selected = !el.selected;
+                                                                // el.changed = !el.changed;
+                                                                el.action();
+                                                                this.componentDidMount();
+                                                                this.setState({
+                                                                    noteDialogOpen: false
+                                                                })
+                                                            }}>
+                                                        {el.name}
+                                                    </Button>
+                                                </Tooltip>
                                             </Grid>
                                         )) :
                                         <></>
@@ -367,6 +510,14 @@ class EditStave extends Component {
                                 </Grid>
                             </Box>
                         </ClickAwayListener>
+                        {/*<Button fullWidth variant={'contained'} type={'info'} onClick={(event) => {*/}
+                        {/*    this.setState({*/}
+                        {/*        noteDialogOpen: false*/}
+                        {/*    });*/}
+                        {/*    this.changeEffects();*/}
+                        {/*}}>*/}
+                        {/*    Сохранить*/}
+                        {/*</Button>*/}
                     </Stack>
                 </Dialog>
             </>

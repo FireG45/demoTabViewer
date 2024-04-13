@@ -2,6 +2,7 @@ import { TabSlide, TabTie } from 'vexflow'
 
 export default function drawHummerSlide(slidesAndTies, notes, context) {
     for (let i = 0; i < slidesAndTies.length; i++) {
+        if (!slidesAndTies[i]) continue;
         let splitted = slidesAndTies[i].split("|")
         let from = notes[parseInt(splitted[0])]
         let to = notes[parseInt(splitted[1])]
