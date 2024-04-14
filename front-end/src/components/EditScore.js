@@ -23,7 +23,8 @@ export default class EditScore extends Component {
             lastMeasure: 0,
             track: Number(this.track),
             start: 0,
-            onStartChange: () => {}
+            onStartChange: () => {
+            }
         };
 
         this.setNote = (id) => {
@@ -38,6 +39,17 @@ export default class EditScore extends Component {
             this.setState({
                 lastMeasure: id
             })
+        }
+
+        this.getChanges = () => {
+            let v = this.state.measureObjs;
+            let changes = []
+            v.forEach((el) => {
+                for (const elElement of  el.current.changes) {
+                    changes.push({staveId: el.current.props.staveId - 1, changes: elElement})
+                }
+            });
+            return changes;
         }
     }
 
@@ -104,7 +116,7 @@ export default class EditScore extends Component {
                                         showTempo={true}
                                         stringCount={stringCount}
                                         timeSignature={timeSignature}
-                                        tuning={index === 0 ? tuning : false}
+                                        tuning={false}//index === 0 ? tuning : false}
                                         staveId={index + 1}
                                         pmIndexes={measures[index].pmIndexes}
                                         lrIndexes={measures[index].lrIndexes}

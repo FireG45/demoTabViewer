@@ -2,7 +2,6 @@ import {Annotation, Bend, Vibrato} from 'vexflow'
 
 function parseEditEffects(effects = []) {
     var modificators = []
-    console.log(effects);
     for (let i = 0; i < effects.length; i++) {
         if (!effects[i] || effects[i] === null || effects[i].length === 0) continue;
         switch (effects[i][0]) {

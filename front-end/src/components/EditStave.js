@@ -2,8 +2,6 @@ import React, {Component} from 'react'
 import VexFlow, {Fraction} from 'vexflow'
 import drawHummerSlide from './renderUtils/drawHummerSlide'
 import drawBeams from './renderUtils/drawBeams'
-import drawPalmMutes from './renderUtils/drawPalmMutes'
-import drawLetRing from './renderUtils/drawLetRing'
 import {Box, Button, ClickAwayListener, Grid, Paper, Stack, Tooltip} from "@mui/material";
 
 import Menu from "@mui/material/Menu";
@@ -48,6 +46,8 @@ class EditStave extends Component {
             noteDialogOpen: false,
         }
 
+        this.changes = []
+
         this.setNote = (noteID) => {
             //console.log("SETNOTE: " + noteID);
             this.setState({
@@ -74,31 +74,36 @@ class EditStave extends Component {
             });
         }
 
+        this.getShift = () => {
+            return this.props.staveId === 1 || this.props.timeSignature ? 39 : 22
+        }
+
         this.drawNoteSelection = (note) => {
             let stave = this.state.notes[0].stave;
-            let shift = this.props.tuning ? 40 : 20
+            let shift = this.getShift();
 
             let shiftX = stave.getX()
             let shiftY = stave.getY()
             let context = stave.getContext();
             let initFont = context.getFont();
             context.setFont({
-                size: 17,
+                size: 20,
             });
             context
-                .fillText('▢', note.getX() + shiftX + shift - 9.5, note.getYs()[this.noteJ] + shiftY + 4.5);
+                .fillText('▢', note.getX() + shiftX + shift - 10.5, note.getYs()[this.noteJ] + shiftY + 6.5);
             context.setFont(initFont);
         }
 
         this.handleClick = (event) => {
             console.clear()
 
-            const DISTANCE = 10;
+            const DISTANCE = 12;
 
             let bounds = event.target.getBoundingClientRect();
             let x = event.clientX - bounds.left;
             let y = event.clientY - bounds.top;
-            let shift = this.props.tuning ? 40 : 20
+            let shift = this.getShift();
+
             const distance =
                 (x1, x2, y1, y2) => Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
 
@@ -170,18 +175,28 @@ class EditStave extends Component {
                 if (!isNaN(keyName)) {
                     let noteID = this.selectedNote;
                     let noteDTO = this.measure[this.selectedBeat - 1].noteDTOS[this.noteJ];
+                    if (noteDTO.fret === 'x') {
+                        let beat = this.measure[this.selectedBeat - 1];
+                        if (noteDTO.fret === 'x') {
+                            noteDTO.fret = noteDTO.rawFret;
+                        } else {
+                            noteDTO.fret = 'x';
+                        }
+                    }
+
                     noteDTO.fret = noteDTO.fret + keyName
                     if (noteDTO.fret.length > 2 || noteDTO.fret[0] === '0' || Number(noteDTO.fret) > 24)
                         noteDTO.fret = keyName;
                     this.componentDidMount();
                     this.selectedNote = noteID;
                     this.drawNoteSelection(note);
+                    this.changes[this.selectedNote].oldFret = this.changes[this.selectedNote].newFret;
+                    this.changes[this.selectedNote].newFret = noteDTO.fret;
                 }
             },
             false,
         );
     }
-
 
 
     componentDidMount() {
@@ -207,8 +222,18 @@ class EditStave extends Component {
             let ind = beat.effects.indexOf(effect);
             if (ind === -1) {
                 beat.effects.push(effect);
+                let removedInd = this.changes[this.selectedNote].removedEffects.indexOf(effect);
+                if (removedInd !== -1)
+                    delete this.changes[this.selectedNote].removedEffects[removedInd];
+                else
+                    this.changes[this.selectedNote].addedEffects.push(effect);
             } else {
                 delete beat.effects[ind];
+                let addedInd = this.changes[this.selectedNote].addedEffects.indexOf(effect);
+                if (addedInd !== -1)
+                    delete this.changes[this.selectedNote].addedEffects[addedInd];
+                else
+                    this.changes[this.selectedNote].removedEffects.push(effect);
             }
         }
 
@@ -223,8 +248,18 @@ class EditStave extends Component {
             }
         }
 
+        let allNotesCount = 0;
         for (let i = 0; i < this.measure.length; i++) {
             let beat = this.measure[i];
+            for (let j = 0; j < beat.noteDTOS.length; j++) {
+                allNotesCount += beat.noteDTOS.length
+            }
+        }
+
+
+        for (let i = 0; i < this.measure.length; i++) {
+            let beat = this.measure[i];
+            let noteId = 0;
             for (let j = 0; j < beat.noteDTOS.length; j++) {
                 let noteDTO = beat.noteDTOS[j];
                 let map = [
@@ -264,7 +299,11 @@ class EditStave extends Component {
                         }
                     },
                     {
-                        name: '^', selected: false, changed: false, title: "Сильно акцентированная нота", action: () => {
+                        name: '^',
+                        selected: false,
+                        changed: false,
+                        title: "Сильно акцентированная нота",
+                        action: () => {
                             changeBooleanEffect('^', beat);
                         }
                     },
@@ -285,6 +324,19 @@ class EditStave extends Component {
                     },
                     {
                         name: '()', selected: false, changed: false, title: "Нота призрак", action: () => {
+                            if (!beat.ghostNote) {
+                                let removedInd = this.changes[this.selectedNote].removedEffects.indexOf('g');
+                                if (removedInd !== -1)
+                                    delete this.changes[this.selectedNote].removedEffects[removedInd];
+                                else
+                                    this.changes[this.selectedNote].addedEffects.push('g');
+                            } else {
+                                let addedInd = this.changes[this.selectedNote].addedEffects.indexOf('g');
+                                if (addedInd !== -1)
+                                    delete this.changes[this.selectedNote].addedEffects[addedInd];
+                                else
+                                    this.changes[this.selectedNote].removedEffects.push('g');
+                            }
                             beat.ghostNote = !beat.ghostNote;
                         }
                     },
@@ -301,13 +353,25 @@ class EditStave extends Component {
                         }
                     },
                 ]
+
                 let note = beat.noteDTOS[j];
                 if (note.effectsFlags.length > 0) {
                     for (let l = 0; l < note.effectsFlags.length; l++) {
                         map[l].selected = note.effectsFlags[l];
                     }
                 }
+
+                // if (this.effectsMap.length < beat.noteDTOS.length)
                 this.effectsMap.push(map)
+
+                if (this.changes.length < allNotesCount)
+                    this.changes.push({
+                        noteId: noteId,
+                        oldFret: noteDTO.fret,
+                        newFret: noteDTO.fret,
+                        addedEffects: [],
+                        removedEffects: [],
+                    })
             }
         }
 
@@ -510,14 +574,6 @@ class EditStave extends Component {
                                 </Grid>
                             </Box>
                         </ClickAwayListener>
-                        {/*<Button fullWidth variant={'contained'} type={'info'} onClick={(event) => {*/}
-                        {/*    this.setState({*/}
-                        {/*        noteDialogOpen: false*/}
-                        {/*    });*/}
-                        {/*    this.changeEffects();*/}
-                        {/*}}>*/}
-                        {/*    Сохранить*/}
-                        {/*</Button>*/}
                     </Stack>
                 </Dialog>
             </>

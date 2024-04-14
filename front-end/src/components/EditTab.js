@@ -2,7 +2,7 @@ import {Component, createRef} from "react";
 import Score from "./Score";
 import Stack from "@mui/material/Stack";
 import {
-    Alert,
+    Alert, Button,
     ButtonGroup, Container, FormControl, Grid, MenuItem, OutlinedInput, Rating, Select, Snackbar, Typography
 } from "@mui/material";
 import withRouter from './withRouter'
@@ -21,6 +21,12 @@ import Favorite from '@mui/icons-material/Favorite';
 import TabPlayer from "./TabPlayer";
 import InputLabel from "@mui/material/InputLabel";
 import EditScore from "./EditScore";
+import AppBar from "@mui/material/AppBar";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
 
 function convertDuration(duration) {
     let dDotted = 0;
@@ -92,6 +98,28 @@ class EditTab extends Component {
             favorite: false,
             speed: 1,
             tabBeats: [],
+            open: false,
+            reload: false,
+        };
+
+        window.addEventListener('beforeunload', (event) => {
+            if (this.state.reload) return;
+            event.preventDefault();
+            //this.handleClickOpen();
+            //this.handleClickOpen();
+        });
+
+
+        this.handleClickOpen = () => {
+            this.setState({
+                open: true,
+            });
+        };
+
+        this.handleClose = () => {
+            this.setState({
+                open: false,
+            });
         };
     }
 
@@ -167,6 +195,7 @@ class EditTab extends Component {
                 isLoaded: true, track: this.track, error
             })
         })
+
     }
 
     render() {
@@ -253,6 +282,44 @@ class EditTab extends Component {
                 <br/><br/>
                 <br/><br/>
                 <br/><br/>
+
+                <Dialog
+                    open={this.state.open}
+                    onClose={this.handleClose}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                >
+                    <DialogTitle id="alert-dialog-title">
+                        {"Обновить страницу?"}
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            После обновления страницы не сохранённые изменения будут потеряны
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={this.handleClose} autoFocus>Отмена</Button>
+                        <Button onClick={() => {
+                            this.setState({
+                                reload: true,
+                            });
+                            window.reload();
+                        }}>
+                            Обновить
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                <AppBar position="fixed" sx={{top: 'auto', bottom: 0}}>
+                    <form>
+                        <Button fullWidth variant={'contained'} type={'submit'} onClick={(event) => {
+                            let changes = this.score.current.getChanges();
+                            console.log(changes);
+                        }}>
+                            Сохранить
+                        </Button>
+                    </form>
+                </AppBar>
             </>)
         }
     }
