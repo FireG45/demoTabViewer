@@ -38,6 +38,11 @@ public class FilesystemFileService implements FileService {
     }
 
     @Override
+    public String upload(InputStream inputStream, String filename) throws Exception {
+        return "";
+    }
+
+    @Override
     public void delete(String filepath) {
         Path path = FileSystems.getDefault().getPath(filepath);
         try {

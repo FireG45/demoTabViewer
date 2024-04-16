@@ -48,6 +48,12 @@ class EditStave extends Component {
 
         this.changes = []
 
+        this.staveChanges = {
+            staveId: this.props.staveId - 1,
+            oldTempo: this.props.tempo,
+            newTempo: this.props.tempo,
+        }
+
         this.setNote = (noteID) => {
             //console.log("SETNOTE: " + noteID);
             this.setState({
@@ -78,8 +84,9 @@ class EditStave extends Component {
             return this.props.staveId === 1 || this.props.timeSignature ? 39 : 22
         }
 
-        this.drawNoteSelection = (note) => {
-            let stave = this.state.notes[0].stave;
+        this.drawNoteSelection = (note, char = '▢') => {
+            console.log("DRAW SELECTION")
+            let stave = note.stave;
             let shift = this.getShift();
 
             let shiftX = stave.getX()
@@ -90,14 +97,14 @@ class EditStave extends Component {
                 size: 20,
             });
             context
-                .fillText('▢', note.getX() + shiftX + shift - 10.5, note.getYs()[this.noteJ] + shiftY + 6.5);
+                .fillText(char, note.getX() + shiftX + shift - 10.5, note.getYs()[this.noteJ] + shiftY + 6.5);
             context.setFont(initFont);
         }
 
         this.handleClick = (event) => {
             console.clear()
 
-            const DISTANCE = 12;
+            const DISTANCE = 8;
 
             let bounds = event.target.getBoundingClientRect();
             let x = event.clientX - bounds.left;
@@ -118,10 +125,12 @@ class EditStave extends Component {
             let noteJ = 0;
             let noteIndex = 0;
             let beatIndex = 0;
+
             for (let n in this.state.notes) {
                 let el = this.state.notes[n];
                 let nn = el.postFormat();
                 for (let i = 0; i < nn.getYs().length; i++) {
+                    console.log()
                     if (distance(xx, nn.getX(), yy, nn.getYs()[i]) < DISTANCE) {
                         note = el;
                         noteJ = i;
@@ -132,29 +141,31 @@ class EditStave extends Component {
                 beatIndex++;
                 if (note) break;
             }
+
             if (this.selectedNote >= 0 && this.selectedNote === noteIndex) {
                 this.setState({
                     noteDialogOpen: true
                 })
             }
-            if (note) {
+
+            if (note !== null) {
                 this.componentDidMount();
-                this.drawNoteSelection(note)
-                this.selectedNote = noteIndex
-                this.selectedBeat = beatIndex
+                this.drawNoteSelection(note);
+                this.selectedNote = noteIndex;
+                this.selectedBeat = beatIndex;
                 this.selectedString = note.positions[noteJ].str;
                 this.noteJ = noteJ;
                 this.selectedNoteObj = note;
             } else {
                 this.componentDidMount();
-                this.selectedNote = -1
+                this.selectedNote = -1;
             }
+
             this.setState({
                 openMenu: false
             })
-            if (note !== null && note.positions !== undefined)
-                console.log("Clicked on: " + note.positions[noteJ].fret + " : " + note.positions[noteJ].str)
-            console.log("SELECTED NOTE:", noteIndex);
+
+            console.log("ONCLICK NOTE: ", note);
         }
 
         this.changeEffects = () => {
@@ -320,6 +331,8 @@ class EditStave extends Component {
                             } else {
                                 noteDTO.fret = 'x';
                             }
+                            this.changes[this.selectedNote].oldFret = this.changes[this.selectedNote].newFret;
+                            this.changes[this.selectedNote].newFret = noteDTO.fret;
                         }
                     },
                     {
@@ -366,7 +379,8 @@ class EditStave extends Component {
 
                 if (this.changes.length < allNotesCount)
                     this.changes.push({
-                        noteId: noteId,
+                        noteId: ++noteId,
+                        beatId: i,
                         oldFret: noteDTO.fret,
                         newFret: noteDTO.fret,
                         addedEffects: [],
@@ -529,6 +543,8 @@ class EditStave extends Component {
                             <QuantityInput startVal={this.tempo} ref={this.tempoField}/>
                             <Button fullWidth variant={'contained'} type={'info'} onClick={(event) => {
                                 this.tempo = this.tempoField.current.state.value;
+                                this.staveChanges.oldTempo = this.staveChanges.newTempo;
+                                this.staveChanges.newTempo = this.tempo;
                                 this.setState({
                                     openMenu: false
                                 });

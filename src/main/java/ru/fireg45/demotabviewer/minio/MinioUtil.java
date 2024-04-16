@@ -49,6 +49,25 @@ public class MinioUtil {
         return false;
     }
 
+    public Boolean minioUpload(InputStream inputStream, String fileName, String bucketName) {
+        try {
+            MinioClient minioClient = MinioClientConfig.getMinioClient();
+
+            if (inputStream != null) {
+
+                PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(bucketName).object(fileName)
+                        .stream(inputStream, -1, 5242880).contentType("audio/x-gtp").build();
+
+                minioClient.putObject(objectArgs);
+                return true;
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return false;
+        }
+        return false;
+    }
+
     public boolean bucketExists(String bucketName) {
         try {
             return MinioClientConfig.bucketExists(bucketName);

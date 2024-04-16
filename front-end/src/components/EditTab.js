@@ -27,6 +27,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
+import * as React from "react";
 
 function convertDuration(duration) {
     let dDotted = 0;
@@ -120,6 +121,32 @@ class EditTab extends Component {
             this.setState({
                 open: false,
             });
+        };
+
+        this.handleUpload = async (changes) => {
+            let changesString = JSON.stringify(changes)
+            try {
+                const result = await fetch("http://localhost:8080/edit/" + this.id + "/" + this.track, {
+                    method: "POST",
+                    body: changesString,
+                    headers: new Headers({
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + this.props.cookies.get("token")
+                    })
+                });
+
+                if (result.ok) {
+                    this.props.navigate('/tabs/' + this.id + '/' + this.track)
+                } else {
+                    if (result.status !== 200) {
+                        this.props.cookies.remove("token")
+                        this.props.cookies.remove("user")
+                        this.props.navigate('/signin')
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+            }
         };
     }
 
@@ -312,9 +339,13 @@ class EditTab extends Component {
 
                 <AppBar position="fixed" sx={{top: 'auto', bottom: 0}}>
                     <form>
-                        <Button fullWidth variant={'contained'} type={'submit'} onClick={(event) => {
+                        <Button fullWidth variant={'contained'} onClick={async () => {
                             let changes = this.score.current.getChanges();
-                            console.log(changes);
+                            let staveChanges = this.score.current.getStavesChanges();
+                            await this.handleUpload({
+                                noteChanges: changes,
+                                staveChanges: staveChanges
+                            });
                         }}>
                             Сохранить
                         </Button>

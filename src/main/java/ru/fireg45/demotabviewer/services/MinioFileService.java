@@ -41,6 +41,17 @@ public class MinioFileService implements FileService {
     }
 
     @Override
+    public String upload(InputStream inputStream, String filename) throws Exception {
+        MinioClient minioClient = MinioClientConfig.getMinioClient();
+        String fileName = filename.hashCode() + new Date().hashCode() + filename;
+        if (minioClient != null && minioUtil.minioUpload(inputStream, fileName, defaultBucket)) {
+            return fileName;
+        }
+
+        return null;
+    }
+
+    @Override
     public void delete(String filepath) {
         MinioClient minioClient = MinioClientConfig.getMinioClient();
         if (minioClient != null) {

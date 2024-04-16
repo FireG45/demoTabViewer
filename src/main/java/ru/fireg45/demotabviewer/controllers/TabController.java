@@ -15,16 +15,16 @@ import ru.fireg45.demotabviewer.model.Tabulature;
 import ru.fireg45.demotabviewer.model.User;
 import ru.fireg45.demotabviewer.security.UserPrincipal;
 import ru.fireg45.demotabviewer.services.*;
+import ru.fireg45.demotabviewer.tab.TabEditor;
+import ru.fireg45.demotabviewer.tab.dto.NoteChangesDTO;
+import ru.fireg45.demotabviewer.tab.dto.TabChangesDTO;
 import ru.fireg45.demotabviewer.tab.dto.TabDTO;
 import ru.fireg45.demotabviewer.tab.TabReader;
 import ru.fireg45.demotabviewer.tab.dto.TabListDTO;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -37,24 +37,26 @@ public class TabController {
     private final FavoriteService favoriteService;
     private final TabulatureSearchService tabulatureSearchService;
     private final MidiService midiService;
+    private final TabEditor tabEditor;
 
     @Autowired
     public TabController(TabulatureService tabulatureService, UserService userService, TabReader tabReader,
                          FavoriteService favoriteService, TabulatureSearchService tabulatureSearchService,
-                         MidiService midiService) {
+                         MidiService midiService, TabEditor tabEditor) {
         this.tabulatureService = tabulatureService;
         this.userService = userService;
         this.tabReader = tabReader;
         this.favoriteService = favoriteService;
         this.tabulatureSearchService = tabulatureSearchService;
         this.midiService = midiService;
+        this.tabEditor = tabEditor;
     }
 
     @GetMapping("")
     public TabListDTO index(@RequestParam(name = "page", defaultValue = "0") int page,
                             @RequestParam(name = "pageCount", defaultValue = "1") int pageCount,
-                            @RequestParam(name = "author" , required = false) String author,
-                            @RequestParam(name = "query" , required = false) String query) throws InterruptedException {
+                            @RequestParam(name = "author", required = false) String author,
+                            @RequestParam(name = "query", required = false) String query) throws InterruptedException {
         int PAGE_SIZE = 20;
         List<Tabulature> tabs;
         long pagesCount;
@@ -123,12 +125,42 @@ public class TabController {
 
     @DeleteMapping("tabs/removefavorite/{id}")
     public ResponseEntity<String> removeFavorite(@AuthenticationPrincipal UserPrincipal userPrincipal,
-                                              @PathVariable("id") int id) {
+                                                 @PathVariable("id") int id) {
         if (userPrincipal == null) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         Optional<Favorite> favorite = favoriteService.getFavorite(userPrincipal.getEmail(), id);
         if (favorite.isEmpty()) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         favoriteService.delete(favorite.get());
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("edit/{id}")
+    public ResponseEntity<String> checkEditPermit(@AuthenticationPrincipal UserPrincipal userPrincipal,
+                                          @PathVariable("id") int id) {
+        Optional<User> optionalUser = userService.findByEmail(userPrincipal.getEmail());
+        if (optionalUser.isEmpty() || optionalUser.get().getTabulatures().stream()
+                .filter(tabulature -> tabulature.getId() == id).findAny().isEmpty())
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("edit/{id}/{track}")
+    public ResponseEntity<String> editTab(@AuthenticationPrincipal UserPrincipal userPrincipal,
+                                          @PathVariable("id") int id, @PathVariable("track") int track,
+                                          @RequestBody TabChangesDTO tabChanges) throws IOException {
+        Optional<User> optionalUser = userService.findByEmail(userPrincipal.getEmail());
+        if (optionalUser.isEmpty() || optionalUser.get().getTabulatures().stream()
+                .filter(tabulature -> tabulature.getId() == id).findAny().isEmpty())
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+
+        tabEditor.updateSong(id, track, tabChanges);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("/teapot")
+    public ResponseEntity<String> teapot() {
+        return new ResponseEntity<>(HttpStatus.I_AM_A_TEAPOT);
     }
 
     @ExceptionHandler(com.auth0.jwt.exceptions.TokenExpiredException.class)

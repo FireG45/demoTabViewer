@@ -10,7 +10,8 @@ import java.io.InputStream;
 
 @Service
 public interface FileService {
-    public String upload(MultipartFile file) throws Exception ;
-    public void delete(String filepath);
-    public InputStream download(Tabulature tabulature) throws IOException;
+    String upload(MultipartFile file) throws Exception;
+    String upload(InputStream inputStream, String filename) throws Exception;
+    void delete(String filepath);
+    InputStream download(Tabulature tabulature) throws IOException;
 }

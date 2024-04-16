@@ -41,12 +41,27 @@ export default class EditScore extends Component {
             })
         }
 
+        this.getStavesChanges = () => {
+            let v = this.state.measureObjs;
+            let changes = []
+            v.forEach((el) => {
+                if (el.current.staveChanges.oldTempo !== el.current.staveChanges.newTempo) {
+                    changes.push(el.current.staveChanges)
+                }
+            });
+            return changes;
+        }
+
         this.getChanges = () => {
             let v = this.state.measureObjs;
             let changes = []
             v.forEach((el) => {
-                for (const elElement of  el.current.changes) {
-                    changes.push({staveId: el.current.props.staveId - 1, changes: elElement})
+                for (const elElement of el.current.changes) {
+                    if (elElement.oldFret !== elElement.newFret || elElement.addedEffects.length !== 0 ||
+                        elElement.removedEffects.length !== 0) {
+                        elElement.staveId = el.current.props.staveId - 1;
+                        changes.push(elElement)
+                    }
                 }
             });
             return changes;
