@@ -1,57 +1,111 @@
 package ru.fireg45.demotabviewer.services;
-
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.fireg45.demotabviewer.model.Review;
 import ru.fireg45.demotabviewer.model.Tabulature;
 import ru.fireg45.demotabviewer.model.User;
 import ru.fireg45.demotabviewer.repositories.UserRepository;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @InjectMocks
-    private UserService userService;
-
     @Mock
     private UserRepository userRepository;
 
-    @Test
-    void findByEmail() {
-        Mockito.when(userRepository.findUserByEmail("EMAIL"))
-                .thenReturn(Optional.of(new User("USER", "EMAIL", "PASSWORD", "USER")));
+    @Mock
+    private TabulatureService tabulatureService;
 
-        Assertions.assertTrue(userService.findByEmail("EMAIL").isPresent());
-        Assertions.assertEquals("EMAIL", userService.findByEmail("EMAIL").get().getEmail());
+    @InjectMocks
+    private UserService userService;
+
+    @BeforeEach
+    void setUp() {
+        // Setup mock responses or behavior here if needed
     }
 
     @Test
-    void save() {
-        User user = new User("USER", "EMAIL", "PASSWORD", "USER");
-        User saved = new User("USER", "EMAIL", "PASSWORD", "USER");
-        saved.setId(1);
-        Mockito.when(userRepository.save(user))
-                .thenReturn(saved);
+    void findByEmail_ExistingEmail_ReturnsUser() {
+        String email = "test@example.com";
+        User expectedUser = new User();
+        when(userRepository.findUserByEmail(email)).thenReturn(Optional.of(expectedUser));
 
-        Assertions.assertNotNull(userService.save(user));
-        Assertions.assertEquals(userService.save(user).getId(), 1);
+        Optional<User> result = userService.findByEmail(email);
+
+        assertTrue(result.isPresent());
+        assertEquals(expectedUser, result.get());
     }
 
     @Test
-    void findByUsername() {
-        Mockito.when(userRepository.findUserByUsername("USER"))
-                .thenReturn(Optional.of(new User("USER", "EMAIL", "PASSWORD", "USER")));
+    void findByEmail_NonExistingEmail_ReturnsEmptyOptional() {
+        String email = "test@example.com";
+        when(userRepository.findUserByEmail(email)).thenReturn(Optional.empty());
 
-        Assertions.assertTrue(userService.findByUsername("USER").isPresent());
-        Assertions.assertEquals("USER", userService.findByUsername("USER").get().getUsername());
+        Optional<User> result = userService.findByEmail(email);
+
+        assertFalse(result.isPresent());
     }
 
+    @Test
+    void save_ValidUser_ReturnsSavedUser() {
+        User user = new User();
+        when(userRepository.save(user)).thenReturn(user);
+
+        User result = userService.save(user);
+
+        assertEquals(user, result);
+    }
+
+    @Test
+    void findByUsername_ExistingUsername_ReturnsUser() {
+        String username = "testUser";
+        User expectedUser = new User();
+        when(userRepository.findUserByUsername(username)).thenReturn(Optional.of(expectedUser));
+
+        Optional<User> result = userService.findByUsername(username);
+
+        assertTrue(result.isPresent());
+        assertEquals(expectedUser, result.get());
+    }
+
+    @Test
+    void findByUsername_NonExistingUsername_ReturnsEmptyOptional() {
+        String username = "testUser";
+        when(userRepository.findUserByUsername(username)).thenReturn(Optional.empty());
+
+        Optional<User> result = userService.findByUsername(username);
+
+        assertFalse(result.isPresent());
+    }
+
+    @Test
+    void delete_UserWithReviews_UpdatesTabRatingsAndDeletesUser() {
+        User user = new User();
+        Review review1 = new Review();
+        review1.setId(1);
+        review1.setTab(new Tabulature());
+        Review review2 = new Review();
+        review2.setId(2);
+        review2.setTab(new Tabulature());
+        user.setReviews(Arrays.asList(review1, review2));
+
+        //when(userRepository.save(user)).thenReturn(user);
+
+        userService.delete(user);
+
+        verify(tabulatureService, times(2)).getAverageRatingWithOutOne(anyInt(), anyInt());
+        verify(userRepository).delete(user);
+        assertEquals(0, review1.getTab().getRating());
+        assertEquals(0, review2.getTab().getRating());
+    }
 }

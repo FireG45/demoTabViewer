@@ -24,9 +24,13 @@ import java.security.NoSuchAlgorithmException;
 @Component
 public class MinioUtil {
 
+    public MinioClient getMinioClient() {
+        return MinioClientConfig.getMinioClient();
+    }
+    
     public Boolean minioUpload(MultipartFile file, String fileName, String bucketName) {
         try {
-            MinioClient minioClient = MinioClientConfig.getMinioClient();
+            MinioClient minioClient = getMinioClient();
 
             if (fileName == null && file != null && file.getOriginalFilename() != null) {
                 fileName = file.getOriginalFilename().replaceAll(" ", "_");
@@ -51,7 +55,7 @@ public class MinioUtil {
 
     public Boolean minioUpload(InputStream inputStream, String fileName, String bucketName) {
         try {
-            MinioClient minioClient = MinioClientConfig.getMinioClient();
+            MinioClient minioClient = getMinioClient();
 
             if (inputStream != null) {
 
@@ -80,7 +84,7 @@ public class MinioUtil {
 
     public InputStream getFileInputStream(String fileName, String bucketName) {
         try {
-            MinioClient minioClient = MinioClientConfig.getMinioClient();
+            MinioClient minioClient = getMinioClient();
             return minioClient.getObject(GetObjectArgs.builder().bucket(bucketName).object(fileName).build());
         } catch (Exception e) {
             // e.printStackTrace();
@@ -94,7 +98,7 @@ public class MinioUtil {
             if (bucketName.isBlank()) {
                 return;
             }
-            MinioClient minioClient = MinioClientConfig.getMinioClient();
+            MinioClient minioClient = getMinioClient();
             if (MinioClientConfig.bucketExists(bucketName)) {
                 log.info("Bucket {} already exists.", bucketName);
             } else {
@@ -107,7 +111,7 @@ public class MinioUtil {
 
     public InputStream downloadFile(String bucketName, String filename) {
         InputStream stream;
-        MinioClient minioClient = MinioClientConfig.getMinioClient();
+        MinioClient minioClient = getMinioClient();
         try {
             stream = minioClient.getObject(GetObjectArgs.builder()
                     .bucket(bucketName)
@@ -126,7 +130,7 @@ public class MinioUtil {
             if (bucketName.isBlank()) {
                 return;
             }
-            MinioClient minioClient = MinioClientConfig.getMinioClient();
+            MinioClient minioClient = getMinioClient();
             boolean isExist = MinioClientConfig.bucketExists(bucketName);
             if (isExist) {
                 minioClient.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -142,7 +146,7 @@ public class MinioUtil {
             if (bucketName.isBlank()) {
                 return;
             }
-            MinioClient minioClient = MinioClientConfig.getMinioClient();
+            MinioClient minioClient = getMinioClient();
             boolean isExist = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (isExist) {
                 minioClient.deleteBucketEncryption(DeleteBucketEncryptionArgs.builder().bucket(bucketName).build());
@@ -154,7 +158,7 @@ public class MinioUtil {
 
     public String getPreviewFileUrl(String bucketName, String fileName) {
         try {
-            MinioClient minioClient = MinioClientConfig.getMinioClient();
+            MinioClient minioClient = getMinioClient();
             return minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder().bucket(bucketName).object(fileName).build());
         } catch (Exception e) {
             return "";
@@ -163,7 +167,7 @@ public class MinioUtil {
 
     @SneakyThrows
     public void deleteFile(String defaultBucket, String filepath) {
-        MinioClient minioClient = MinioClientConfig.getMinioClient();
+        MinioClient minioClient = getMinioClient();
         minioClient.removeObject(RemoveObjectArgs.builder().bucket(defaultBucket).object(filepath).build());
     }
 }

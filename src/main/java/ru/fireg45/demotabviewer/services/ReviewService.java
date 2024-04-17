@@ -18,14 +18,6 @@ public class ReviewService {
         this.reviewRepository = reviewRepository;
     }
 
-    public int getAverageRating(int id) {
-        return 0;
-    }
-
-    public int getRatingCount(int id) {
-        return 0;
-    }
-
     public void save(Review review) {
         reviewRepository.save(review);
     }

@@ -168,7 +168,10 @@ public class TabEditor {
             if (Objects.equals(changes.getOldFret(), "x")) {
                 note.getEffect().setDeadNote(false);
             } else {
-                note.setValue(Integer.parseInt(changes.getNewFret()));
+                if (changes.getNewFret().charAt(0) == 'x')
+                    note.getEffect().setDeadNote(false);
+                else
+                    note.setValue(Integer.parseInt(changes.getNewFret()));
             }
             applyEffectChanges(note, changes);
         }

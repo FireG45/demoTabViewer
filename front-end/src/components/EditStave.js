@@ -254,8 +254,10 @@ class EditStave extends Component {
             let ind = this.slidesAndTies.indexOf(search);
             if (ind === -1) {
                 this.slidesAndTies.push(search);
+                this.changes[this.selectedNote].addedEffects.push(effect);
             } else {
                 delete this.slidesAndTies[ind];
+                this.changes[this.selectedNote].removedEffects.push(effect);
             }
         }
 
@@ -355,13 +357,11 @@ class EditStave extends Component {
                     },
                     {
                         name: 'H.O', selected: false, changed: false, title: "Hammer-on", action: () => {
-                            changeBooleanEffect('H', beat)
                             changeBooleanHammerSlideEffect('H', beat);
                         }
                     },
                     {
                         name: '⎯', selected: false, changed: false, title: "Слайд", action: () => {
-                            changeBooleanEffect('S', beat)
                             changeBooleanHammerSlideEffect('S', beat);
                         }
                     },

@@ -31,7 +31,7 @@ public class MinioFileService implements FileService {
 
     @Override
     public String upload(MultipartFile file) throws Exception {
-        MinioClient minioClient = MinioClientConfig.getMinioClient();
+        MinioClient minioClient = minioUtil.getMinioClient();
         String fileName = file.getName().hashCode() + new Date().hashCode() + file.getOriginalFilename();
         if (minioClient != null && minioUtil.minioUpload(file, fileName, defaultBucket)) {
             return fileName;
@@ -42,7 +42,7 @@ public class MinioFileService implements FileService {
 
     @Override
     public String upload(InputStream inputStream, String filename) throws Exception {
-        MinioClient minioClient = MinioClientConfig.getMinioClient();
+        MinioClient minioClient = minioUtil.getMinioClient();
         String fileName = filename.hashCode() + new Date().hashCode() + filename;
         if (minioClient != null && minioUtil.minioUpload(inputStream, fileName, defaultBucket)) {
             return fileName;
@@ -53,7 +53,7 @@ public class MinioFileService implements FileService {
 
     @Override
     public void delete(String filepath) {
-        MinioClient minioClient = MinioClientConfig.getMinioClient();
+        MinioClient minioClient = minioUtil.getMinioClient();
         if (minioClient != null) {
             minioUtil.deleteFile(defaultBucket,filepath);
         }
@@ -61,7 +61,7 @@ public class MinioFileService implements FileService {
 
     @Override
     public InputStream download(Tabulature tabulature) throws IOException {
-        MinioClient minioClient = MinioClientConfig.getMinioClient();
+        MinioClient minioClient = minioUtil.getMinioClient();
         if (minioClient == null) {
             return null;
         }
@@ -74,8 +74,6 @@ public class MinioFileService implements FileService {
         targetFile.deleteOnExit();
         try (OutputStream outStream = new FileOutputStream(targetFile)) {
             outStream.write(buffer);
-        } catch (Exception ex) {
-            System.out.println(ex.getLocalizedMessage());
         }
 
         return new DeleteOnExitFileInputStream(targetFile);

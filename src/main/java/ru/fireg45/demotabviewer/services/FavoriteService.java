@@ -18,14 +18,6 @@ public class FavoriteService {
         this.favoriteRepository = favoriteRepository;
     }
 
-    public List<Favorite> findAllByUserEmail(String username) {
-        return favoriteRepository.findAllByUserEmail(username);
-    }
-
-    public List<Favorite> findAllByTab(Tabulature tabulature) {
-        return favoriteRepository.findAllByTab(tabulature);
-    }
-
     public Optional<Favorite> getFavorite(String email, int tabId) {
         return favoriteRepository.getFavorite(email, tabId);
     }

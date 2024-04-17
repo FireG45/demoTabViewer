@@ -138,7 +138,7 @@ class EditTab extends Component {
                 if (result.ok) {
                     this.props.navigate('/tabs/' + this.id + '/' + this.track)
                 } else {
-                    if (result.status !== 200) {
+                    if (result.status > 404 && result.status < 500) {
                         this.props.cookies.remove("token")
                         this.props.cookies.remove("user")
                         this.props.navigate('/signin')
@@ -165,6 +165,12 @@ class EditTab extends Component {
             })
         }).then(res => res.json()).then((result) => {
             let beats = []
+
+            if (!result.userOwner) {
+                this.props.cookies.remove("token")
+                this.props.cookies.remove("user")
+                this.props.navigate('/signin')
+            }
 
             let metronomeTrack = {
                 "n": 37,
