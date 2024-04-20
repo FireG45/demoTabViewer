@@ -118,6 +118,15 @@ public class AuthController {
                 principal.getEmail()), HttpStatus.OK);
     }
 
+    @GetMapping("/auth/role")
+    public ResponseEntity<String> getRole(@AuthenticationPrincipal UserPrincipal principal) {
+        if (principal == null)
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        User user = userService.findByEmail(principal.getEmail()).orElse(null);
+        if (user == null) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        return new ResponseEntity<>(user.getRole(), HttpStatus.OK);
+    }
+
     @PostMapping("/auth/update")
     public ResponseEntity<UserResponse> update(@AuthenticationPrincipal UserPrincipal principal,
                                                @RequestBody @Valid UserUpdateRequest userUpdate,

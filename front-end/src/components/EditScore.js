@@ -1,9 +1,13 @@
-import {Component, createRef, forwardRef} from "react";
+import React, {Component, createRef, forwardRef} from "react";
 import Stave from "./Stave";
-import {Grid, CircularProgress} from "@mui/material";
+import {Grid, CircularProgress, Snackbar} from "@mui/material";
 import Loading from "./Loading";
 import StaveWrapper from "./utils/StaveWrapper";
 import EditStave from "./EditStave";
+import SnackbarHandler from "./SnackbarHandler";
+import {useSnackbar} from "notistack";
+
+const UNDO_TIMEOUT = 500;
 
 export default class EditScore extends Component {
     constructor(props) {
@@ -19,10 +23,33 @@ export default class EditScore extends Component {
             wide: false,
             note: 0,
             measureObjs: [],
+            snackbarRef: createRef(),
             measuresLengths: [],
             lastMeasure: 0,
             track: Number(this.track),
             start: 0,
+            lastState: [],
+            undoCount: 0,
+            lastUndo: Date.now(),
+
+            setLastState: (lastState) => {
+                this.setState({
+                    lastState: [...this.state.lastState, lastState]
+                });
+                console.clear();
+                console.log(this.state.lastState);
+            },
+
+            popLastState: () => {
+                if (this.state.snackbarRef.current) this.state.snackbarRef.current.showSnackbar('UNDO!');
+                let lastStates = this.state.lastState;
+                if (lastStates.length === 0) return;
+                let lastState = this.state.lastState.pop();
+                this.state.measureObjs[lastState.staveId - 1].current.popState(lastState);
+                this.state.measureObjs[lastState.staveId - 1].current.componentDidMount();
+                console.log('POP');
+            },
+
             onStartChange: () => {
             }
         };
@@ -66,10 +93,33 @@ export default class EditScore extends Component {
             });
             return changes;
         }
+
+        this.undoCount = 0;
+
     }
 
     componentDidMount() {
         var path = "http://localhost:8080/tabs/" + this.id + "?track=" + this.track;
+
+        const timerId = setInterval(() => {
+            this.setState({ canUndo: true });
+            clearInterval(timerId);
+        }, 200);
+
+
+        let ex = this;
+        if (this.undoCount === 0) {
+            document.addEventListener('keydown', function (event) {
+                if (Date.now() - ex.state.lastUndo > UNDO_TIMEOUT && event.ctrlKey && event.key === 'z') {
+                    ex.state.popLastState();
+                    ex.setState({
+                        lastUndo: Date.now()
+                    })
+                }
+            });
+        }
+
+
         fetch(path).then(res => res.json()).then(
             (result) => {
                 let measuresLengths = []
@@ -124,7 +174,9 @@ export default class EditScore extends Component {
                                     //this.setState({start: index})
                                     //this.state.onStartChange();
                                 }}>
+                                    <SnackbarHandler ref={this.state.snackbarRef}/>
                                     <EditStave
+                                        setLastState={this.state.setLastState}
                                         ref={this.state.measureObjs[index]}
                                         measure={measures[index].beatDTOS}
                                         tempo={tempo}

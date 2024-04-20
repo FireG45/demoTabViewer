@@ -53,6 +53,10 @@ public class Tabulature {
 
     @JsonIgnore
     @OneToMany(mappedBy = "tab", cascade = CascadeType.ALL)
+    private List<Report> reports;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "tab", cascade = CascadeType.ALL)
     private List<Favorite> favorite;
 
     public Tabulature() {}

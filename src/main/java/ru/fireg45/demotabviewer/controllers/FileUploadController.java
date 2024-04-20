@@ -44,9 +44,9 @@ public class FileUploadController {
 
     @PostMapping(value = "/upload")
     public ResponseEntity<FileUploadResponse> handleFileUpload(@RequestParam("file") MultipartFile file,
-                                               @RequestParam("author") String author,
-                                               @RequestParam("title") String title,
-                                               @AuthenticationPrincipal UserPrincipal principal) {
+                                                               @RequestParam("author") String author,
+                                                               @RequestParam("title") String title,
+                                                               @AuthenticationPrincipal UserPrincipal principal) {
         Tabulature tab;
         User user = userService.findByEmail(principal.getEmail()).orElse(null);
 
@@ -69,10 +69,10 @@ public class FileUploadController {
 
     @PatchMapping("/tabs/update/{id}")
     public ResponseEntity<FileUploadResponse> update(@PathVariable("id") int id,
-                                     @RequestParam(value = "file", required = false) MultipartFile file,
-                                     @RequestParam("author") String author,
-                                     @RequestParam("title") String title,
-                                     @AuthenticationPrincipal UserPrincipal principal) {
+                                                     @RequestParam(value = "file", required = false) MultipartFile file,
+                                                     @RequestParam("author") String author,
+                                                     @RequestParam("title") String title,
+                                                     @AuthenticationPrincipal UserPrincipal principal) {
         Optional<Tabulature> optionalTab = tabulatureService.findById(id);
         if (optionalTab.isEmpty()) return new ResponseEntity<>(new FileUploadResponse(-1), HttpStatus.BAD_REQUEST);
 
@@ -102,9 +102,11 @@ public class FileUploadController {
         Optional<Tabulature> optionalTab = tabulatureService.findById(id);
         if (optionalTab.isEmpty()) return new ResponseEntity<>("", HttpStatus.BAD_REQUEST);
 
+        Optional<User> optionalUser = userService.findByEmail(principal.getEmail());
         Tabulature tab = optionalTab.get();
 
-        if (principal == null || !Objects.equals(principal.getEmail(), tab.getUser().getEmail()))
+        if (optionalUser.isEmpty() || !optionalUser.get().getRole().equals("ADMIN")
+                && !Objects.equals(principal.getEmail(), tab.getUser().getEmail()))
             return new ResponseEntity<>("", HttpStatus.FORBIDDEN);
 
         try {

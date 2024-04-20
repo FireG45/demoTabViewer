@@ -20,6 +20,7 @@
     "fs": "^0.0.1-security",
     "midi-sounds-react": "^1.2.54",
     "midifile": "^2.0.0",
+    "notistack": "^3.0.1",
     "os": "^0.1.2",
     "path": "^0.12.7",
     "react": "^18.2.0",

@@ -1,7 +1,11 @@
 package ru.fireg45.demotabviewer.tab;
 
 import org.herac.tuxguitar.graphics.control.TGFactoryImpl;
+import org.herac.tuxguitar.io.base.TGFileFormat;
 import org.herac.tuxguitar.io.base.TGFileFormatException;
+import org.herac.tuxguitar.io.base.TGSongReader;
+import org.herac.tuxguitar.io.base.TGSongReaderHandle;
+import org.herac.tuxguitar.io.gpx.v6.GPXInputStream;
 import org.herac.tuxguitar.io.gtp.GP1InputStream;
 import org.herac.tuxguitar.io.gtp.*;
 import org.herac.tuxguitar.io.gtp.GTPInputStream;
@@ -249,7 +253,7 @@ public class TabReaderImpl implements TabReader {
             if (measure.getHeader().getRepeatClose() > 0) {
                 measure.getHeader().setRepeatClose(measure.getHeader().getRepeatClose() - 1);
                 measures.set(i, measure);
-                i = repeatStart - 1;
+                i = Math.max(0, repeatStart - 1);
             }
         }
         tabDTO.measures = measureDTOS.toArray(new MeasureDTO[0]);

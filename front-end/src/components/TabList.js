@@ -165,9 +165,14 @@ function TabList() {
             </Container>
             {/*{!!! (params.author || query) &&*/}
             {/*    }*/}
-            <Pagination page={page} count={pageCount} onChange={(_, newPage) => {
-                setPage(newPage)
-            }} color="primary"/>
+            {
+                params.author || query ?
+                    <></>
+                    :
+                    <Pagination page={page} count={pageCount} onChange={(_, newPage) => {
+                        setPage(newPage)
+                    }} color="primary"/>
+            }
             <br/>
         </Stack>
     );

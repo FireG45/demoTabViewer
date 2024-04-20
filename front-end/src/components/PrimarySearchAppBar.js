@@ -8,10 +8,8 @@ import InputBase from '@mui/material/InputBase';
 import Badge from '@mui/material/Badge';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
-import SearchIcon from '@mui/icons-material/Search';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import MoreIcon from '@mui/icons-material/MoreVert';
 import {Box, Button, Divider, Drawer, List, ListItemButton, Stack} from "@mui/material";
 import {useNavigate} from 'react-router-dom';
 import {useCookies} from 'react-cookie';
@@ -91,6 +89,10 @@ export default function PrimarySearchAppBar() {
     React.useEffect(() => {
         setUser(cookies["user"])
     }, [cookies["user"]])
+
+    console.log("TOKEN ", cookies["token"]);
+    console.log("USER ", cookies["user"]);
+    console.log("cookies ", cookies);
 
     const toggleDrawer = (inOpen) => (event) => {
         if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -180,7 +182,7 @@ export default function PrimarySearchAppBar() {
                         component="div"
                         sx={{display: {xs: 'none', sm: 'block'}}}
                     >
-                        <Button onClick={() => navigate('/')}
+                        <Button onClick={() => navigate('/', {replace: true})}
                                 style={{'fontSize': '18px', 'textDecoration': 'none', 'color': '#FFFF'}}>TABS</Button>
                     </Typography>
                     {/* <Search>

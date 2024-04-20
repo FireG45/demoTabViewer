@@ -135,10 +135,11 @@ public class TabController {
 
     @GetMapping("edit/{id}")
     public ResponseEntity<String> checkEditPermit(@AuthenticationPrincipal UserPrincipal userPrincipal,
-                                          @PathVariable("id") int id) {
+                                                  @PathVariable("id") int id) {
         Optional<User> optionalUser = userService.findByEmail(userPrincipal.getEmail());
-        if (optionalUser.isEmpty() || optionalUser.get().getTabulatures().stream()
-                .filter(tabulature -> tabulature.getId() == id).findAny().isEmpty())
+        if (optionalUser.isEmpty() || !optionalUser.get().getRole().equals("ADMIN") &&
+                optionalUser.get().getTabulatures().stream()
+                        .filter(tabulature -> tabulature.getId() == id).findAny().isEmpty())
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 
         return new ResponseEntity<>(HttpStatus.OK);
@@ -149,8 +150,9 @@ public class TabController {
                                           @PathVariable("id") int id, @PathVariable("track") int track,
                                           @RequestBody TabChangesDTO tabChanges) throws IOException {
         Optional<User> optionalUser = userService.findByEmail(userPrincipal.getEmail());
-        if (optionalUser.isEmpty() || optionalUser.get().getTabulatures().stream()
-                .filter(tabulature -> tabulature.getId() == id).findAny().isEmpty())
+        if (optionalUser.isEmpty() || !optionalUser.get().getRole().equals("ADMIN") &&
+                optionalUser.get().getTabulatures().stream()
+                        .filter(tabulature -> tabulature.getId() == id).findAny().isEmpty())
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 
         tabEditor.updateSong(id, track, tabChanges);

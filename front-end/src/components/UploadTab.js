@@ -22,7 +22,8 @@ export default function UploadTab() {
   const handleFileChange = (e) => {
     if (e.target.files) {
       setFile(e.target.files[0]);
-      if (e.target.files[0] && ['gp1', 'gp2', 'gp3', 'gp4', 'gp5'].indexOf(e.target.files[0].name.split('.').pop()) != -1) {
+      if (e.target.files[0] &&
+          ['gp1', 'gp2', 'gp3', 'gp4', 'gp5'].indexOf(e.target.files[0].name.split('.').pop()) != -1) {
         setError(null)
       } else {
         setError(

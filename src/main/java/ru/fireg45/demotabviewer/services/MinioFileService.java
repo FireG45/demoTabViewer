@@ -4,16 +4,18 @@ import io.minio.MinioClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.fireg45.demotabviewer.minio.MinioUtil;
-import ru.fireg45.demotabviewer.minio.config.MinioClientConfig;
 import ru.fireg45.demotabviewer.model.Tabulature;
+import ru.fireg45.demotabviewer.model.User;
 import ru.fireg45.demotabviewer.util.DeleteOnExitFileInputStream;
 
 import java.io.*;
-import java.nio.file.StandardOpenOption;
 import java.util.Date;
+import java.util.Optional;
 
 @Primary
 @Service
@@ -29,11 +31,20 @@ public class MinioFileService implements FileService {
         this.minioUtil = minioUtil;
     }
 
+    private String getBucket() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        String bucketName = String.valueOf(userEmail.hashCode());
+        if (!minioUtil.bucketExists(bucketName)) minioUtil.createBucketName(bucketName);
+        return bucketName;
+    }
+
     @Override
     public String upload(MultipartFile file) throws Exception {
+
         MinioClient minioClient = minioUtil.getMinioClient();
         String fileName = file.getName().hashCode() + new Date().hashCode() + file.getOriginalFilename();
-        if (minioClient != null && minioUtil.minioUpload(file, fileName, defaultBucket)) {
+        if (minioClient != null && minioUtil.minioUpload(file, fileName, getBucket())) {
             return fileName;
         }
 
@@ -44,7 +55,7 @@ public class MinioFileService implements FileService {
     public String upload(InputStream inputStream, String filename) throws Exception {
         MinioClient minioClient = minioUtil.getMinioClient();
         String fileName = filename.hashCode() + new Date().hashCode() + filename;
-        if (minioClient != null && minioUtil.minioUpload(inputStream, fileName, defaultBucket)) {
+        if (minioClient != null && minioUtil.minioUpload(inputStream, fileName, getBucket())) {
             return fileName;
         }
 
@@ -55,7 +66,7 @@ public class MinioFileService implements FileService {
     public void delete(String filepath) {
         MinioClient minioClient = minioUtil.getMinioClient();
         if (minioClient != null) {
-            minioUtil.deleteFile(defaultBucket,filepath);
+            minioUtil.deleteFile(getBucket(),filepath);
         }
     }
 
@@ -66,7 +77,10 @@ public class MinioFileService implements FileService {
             return null;
         }
 
-        InputStream stream = minioUtil.downloadFile(defaultBucket, tabulature.getFilepath());
+        InputStream stream = minioUtil.downloadFile(
+                String.valueOf(tabulature.getUser().getEmail().hashCode()),
+                tabulature.getFilepath()
+        );
 
         byte[] buffer = stream.readAllBytes();
 

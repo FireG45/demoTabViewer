@@ -9,6 +9,7 @@ import QuantityInput from "./QuantityInput";
 import Dialog from "@mui/material/Dialog";
 import {styled} from "@mui/system";
 import parseEditEffects from "./renderUtils/parseEditEffects";
+import SnackbarHandler from "./SnackbarHandler";
 
 const {Renderer, TabStave, TabNote, Formatter, StaveNote} = VexFlow.Flow
 
@@ -28,6 +29,9 @@ class EditStave extends Component {
         this.showTempo = this.props.showTempo;
         this.tempo = this.props.tempo;
 
+        this.slidesAndTies = this.props.slidesAndTies
+        this.measure = this.props.measure;
+
         this.effectsMap = []
 
         this.selectedNote = -1
@@ -35,8 +39,6 @@ class EditStave extends Component {
         this.selectedString = -1;
         this.noteJ = -1;
 
-        this.slidesAndTies = this.props.slidesAndTies
-        this.measure = this.props.measure;
 
         this.state = {
             note: 0,
@@ -177,6 +179,192 @@ class EditStave extends Component {
             this.componentDidMount();
         }
 
+        this.saveState = () => {
+            this.props.setLastState({
+                staveId: this.props.staveId,
+                changes: JSON.parse(JSON.stringify(this.changes)),
+                tempo: this.tempo,
+                slidesAndTies: JSON.parse(JSON.stringify(this.slidesAndTies)),
+                measure: JSON.parse(JSON.stringify(this.measure)),
+            })
+        }
+
+        this.popState = (poppedState) => {
+            console.clear();
+            console.log("IN POP: ", poppedState.measure);
+            console.log("PRE POP: ", this.measure);
+            this.changes = poppedState.changes
+            this.tempo = poppedState.tempo
+            this.slidesAndTies = poppedState.slidesAndTies
+            this.measure = poppedState.measure
+            console.log("POST POP: ", this.measure);
+            this.componentDidMount();
+            this.generateEffectMap();
+        }
+
+        this.generateEffectMap = () => {
+            const changeBooleanEffect = (effect, beat) => {
+                let ind = beat.effects.indexOf(effect);
+                if (ind === -1) {
+                    beat.effects.push(effect);
+                    let removedInd = this.changes[this.selectedNote].removedEffects.indexOf(effect);
+                    if (removedInd !== -1)
+                        delete this.changes[this.selectedNote].removedEffects[removedInd];
+                    else
+                        this.changes[this.selectedNote].addedEffects.push(effect);
+                } else {
+                    delete beat.effects[ind];
+                    let addedInd = this.changes[this.selectedNote].addedEffects.indexOf(effect);
+                    if (addedInd !== -1)
+                        delete this.changes[this.selectedNote].addedEffects[addedInd];
+                    else
+                        this.changes[this.selectedNote].removedEffects.push(effect);
+                }
+            }
+
+            const changeBooleanHammerSlideEffect = (effect, beat) => {
+                let i = this.selectedBeat - 1;
+                let search = `${i}|${i + 1}|${effect}|${this.noteJ}`;
+                let ind = this.slidesAndTies.indexOf(search);
+                if (ind === -1) {
+                    this.slidesAndTies.push(search);
+                    this.changes[this.selectedNote].addedEffects.push(effect);
+                } else {
+                    delete this.slidesAndTies[ind];
+                    this.changes[this.selectedNote].removedEffects.push(effect);
+                }
+            }
+
+            let allNotesCount = 0;
+            for (let i = 0; i < this.measure.length; i++) {
+                let beat = this.measure[i];
+                for (let j = 0; j < beat.noteDTOS.length; j++) {
+                    allNotesCount += beat.noteDTOS.length
+                }
+            }
+
+
+            for (let i = 0; i < this.measure.length; i++) {
+                let beat = this.measure[i];
+                let noteId = 0;
+                for (let j = 0; j < beat.noteDTOS.length; j++) {
+                    let noteDTO = beat.noteDTOS[j];
+                    let map = [
+                        {
+                            name: 'P.M', selected: false, title: "Palm Mute", action: () => {
+                                changeBooleanEffect('p', beat)
+                            }
+                        },
+                        {
+                            name: 'T', selected: false, title: "Тэппинг", action: () => {
+                                changeBooleanEffect('t', beat)
+                            }
+                        },
+                        {
+                            name: 'S', selected: false, title: "Слэп", action: () => {
+                                changeBooleanEffect('s', beat)
+                            }
+                        },
+                        {
+                            name: 'P', selected: false, title: "Поппинг", action: () => {
+                                changeBooleanEffect('P', beat)
+                            }
+                        },
+                        {
+                            name: 'A.H', selected: false, title: "Флажолет", action: () => {
+                                changeBooleanEffect('h|H|' + noteDTO.fret, beat);
+                            }
+                        },
+                        {
+                            name: '>', selected: false, title: "Акцентированная нота", action: () => {
+                                changeBooleanEffect('>', beat);
+                            }
+                        },
+                        {
+                            name: 'L.R', selected: false, title: "Let Ring", action: () => {
+                                changeBooleanEffect('L', beat);
+                            }
+                        },
+                        {
+                            name: '^',
+                            selected: false,
+                            changed: false,
+                            title: "Сильно акцентированная нота",
+                            action: () => {
+                                changeBooleanEffect('^', beat);
+                            }
+                        },
+
+                        {
+                            name: '~', selected: false, changed: false, title: "Вибрато", action: () => {
+                                changeBooleanEffect('v', beat)
+                            }
+                        },
+                        {
+                            name: 'X', selected: false, changed: false, title: "Мертвая нота", action: () => {
+                                if (noteDTO.fret === 'x') {
+                                    noteDTO.fret = noteDTO.rawFret;
+                                } else {
+                                    noteDTO.fret = 'x';
+                                }
+                                this.changes[this.selectedNote].oldFret = this.changes[this.selectedNote].newFret;
+                                this.changes[this.selectedNote].newFret = noteDTO.fret;
+                            }
+                        },
+                        {
+                            name: '()', selected: false, changed: false, title: "Нота призрак", action: () => {
+                                if (!beat.ghostNote) {
+                                    let removedInd = this.changes[this.selectedNote].removedEffects.indexOf('g');
+                                    if (removedInd !== -1)
+                                        delete this.changes[this.selectedNote].removedEffects[removedInd];
+                                    else
+                                        this.changes[this.selectedNote].addedEffects.push('g');
+                                } else {
+                                    let addedInd = this.changes[this.selectedNote].addedEffects.indexOf('g');
+                                    if (addedInd !== -1)
+                                        delete this.changes[this.selectedNote].addedEffects[addedInd];
+                                    else
+                                        this.changes[this.selectedNote].removedEffects.push('g');
+                                }
+                                beat.ghostNote = !beat.ghostNote;
+                            }
+                        },
+                        {
+                            name: 'H.O', selected: false, changed: false, title: "Hammer-on", action: () => {
+                                changeBooleanHammerSlideEffect('H', beat);
+                            }
+                        },
+                        {
+                            name: '⎯', selected: false, changed: false, title: "Слайд", action: () => {
+                                changeBooleanHammerSlideEffect('S', beat);
+                            }
+                        },
+                    ]
+
+                    let note = beat.noteDTOS[j];
+                    if (note.effectsFlags.length > 0) {
+                        for (let l = 0; l < note.effectsFlags.length; l++) {
+                            map[l].selected = note.effectsFlags[l];
+                        }
+                    }
+
+                    // if (this.effectsMap.length < beat.noteDTOS.length)
+                    this.effectsMap.push(map)
+
+                    if (this.changes.length < allNotesCount)
+                        this.changes.push({
+                            noteId: ++noteId,
+                            beatId: i,
+                            oldFret: noteDTO.fret,
+                            newFret: noteDTO.fret,
+                            addedEffects: [],
+                            removedEffects: [],
+                        })
+                }
+            }
+
+        }
+
         document.addEventListener(
             "keypress",
             (event) => {
@@ -184,6 +372,7 @@ class EditStave extends Component {
                 const keyName = event.key;
                 let note = this.selectedNoteObj;
                 if (!isNaN(keyName)) {
+                    this.saveState();
                     let noteID = this.selectedNote;
                     let noteDTO = this.measure[this.selectedBeat - 1].noteDTOS[this.noteJ];
                     if (noteDTO.fret === 'x') {
@@ -229,165 +418,7 @@ class EditStave extends Component {
         stave.options.num_lines = this.props.stringCount
         stave.options.line_config = new Array(this.props.stringCount).fill({visible: true})
 
-        const changeBooleanEffect = (effect, beat) => {
-            let ind = beat.effects.indexOf(effect);
-            if (ind === -1) {
-                beat.effects.push(effect);
-                let removedInd = this.changes[this.selectedNote].removedEffects.indexOf(effect);
-                if (removedInd !== -1)
-                    delete this.changes[this.selectedNote].removedEffects[removedInd];
-                else
-                    this.changes[this.selectedNote].addedEffects.push(effect);
-            } else {
-                delete beat.effects[ind];
-                let addedInd = this.changes[this.selectedNote].addedEffects.indexOf(effect);
-                if (addedInd !== -1)
-                    delete this.changes[this.selectedNote].addedEffects[addedInd];
-                else
-                    this.changes[this.selectedNote].removedEffects.push(effect);
-            }
-        }
-
-        const changeBooleanHammerSlideEffect = (effect, beat) => {
-            let i = this.selectedBeat - 1;
-            let search = `${i}|${i + 1}|${effect}|${this.noteJ}`;
-            let ind = this.slidesAndTies.indexOf(search);
-            if (ind === -1) {
-                this.slidesAndTies.push(search);
-                this.changes[this.selectedNote].addedEffects.push(effect);
-            } else {
-                delete this.slidesAndTies[ind];
-                this.changes[this.selectedNote].removedEffects.push(effect);
-            }
-        }
-
-        let allNotesCount = 0;
-        for (let i = 0; i < this.measure.length; i++) {
-            let beat = this.measure[i];
-            for (let j = 0; j < beat.noteDTOS.length; j++) {
-                allNotesCount += beat.noteDTOS.length
-            }
-        }
-
-
-        for (let i = 0; i < this.measure.length; i++) {
-            let beat = this.measure[i];
-            let noteId = 0;
-            for (let j = 0; j < beat.noteDTOS.length; j++) {
-                let noteDTO = beat.noteDTOS[j];
-                let map = [
-                    {
-                        name: 'P.M', selected: false, title: "Palm Mute", action: () => {
-                            changeBooleanEffect('p', beat)
-                        }
-                    },
-                    {
-                        name: 'T', selected: false, title: "Тэппинг", action: () => {
-                            changeBooleanEffect('t', beat)
-                        }
-                    },
-                    {
-                        name: 'S', selected: false, title: "Слэп", action: () => {
-                            changeBooleanEffect('s', beat)
-                        }
-                    },
-                    {
-                        name: 'P', selected: false, title: "Поппинг", action: () => {
-                            changeBooleanEffect('P', beat)
-                        }
-                    },
-                    {
-                        name: 'A.H', selected: false, title: "Флажолет", action: () => {
-                            changeBooleanEffect('h|H|' + noteDTO.fret, beat);
-                        }
-                    },
-                    {
-                        name: '>', selected: false, title: "Акцентированная нота", action: () => {
-                            changeBooleanEffect('>', beat);
-                        }
-                    },
-                    {
-                        name: 'L.R', selected: false, title: "Let Ring", action: () => {
-                            changeBooleanEffect('L', beat);
-                        }
-                    },
-                    {
-                        name: '^',
-                        selected: false,
-                        changed: false,
-                        title: "Сильно акцентированная нота",
-                        action: () => {
-                            changeBooleanEffect('^', beat);
-                        }
-                    },
-
-                    {
-                        name: '~', selected: false, changed: false, title: "Вибрато", action: () => {
-                            changeBooleanEffect('v', beat)
-                        }
-                    },
-                    {
-                        name: 'X', selected: false, changed: false, title: "Мертвая нота", action: () => {
-                            if (noteDTO.fret === 'x') {
-                                noteDTO.fret = noteDTO.rawFret;
-                            } else {
-                                noteDTO.fret = 'x';
-                            }
-                            this.changes[this.selectedNote].oldFret = this.changes[this.selectedNote].newFret;
-                            this.changes[this.selectedNote].newFret = noteDTO.fret;
-                        }
-                    },
-                    {
-                        name: '()', selected: false, changed: false, title: "Нота призрак", action: () => {
-                            if (!beat.ghostNote) {
-                                let removedInd = this.changes[this.selectedNote].removedEffects.indexOf('g');
-                                if (removedInd !== -1)
-                                    delete this.changes[this.selectedNote].removedEffects[removedInd];
-                                else
-                                    this.changes[this.selectedNote].addedEffects.push('g');
-                            } else {
-                                let addedInd = this.changes[this.selectedNote].addedEffects.indexOf('g');
-                                if (addedInd !== -1)
-                                    delete this.changes[this.selectedNote].addedEffects[addedInd];
-                                else
-                                    this.changes[this.selectedNote].removedEffects.push('g');
-                            }
-                            beat.ghostNote = !beat.ghostNote;
-                        }
-                    },
-                    {
-                        name: 'H.O', selected: false, changed: false, title: "Hammer-on", action: () => {
-                            changeBooleanHammerSlideEffect('H', beat);
-                        }
-                    },
-                    {
-                        name: '⎯', selected: false, changed: false, title: "Слайд", action: () => {
-                            changeBooleanHammerSlideEffect('S', beat);
-                        }
-                    },
-                ]
-
-                let note = beat.noteDTOS[j];
-                if (note.effectsFlags.length > 0) {
-                    for (let l = 0; l < note.effectsFlags.length; l++) {
-                        map[l].selected = note.effectsFlags[l];
-                    }
-                }
-
-                // if (this.effectsMap.length < beat.noteDTOS.length)
-                this.effectsMap.push(map)
-
-                if (this.changes.length < allNotesCount)
-                    this.changes.push({
-                        noteId: ++noteId,
-                        beatId: i,
-                        oldFret: noteDTO.fret,
-                        newFret: noteDTO.fret,
-                        addedEffects: [],
-                        removedEffects: [],
-                    })
-            }
-        }
+       this.generateEffectMap();
 
         if (this.showTempo) {
             const bpm = this.tempo
@@ -542,6 +573,7 @@ class EditStave extends Component {
                             <h5>Изменить темп</h5>
                             <QuantityInput startVal={this.tempo} ref={this.tempoField}/>
                             <Button fullWidth variant={'contained'} type={'info'} onClick={(event) => {
+                                this.saveState();
                                 this.tempo = this.tempoField.current.state.value;
                                 this.staveChanges.oldTempo = this.staveChanges.newTempo;
                                 this.staveChanges.newTempo = this.tempo;
@@ -561,8 +593,9 @@ class EditStave extends Component {
                         <h5>Изменить эффекты</h5>
                         <ClickAwayListener onClickAway={(event) => {
                             this.setState({
-                                noteDialogOpen: false
+                                noteDialogOpen: false,
                             })
+                            this.selectedNote = -1;
                         }}>
                             <Box sx={{flexGrow: 1}}>
                                 <Grid container spacing={{xs: 0.5, md: 0.5}} columns={{xs: 2, sm: 8, md: 14}}>
@@ -572,6 +605,7 @@ class EditStave extends Component {
                                                 <Tooltip title={el.title}>
                                                     <Button fullWidth variant={el.selected ? 'contained' : 'outlined'}
                                                             onClick={() => {
+                                                                this.saveState();
                                                                 el.selected = !el.selected;
                                                                 // el.changed = !el.changed;
                                                                 el.action();

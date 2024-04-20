@@ -247,7 +247,11 @@ class ShowTab extends Component {
                                         }
                                     }} checked={favorite} icon={<FavoriteBorder/>} checkedIcon={<Favorite/>}/>
                                     <TabInfoPopover data={{
-                                        user: tab.user, uploaded: tab.uploaded, id: this.id, owner: tab.userOwner, track: this.track
+                                        user: tab.user,
+                                        uploaded: tab.uploaded,
+                                        id: this.id,
+                                        owner: tab.userOwner,
+                                        track: this.track
                                     }}/>
                                 </ButtonGroup>
                                 <Typography component="legend">Сложность табулатуры:</Typography>
