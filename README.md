@@ -17,7 +17,7 @@ DemoTabViewer offers an open source solution for digital guitar music viewing, s
 
 ## Key Features
 
-* Displays MusicXML sheet music in a browser 
+* Displays Guitar pro tabs in a browser 
 * *Soon: Tabulature audio playback (work in progress)*
 * Uses [Vexflow](https://www.vexflow.com/) for rendering and layout
 * Parses most Guitar Pro note effects (Band, Natural/Artificial Harmonics, Palm Mute etc)
