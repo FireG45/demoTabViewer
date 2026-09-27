@@ -34,7 +34,6 @@ The bundled code under `src/main/java/org/herac/tuxguitar` comes from the open-s
 * Web version on mobile doesn't renders properly
 
 ## Build
-## Build
 
 Install Docker Engine with Docker Compose. From the repository root run:
 
