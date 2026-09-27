@@ -34,11 +34,16 @@ The bundled code under `src/main/java/org/herac/tuxguitar` comes from the open-s
 * Web version on mobile doesn't renders properly
 
 ## Build
-* To build the project you must have Docker Engine installed
-* You can build and run all containers with this command:
- ```docker compose up --build -d```
-* Or build all containers separately:
-  * backend: ```docker build -t server .```
-  * frontend: ```docker build -t client font-end```
-  * postgres: ```docker run --name postgres -p 5432:5432 -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin -e POSTGRES_DB=tab_viewer_db -e PGDATA=/var/lib/postgresql/data/pgdata -d -v "$(pwd)":/var/lib/postgresql/data ```
-  * minio: ```docker run -p 9000:9000 p 9001:9001 --name minio -v ~/minio/data:/data -e "MINIO_ROOT_USER=minioadmin" -e "MINIO_ROOT_PASSWORD=minioadmin" quay.io/minio/minio server /data --console-address ":9001"```
+## Build
+
+Install Docker Engine with Docker Compose. From the repository root run:
+
+```bash
+docker compose up --build -d
+```
+
+To stop the containers:
+
+```bash
+docker compose down
+```
